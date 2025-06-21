@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: whisker-nodeport
+  namespace: calico-system
+spec:
+  type: NodePort  # Changed from ClusterIP to NodePort
+  selector:
+    k8s-app: whisker
+  ports:
+  - port: 80
+    targetPort: 8081
+    nodePort: 30081  # Added nodePort in the range 30000-32767

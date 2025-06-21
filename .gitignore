@@ -1,0 +1,40 @@
+# Terraform files
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+
+# Ansible 
+*.retry
+
+# SSH keys
+*.pem
+
+# Instance IP and inventory files (generated)
+ec2_ip.txt
+inventory.ini
+
+# Large container images
+*.tar.xz
+*.tar
+*.gz
+*.qcow2
+*.img
+*.vmdk
+
+# Local environment
+.env
+.envrc
+.DS_Store
+*.log
+
+# Kubernetes
+kubeconfig
+*kubeconfig*
+.kube/
+
+# ContainerLab
+clab-*
+license-tokens.yml

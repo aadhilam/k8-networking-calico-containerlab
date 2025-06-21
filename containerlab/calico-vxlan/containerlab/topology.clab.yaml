@@ -1,0 +1,44 @@
+name: calico-vxlan
+topology:
+  nodes:
+    r0:
+      kind: linux
+      image: frrouting/frr:v8.4.0
+      binds:
+        - r0/daemons:/etc/frr/daemons
+      cmd: /usr/lib/frr/docker-start
+      exec:
+        - ip addr add 10.87.1.1/24 dev net0
+        - ip addr add 10.87.2.1/24 dev net1
+        - ip addr add 10.87.3.1/24 dev net2
+
+    k01:
+      kind: k8s-kind
+      startup-config: k01-no-cni.yaml
+      extras:
+        k8s_kind:
+          deploy:
+            wait: 0s
+
+    k01-control-plane:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.87.1.2/24"
+        - "ip route add 10.0.0.0/8 via 10.87.1.1"
+
+    k01-worker:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.87.2.2/24"
+        - "ip route add 10.0.0.0/8 via 10.87.2.1"
+
+    k01-worker2:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.87.3.2/24"
+        - "ip route add 10.0.0.0/8 via 10.87.3.1"
+
+  links:
+    - endpoints: ["r0:net0", "k01-control-plane:eth1"]
+    - endpoints: ["r0:net1", "k01-worker:eth1"]
+    - endpoints: ["r0:net2", "k01-worker2:eth1"]

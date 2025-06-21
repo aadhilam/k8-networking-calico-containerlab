@@ -1,0 +1,63 @@
+---
+- hosts: clab
+  become: yes
+  tasks:
+    - name: Install dependencies
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - docker.io
+        - curl
+        - iproute2
+        - bridge-utils
+        - tcpdump
+        - jq  # Added jq installation
+
+    - name: Install containerlab
+      shell: |
+        curl -sL https://get.containerlab.dev | bash
+
+    - name: Enable and start Docker
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Install latest kind
+      shell: |
+        curl -Lo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64
+        chmod +x /usr/local/bin/kind
+
+    - name: Install latest kubectl
+      shell: |
+        curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/
+        
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+        
+    - name: Give ubuntu user passwordless sudo access
+      lineinfile:
+        path: /etc/sudoers.d/ubuntu
+        line: "ubuntu ALL=(ALL) NOPASSWD:ALL"
+        state: present
+        mode: 0440
+        create: yes
+        validate: 'visudo -cf %s'
+        
+    - name: Ensure ubuntu user's .bashrc loads Docker environment
+      lineinfile:
+        path: /home/ubuntu/.bashrc
+        line: "{{ item }}"
+        state: present
+      loop:
+        - "# Added by ansible - Docker and containerlab environment"
+        - "export PATH=$PATH:/usr/local/bin"
+        - "[ -f /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion"
+        - "[ -f /etc/bash_completion.d/docker ] && . /etc/bash_completion.d/docker"
+      become_user: ubuntu

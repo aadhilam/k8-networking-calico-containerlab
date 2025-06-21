@@ -1,0 +1,81 @@
+# Container Labs: Containerized Network & Kubernetes Testing Environment
+
+A toolkit for deploying and experimenting with containerized networking labs on AWS infrastructure.
+
+## Prerequisites
+
+- AWS CLI configured with appropriate permissions
+- Terraform (1.0+)
+- Ansible (2.9+)
+- SSH key pair in `~/.ssh/id_rsa` (public key in `~/.ssh/id_rsa.pub`)
+
+## Getting Started
+
+### Deploying the Lab Environment
+
+1. Clone this repository:
+   ```
+   git clone https://github.com/yourusername/container-labs.git
+   cd container-labs
+   ```
+
+2. Run the deployment script:
+   ```
+   ./deploy.sh
+   ```
+
+The deployment script will:
+- Provision a t3.2xlarge EC2 instance in us-east-1 using Terraform
+- Configure the instance with Docker, ContainerLab, Kind, and kubectl using Ansible
+- Copy lab files to the instance
+- Establish an SSH session to the instance
+
+### Working with the Lab
+
+Once connected to the EC2 instance:
+- ContainerLab is available for creating network topologies
+- Kind is available for creating Kubernetes clusters
+- Docker is configured and ready to use
+- The ubuntu user has passwordless sudo access
+
+## Infrastructure Details
+
+- **Instance Type**: t3.2xlarge (8 vCPUs, 32GB RAM)
+- **Storage**: 50GB GP3 SSD volume
+- **Operating System**: Ubuntu 22.04 LTS
+- **Pre-installed Tools**:
+  - Docker
+  - ContainerLab
+  - Kind (Kubernetes in Docker)
+  - kubectl
+  - jq, curl, tcpdump, bridge-utils, iproute2
+
+## Project Structure
+
+```
+container-labs/
+├── ansible/
+│   └── playbook.yml        # Ansible configuration for the instance
+├── deploy.sh               # Main deployment script
+├── destroy.sh              # Cleanup script
+├── main.tf                 # Terraform infrastructure definition
+└── ec2_ip.txt              # Generated file with EC2 instance IP (created during deployment)
+```
+
+## Cleanup
+
+When you're done with the lab environment, you can clean everything up:
+
+```
+./destroy.sh
+```
+
+This script will:
+- Destroy all Terraform-managed resources (EC2 instance)
+- Remove local temporary files
+
+## Notes
+
+- The EC2 instance public IP is saved to `ec2_ip.txt` for easy reference
+- The ubuntu user is configured with passwordless sudo and Docker group membership
+- Docker environment variables and completions are automatically loaded in the shell
