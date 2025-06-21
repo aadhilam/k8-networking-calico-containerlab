@@ -38,3 +38,9 @@ kubeconfig
 # ContainerLab
 clab-*
 license-tokens.yml
+
+#vscode
+.vscode/
+
+notes.txt
+
