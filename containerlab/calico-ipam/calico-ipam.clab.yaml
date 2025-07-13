@@ -1,0 +1,11 @@
+name: calico-ipam
+topology:
+  nodes:
+    calico-ipam:
+      kind: k8s-kind
+      image: kindest/node:v1.28.0
+      startup-config: calico-ipam-no-cni.yaml
+      extras:
+        k8s_kind:
+          deploy:
+            wait: 0s
