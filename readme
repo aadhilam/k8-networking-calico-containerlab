@@ -1,4 +1,4 @@
-# Container Labs: Containerized Network & Kubernetes Testing Environment
+# Kubernetes networking with Calico and Container Lab. 
 
 A toolkit for deploying and experimenting with containerized networking labs on AWS infrastructure.
 
@@ -30,6 +30,8 @@ The deployment script will:
 - Copy lab files to the instance
 - Establish an SSH session to the instance
 
+![EC2 ContainerLab Environment](images/ec2_containerlab.png)
+
 ### Working with the Lab
 
 Once connected to the EC2 instance:
@@ -56,10 +58,13 @@ Once connected to the EC2 instance:
 container-labs/
 ├── ansible/
 │   └── playbook.yml        # Ansible configuration for the instance
+├── containerlab/           # ContainerLab topologies and configurations
+├── images/                 # Documentation images
 ├── deploy.sh               # Main deployment script
 ├── destroy.sh              # Cleanup script
 ├── main.tf                 # Terraform infrastructure definition
-└── ec2_ip.txt              # Generated file with EC2 instance IP (created during deployment)
+├── variables.tf            # Terraform variable definitions
+└── outputs.tf              # Terraform output definitions
 ```
 
 ## Cleanup
