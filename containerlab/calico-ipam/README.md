@@ -1,8 +1,8 @@
-# Calico IPAM Lab
+# Calico IP Address Management (IPAM)
 
 This lab demonstrates Calico's IP Address Management (IPAM) functionality in a 3-node Kind Kubernetes cluster.
 
-## Why IPAM is Required in Kubernetes
+## Why is IPAM Required
 
 In Kubernetes, every pod needs a unique IP address to communicate with other pods and services. IPAM (IP Address Management) is crucial because:
 
@@ -16,6 +16,7 @@ In Kubernetes, every pod needs a unique IP address to communicate with other pod
 
 <mark> Calico's IPAM provides efficient IP allocation by pre-allocating IP blocks to nodes, allowing for fast pod startup times while maintaining proper IP address management across the entire cluster. </mark>
 
+![Calico IPAM Architecture](../../images/calico-pod-ip.png)
 
 ## Lab Setup
 
@@ -63,9 +64,31 @@ The CIDR choice directly impacts cluster scalability and network policy effectiv
 
 After deployment, verify the cluster is ready:
 
-### 1. Check Calico Installation Status
+### 1. Inspect ContainerLab Topology
+```bash
+containerlab inspect -t calico-ipam.clab.yaml
+```
+**Output Example:**
+
+```
+╭───────────────────────────┬──────────────────────┬─────────┬───────────────────────╮
+│            Name           │      Kind/Image      │  State  │     IPv4/6 Address    │
+├───────────────────────────┼──────────────────────┼─────────┼───────────────────────┤
+│ calico-ipam-control-plane │ k8s-kind             │ running │ 172.18.0.3            │
+│                           │ kindest/node:v1.28.0 │         │ fc00:f853:ccd:e793::3 │
+├───────────────────────────┼──────────────────────┼─────────┼───────────────────────┤
+│ calico-ipam-worker        │ k8s-kind             │ running │ 172.18.0.2            │
+│                           │ kindest/node:v1.28.0 │         │ fc00:f853:ccd:e793::2 │
+├───────────────────────────┼──────────────────────┼─────────┼───────────────────────┤
+│ calico-ipam-worker2       │ k8s-kind             │ running │ 172.18.0.4            │
+│                           │ kindest/node:v1.28.0 │         │ fc00:f853:ccd:e793::4 │
+╰───────────────────────────┴──────────────────────┴─────────┴───────────────────────╯
+```
+
+### 2. Check Calico Installation Status
 
 ```bash
+export KUBECONFIG=/home/ubuntu/containerlab/calico-ipam/calico-ipam.kubeconfig
 kubectl get tigerastatus
 ```
 
@@ -85,7 +108,7 @@ calico      True        False         False      2m45s
 
 All components should show `AVAILABLE: True` and `DEGRADED: False` for a healthy installation.
 
-### 2. Check Node Status
+### 3. Check Node Status
 
 ```bash
 kubectl get nodes
@@ -128,9 +151,9 @@ calicoctl ipam show
 **Explanation:**
 - Shows the IP pool configuration from your custom-resources.yaml
 - **CIDR**: The overall pod network range (192.168.0.0/16)
-- **IPS TOTAL**: Total available IP addresses in the pool (65,536)
-- **IPS IN USE**: Currently allocated IP addresses to pods
-- **IPS FREE**: Available IP addresses for new pod allocation
+- **IPs TOTAL**: Total available IP addresses in the pool (65,536)
+- **IPs IN USE**: Currently allocated IP addresses to pods
+- **IPs FREE**: Available IP addresses for new pod allocation
 
 ### 2. Block Affinities List
 

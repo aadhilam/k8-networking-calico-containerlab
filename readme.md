@@ -1,6 +1,12 @@
-# Kubernetes networking with Calico and Container Lab. 
+# Kubernetes Networking with Calico and ContainerLab
 
-A toolkit for deploying and experimenting with containerized networking labs on AWS infrastructure.
+🎯 **Learn Kubernetes networking hands-on!** This repository provides a complete toolkit for deploying and experimenting with **Calico CNI**, **ContainerLab topologies**, and **Kubernetes networking concepts** on AWS infrastructure.
+
+Perfect for:
+- 🔬 **Network engineers** exploring Kubernetes networking
+- 📚 **Students** learning CNI implementations and BGP routing
+- 🛠️ **DevOps practitioners** understanding pod-to-pod communication
+- 🌐 **Security professionals** studying network policies and micro-segmentation
 
 ## Prerequisites
 
@@ -15,12 +21,13 @@ A toolkit for deploying and experimenting with containerized networking labs on 
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/container-labs.git
+   git clone https://github.com/aadhilam/container-labs.git
    cd container-labs
    ```
 
 2. Run the deployment script:
    ```
+   chmod +x deploy.sh
    ./deploy.sh
    ```
 
@@ -39,6 +46,10 @@ Once connected to the EC2 instance:
 - Kind is available for creating Kubernetes clusters
 - Docker is configured and ready to use
 - The ubuntu user has passwordless sudo access
+
+
+
+
 
 ## Infrastructure Details
 
@@ -72,6 +83,7 @@ container-labs/
 When you're done with the lab environment, you can clean everything up:
 
 ```
+chmod +x deploy.sh
 ./destroy.sh
 ```
 
@@ -84,3 +96,20 @@ This script will:
 - The EC2 instance public IP is saved to `ec2_ip.txt` for easy reference
 - The ubuntu user is configured with passwordless sudo and Docker group membership
 - Docker environment variables and completions are automatically loaded in the shell
+
+**Connection Requirements:**
+- Your SSH private key should be in `~/.ssh/id_rsa`
+- The security group allows SSH access (port 22) from your IP
+- The instance will have a public IP address for direct access
+
+**Troubleshooting Connection Issues:**
+```bash
+# If you get permission denied, ensure your key has correct permissions
+chmod 600 ~/.ssh/id_rsa
+
+# Test connection with verbose output
+ssh -v ubuntu@$(cat ec2_ip.txt)
+
+# Connect using specific key file
+ssh -i ~/.ssh/id_rsa ubuntu@$(cat ec2_ip.txt)
+```
