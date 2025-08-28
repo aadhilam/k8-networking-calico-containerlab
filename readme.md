@@ -21,7 +21,7 @@ Perfect for:
 
 1. Clone this repository:
    ```
-   git clone https://github.com/aadhilam/container-labs.git
+   git clone https://github.com/aadhilam/k8-networking-calico-containerlab.git
    cd container-labs
    ```
 
@@ -46,6 +46,10 @@ Once connected to the EC2 instance:
 - Kind is available for creating Kubernetes clusters
 - Docker is configured and ready to use
 - The ubuntu user has passwordless sudo access
+
+#### Lessons
+1. [Calico IP Address Management (IPAM) for Kubernetes](containerlab/calico-ipam/README.md)
+2. [Calico Pod Networking with Veth Pairs and Routing](containerlab/pod-network/README.md)
 
 
 

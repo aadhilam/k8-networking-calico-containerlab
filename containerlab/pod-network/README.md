@@ -2,6 +2,8 @@
 
 This lab demonstrates Calico's routing functionality in a 3-node Kind Kubernetes cluster.
 
+📖 **[Back to Main Labs](../../README.md)** | 🚀 **[Deploy Lab Environment](../../README.md#deploying-the-lab-environment)**
+
 ## Why Pod Networking is Required
 
 ![Pod Network Architecture](../../images/pod-network.png)
@@ -25,18 +27,28 @@ In Kubernetes, every pod needs a unique IP address and proper network connectivi
 When a pod is created, several Kubernetes components work together to establish network connectivity:
 
 • **kube-apiserver** receives pod creation request and assigns it to a node
+
 • **kubelet** detects the new pod and calls the **Container Runtime** (containerd/CRI-O)
+
 • **Container Runtime** creates pod's network namespace and calls **Calico CNI plugin**
+
 • **Calico CNI** requests an IP address from **Calico IPAM** plugin
+
 • **Calico IPAM** allocates an IP from the node's assigned IP block (e.g., 192.168.202.66/32)
+
 • **Calico CNI** creates a **veth pair**: one end stays on host (`cali123abc`), other goes to pod (`eth0`)
+
 • **Host routing** is updated with direct route to pod IP via the Calico interface
+
 • **Pod gets default route** via virtual gateway (169.254.1.1) for cluster communication
 
 **Result**: Pod has unique IP address and can communicate with other pods across the cluster through Calico's routing infrastructure.
 
 
 ## Lab Setup
+
+Make sure you have a EC2 instance or VM configured with containerlab. This repo provides a script to provision a preconfigured EC2 instance. 
+
 
 This lab consists of:
 - 3-node Kind cluster (1 control-plane, 2 workers)
