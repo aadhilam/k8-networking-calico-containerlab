@@ -11,13 +11,11 @@ In Kubernetes, every pod needs a unique IP address and proper network connectivi
 
 **1. Dynamic Pod Creation**: Pods are ephemeral and created/destroyed frequently. Each new pod requires network connectivity to communicate with other pods, services, and external resources across the cluster.
 
-**2. Cross-Node Communication**: Pods distributed across different nodes need seamless network connectivity to communicate directly without complex NAT configurations or port mappings.
+**2. Network Isolation**: Each pod gets its own network namespace, providing security isolation while still requiring connectivity mechanisms to bridge between pod and host network namespaces.
 
-**3. Network Isolation**: Each pod gets its own network namespace, providing security isolation while still requiring connectivity mechanisms to bridge between pod and host network namespaces.
+**3. Service Discovery**: Proper networking enables pods to reach Kubernetes services, DNS resolution, and communicate with other pods regardless of their physical location in the cluster.
 
-**4. Service Discovery**: Proper networking enables pods to reach Kubernetes services, DNS resolution, and communicate with other pods regardless of their physical location in the cluster.
-
-**5. Container-to-Container Communication**: Multiple containers within the same pod need to communicate via localhost, requiring proper network namespace sharing and interface management.
+**4. Container-to-Container Communication**: Multiple containers within the same pod need to communicate via localhost, requiring proper network namespace sharing and interface management.
 
 <mark>Calico provides comprehensive pod networking by creating virtual network interfaces, managing IP address allocation, establishing routing tables, and enabling secure pod-to-pod communication across the entire cluster infrastructure.</mark>
 
@@ -25,21 +23,33 @@ In Kubernetes, every pod needs a unique IP address and proper network connectivi
 
 When a pod is created, several Kubernetes components work together to establish network connectivity:
 
-• **kube-apiserver** receives pod creation request and assigns it to a node
+![Pod Interface Creation with CNI](../../images/pod-interface-cni.png)
 
-• **kubelet** detects the new pod and calls the **Container Runtime** (containerd/CRI-O)
+1. **kube-apiserver** receives pod creation request and assigns it to a node
 
-• **Container Runtime** creates pod's network namespace and calls **Calico CNI plugin**
+2. **kubelet** detects the new pod and calls the **Container Runtime** (containerd/CRI-O)
 
-• **Calico CNI** requests an IP address from **Calico IPAM** plugin
+3. **Container Runtime** creates pod's network namespace 
 
-• **Calico IPAM** allocates an IP from the node's assigned IP block (e.g., 192.168.202.66/32)
+4. **Container Runtime** calls **Calico CNI plugin**
 
-• **Calico CNI** creates a **veth pair**: one end stays on host (`cali123abc`), other goes to pod (`eth0`)
+5. **Calico CNI** requests an IP address from **Calico IPAM** plugin. **Calico IPAM** allocates an IP from the node's assigned IP block.
 
-• **Host routing** is updated with direct route to pod IP via the Calico interface
+6. **Calico CNI** creates a **veth pair**: one end stays on host (`cali123abc`), other goes to pod (`eth0`)
 
-• **Pod gets default route** via virtual gateway (169.254.1.1) for cluster communication
+7. **Calico CNI** updates the **Calico datastore** with WorkloadEndpoint information (pod IP, interface, node, labels)
+
+8. **Calico CNI** returns success response to **Container Runtime** with network configuration details
+
+9. **Container Runtime** reports successful network setup back to **kubelet**
+
+10. **kubelet** updates **kube-apiserver** with pod status (Running) and assigned IP address
+
+Additionally
+
+**Calico CNI** updates **host routing** with direct route to pod IP via the Calico interface. Also configures **pod's default route** via virtual gateway (169.254.1.1) for cluster communication
+
+
 
 **Result**: Pod has unique IP address and can communicate with other pods across the cluster through Calico's routing infrastructure.
 
@@ -91,18 +101,18 @@ containerlab inspect -t pod-network.clab.yaml
 
 **Output Example:**
 ```
-╭──────────────────────────────┬──────────────────────┬─────────┬───────────────────────╮
-│             Name             │      Kind/Image      │  State  │     IPv4/6 Address    │
-├──────────────────────────────┼──────────────────────┼─────────┼───────────────────────┤
-│ pod-network-control-plane    │ k8s-kind             │ running │ 172.18.0.3            │
-│                              │ kindest/node:v1.28.0 │         │ fc00:f853:ccd:e793::3 │
-├──────────────────────────────┼──────────────────────┼─────────┼───────────────────────┤
-│ pod-network-worker           │ k8s-kind             │ running │ 172.18.0.4            │
-│                              │ kindest/node:v1.28.0 │         │ fc00:f853:ccd:e793::4 │
-├──────────────────────────────┼──────────────────────┼─────────┼───────────────────────┤
-│ pod-network-worker2          │ k8s-kind             │ running │ 172.18.0.2            │
-│                              │ kindest/node:v1.28.0 │         │ fc00:f853:ccd:e793::2 │
-╰──────────────────────────────┴──────────────────────┴─────────┴───────────────────────╯
+╭───────────────────────────┬──────────────────────┬─────────┬───────────────────────╮
+│            Name           │      Kind/Image      │  State  │     IPv4/6 Address    │
+├───────────────────────────┼──────────────────────┼─────────┼───────────────────────┤
+│ pod-network-control-plane │ k8s-kind             │ running │ 172.18.0.4            │
+│                           │ kindest/node:v1.28.0 │         │ fc00:f853:ccd:e793::4 │
+├───────────────────────────┼──────────────────────┼─────────┼───────────────────────┤
+│ pod-network-worker        │ k8s-kind             │ running │ 172.18.0.3            │
+│                           │ kindest/node:v1.28.0 │         │ fc00:f853:ccd:e793::3 │
+├───────────────────────────┼──────────────────────┼─────────┼───────────────────────┤
+│ pod-network-worker2       │ k8s-kind             │ running │ 172.18.0.2            │
+│                           │ kindest/node:v1.28.0 │         │ fc00:f853:ccd:e793::2 │
+╰───────────────────────────┴──────────────────────┴─────────┴───────────────────────╯
 ```
 
 **Explanation:**
@@ -119,18 +129,18 @@ All nodes should show `State: running` for a healthy cluster setup.
 
 ```bash
 # Set kubeconfig to use the cluster
-export KUBECONFIG=$(pwd)/pod-network.kubeconfig
+export KUBECONFIG=/home/ubuntu/containerlab/pod-network/pod-network.kubeconfig
 
 # Check cluster nodes
 kubectl get nodes -o wide
 ```
 
-**Output Example:**
+**Output:**
 ```
-NAME                           STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
-pod-network-control-plane   Ready    control-plane   5m    v1.28.0   172.18.0.3    <none>        Ubuntu 22.04.3 LTS   5.15.0-56-generic   containerd://1.7.1
-pod-network-worker          Ready    <none>          5m    v1.28.0   172.18.0.4    <none>        Ubuntu 22.04.3 LTS   5.15.0-56-generic   containerd://1.7.1
-pod-network-worker2         Ready    <none>          5m    v1.28.0   172.18.0.2    <none>        Ubuntu 22.04.3 LTS   5.15.0-56-generic   containerd://1.7.1
+NAME                        STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION   CONTAINER-RUNTIME
+pod-network-control-plane   Ready    control-plane   11m   v1.28.0   172.18.0.4    <none>        Debian GNU/Linux 11 (bullseye)   6.2.0-1012-aws   containerd://1.7.1
+pod-network-worker          Ready    <none>          10m   v1.28.0   172.18.0.3    <none>        Debian GNU/Linux 11 (bullseye)   6.2.0-1012-aws   containerd://1.7.1
+pod-network-worker2         Ready    <none>          10m   v1.28.0   172.18.0.2    <none>        Debian GNU/Linux 11 (bullseye)   6.2.0-1012-aws   containerd://1.7.1
 ```
 
 All nodes should show `STATUS: Ready` indicating the Kubernetes cluster is operational and ready for workloads.
@@ -183,10 +193,10 @@ ip addr
     inet6 ::1/128 scope host 
        valid_lft forever preferred_lft forever
 2: eth0@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP group default qlen 1000
-    link/ether e2:4a:39:cc:ac:21 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 192.168.202.66/32 scope global eth0
+    link/ether 7e:08:91:93:9c:3b brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 192.168.146.66/32 scope global eth0
        valid_lft forever preferred_lft forever
-    inet6 fe80::e04a:39ff:fecc:ac21/64 scope link 
+    inet6 fe80::7c08:91ff:fe93:9c3b/64 scope link 
        valid_lft forever preferred_lft forever
 ```
 
@@ -194,7 +204,7 @@ ip addr
 - **Interface 1 (lo)**: Standard loopback interface for local communication
 - **Interface 2 (eth0@if6)**: Pod's primary network interface
   - **MTU 1450**: Reduced from standard 1500 to accommodate VXLAN overhead
-  - **inet 192.168.202.66/32**: Pod IP with /32 subnet (single host route)
+  - **inet 192.168.146.66/32**: Pod IP with /32 subnet (single host route)
   - **link-netnsid 0**: Connected to the host network namespace via veth pair
   - **@if6**: Indicates this is one end of a veth pair, connected to interface 6 on the host
 
@@ -209,7 +219,7 @@ ip link
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
 2: eth0@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP mode DEFAULT group default qlen 1000
-    link/ether e2:4a:39:cc:ac:21 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    link/ether 7e:08:91:93:9c:3b brd ff:ff:ff:ff:ff:ff link-netnsid 0
 ```
 
 **Explanation:**
@@ -235,6 +245,40 @@ default via 169.254.1.1 dev eth0
 - **scope link**: The next-hop is directly reachable on the same network segment
 - **Calico's Approach**: Uses a consistent next-hop IP across all pods, simplifying routing
 
+#### Check DNS Configuration
+
+```
+cat /etc/resolv.conf
+```
+**Output Example:**
+```
+search default.svc.cluster.local svc.cluster.local cluster.local ec2.internal
+nameserver 10.96.0.10
+options ndots:5
+```
+
+**Explanation:**
+- **search domains**: Automatic domain completion for name resolution
+  - **default.svc.cluster.local**: Services in the default namespace
+  - **svc.cluster.local**: Services in any namespace within the cluster
+  - **cluster.local**: Cluster-wide resources and general cluster domain
+  - **ec2.internal**: AWS EC2 internal domain (inherited from the host EC2 instance)
+- **nameserver 10.96.0.10**: CoreDNS service IP address for all DNS queries
+  - This is the cluster IP of the `kube-dns` service in the `kube-system` namespace
+  - All pod DNS queries are forwarded to CoreDNS for resolution
+- **options ndots:5**: Query behavior configuration
+  - Names with fewer than 5 dots are treated as relative names (searched with domain suffixes)
+  - Names with 5+ dots are treated as fully qualified domain names (FQDN)
+  - Example: `kubernetes` → searches `kubernetes.default.svc.cluster.local`
+  - Example: `google.com.` → queried directly as FQDN
+
+This DNS configuration enables Kubernetes service discovery, allowing pods to reach services by short names (e.g., `kubernetes`) or fully qualified names (e.g., `my-service.my-namespace.svc.cluster.local`).
+
+#### Exit from Pod
+```
+exit
+```
+
 ### 3. Examine the Host Routing Table
 
 First, identify which node the pod is running on and connect to that specific host:
@@ -246,12 +290,12 @@ kubectl get pods -n default -o wide
 
 **Output Example:**
 ```
-NAME        READY   STATUS    RESTARTS   AGE   IP               NODE                    NOMINATED NODE   READINESS GATES
-multitool   1/1     Running   0          50m   192.168.202.66   pod-network-worker   <none>           <none>
+NAME        READY   STATUS    RESTARTS   AGE   IP               NODE                 NOMINATED NODE   READINESS GATES
+multitool   1/1     Running   0          17m   192.168.146.66   pod-network-worker   <none>           <none>
 ```
 
 **Explanation:**
-- **IP**: Shows the pod's IP address (192.168.202.66)
+- **IP**: Shows the pod's IP address (192.168.146.66)
 - **NODE**: Indicates the pod is running on `pod-network-worker`
 - This tells us which node's routing table we need to examine
 
@@ -270,16 +314,16 @@ Now you're inside the Kubernetes worker node and can examine the host routing co
 
 ```bash
 # Find the route to the pod's IP address on the host
-ip route | grep 192.168.202.66
+ip route | grep 192.168.146.66
 ```
 
 **Output Example:**
 ```
-192.168.202.66 dev cali6d09fa47963 scope link 
+192.168.146.66 dev cali6d09fa47963 scope link 
 ```
 
 **Explanation:**
-- **192.168.202.66**: The pod's IP address from the pod's eth0 interface
+- **192.168.146.66**: The pod's IP address from the pod's eth0 interface
 - **dev cali6d09fa47963**: Traffic to this pod goes through the Calico veth interface
 - **scope link**: The destination is directly reachable on the local network segment
 
@@ -294,7 +338,7 @@ ip addr | grep cali6d09fa47963 -A3
 **Output Example:**
 ```
 6: cali6d09fa47963@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP group default qlen 1000
-    link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-c960770b-e6f3-3444-7ada-0bf85e94a716
+    link/ether ee:ee:ee:ee:ee:ee brd ff:ff:ff:ff:ff:ff link-netns cni-03a82789-389d-e76a-7035-f50cab457aa9
     inet6 fe80::ecee:eeff:feee:eeee/64 scope link 
        valid_lft forever preferred_lft forever
 ```
@@ -302,7 +346,7 @@ ip addr | grep cali6d09fa47963 -A3
 **Explanation:**
 - **cali6d09fa47963@if2**: Host-side veth interface paired with pod's eth0@if6
 - **Interface 6 ↔ Interface 2**: The @if6 in the pod corresponds to interface 6 on host, @if2 indicates it's paired with interface 2 in the pod's namespace
-- **link-netns cni-c960770b-e6f3-3444-7ada-0bf85e94a716**: References the pod's network namespace
+- **link-netns cni-03a82789-389d-e76a-7035-f50cab457aa9**: References the pod's network namespace
 - **MTU 1450**: Consistent with the pod's interface for VXLAN overhead
 - **No IPv4 Address**: The host-side veth interface doesn't need an IP address for L3 routing
 
@@ -313,6 +357,7 @@ ip addr | grep cali6d09fa47963 -A3
 **Direct Host Routes**: Each pod gets a specific /32 route on the host pointing to its dedicated Calico interface.
 
 **Namespace Isolation**: The link-netns reference shows how the pod's network namespace is isolated while remaining connected to the host.
+
 
 
 ### 4. Key Calico Routing Concepts
