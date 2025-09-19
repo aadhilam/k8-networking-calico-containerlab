@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: multitool-1
+  namespace: default
+  labels:
+    app: multitool-1
+spec:
+  selector:
+    matchLabels:
+      app: multitool-1
+  template:
+    metadata:
+      labels:
+        app: multitool-1
+    spec:
+      containers:
+      - name: multitool
+        image: praqma/network-multitool:latest
+        ports:
+        - containerPort: 80
+          name: http
+        - containerPort: 443
+          name: https
+        env:
+        - name: HTTP_PORT
+          value: "80"
+        - name: HTTPS_PORT
+          value: "443"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Multitool-1 pod started on node: $HOSTNAME"
+          echo "Available tools: curl, wget, nslookup, dig, ping, traceroute, netstat, ss, iperf3, tcpdump"
+          echo "Pod IP: $(hostname -i)"
+          echo "Node: $(cat /proc/sys/kernel/hostname)"
+          nginx -g "daemon off;"
+      restartPolicy: Always
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: multitool-1-service
+  namespace: default
+  labels:
+    app: multitool-1
+spec:
+  selector:
+    app: multitool-1
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 443
+    protocol: TCP
+  type: ClusterIP
