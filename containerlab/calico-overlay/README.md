@@ -210,9 +210,8 @@ Calico supports the following encapsulation types.
 
 ### 3. Verify Pod Routing
 
-<div style="background-color:rgb(252, 241, 168); border-left: 4px solid #34a853; padding: 10px;">
-  <strong>💡 Note:</strong> The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses and mac addresses as per your lab. 
-</div>
+> [!NOTE]
+> The outputs in this section will be different in your lab. When running the commands given here, replace IP addresses and MAC addresses with values from your environment.
 
 #### 3.1 Verify Pod Routing for Nodes in the Same Subnet
 
@@ -224,9 +223,8 @@ docker exec -it  k01-worker /bin/bash
 
 ##### command
 Retrieve routes for prefixes which are /26 mask.
-<div style="background-color: #fffbe6; border-left: 4px solid #fbbc04; padding: 10px; margin-bottom: 10px;">
-    <strong>🔎 Note:</strong> The <code>/26</code> mask is selected so that we can filter routes based on the IPAM block affinities.
-</div>
+> [!TIP]
+> Filter with the `/26` mask so the output lines up with the IPAM block affinities.
 
 ```
 ip route | grep /26
