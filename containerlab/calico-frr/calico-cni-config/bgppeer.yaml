@@ -1,0 +1,8 @@
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: bgppeer-frr
+spec:
+  peerIP: 10.10.10.1           # IP address of your FRR router
+  asNumber: 65001              # AS number of the FRR router
+  nodeSelector: all()

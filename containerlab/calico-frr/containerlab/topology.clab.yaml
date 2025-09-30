@@ -1,0 +1,42 @@
+name: calico-overlay
+topology:
+  nodes:
+    frr01:
+      kind: linux
+      image: frrouting/frr:v8.4.0
+      binds:
+        - r0/daemons:/etc/frr/daemons
+        - r0/frr.conf:/etc/frr/frr.conf
+      cmd: /usr/lib/frr/docker-start
+      exec:
+        - ip addr add 10.10.10.1/24 dev eth1
+        - ip addr add 10.10.10.1/24 dev eth2
+        - ip addr add 10.10.10.1/24 dev eth3
+
+    k01:
+      kind: k8s-kind
+      startup-config: k01-no-cni.yaml
+      extras:
+        k8s_kind:
+          deploy:
+            wait: 0s
+
+    k01-control-plane:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.100/24"
+
+    k01-worker:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.101/24"
+
+    k01-worker2:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.102/24"
+
+  links:
+    - endpoints: ["frr01:eth1", "k01-control-plane:eth1"]
+    - endpoints: ["frr01:eth2", "k01-worker:eth1"]  
+    - endpoints: ["frr01:eth3", "k01-worker2:eth1"]

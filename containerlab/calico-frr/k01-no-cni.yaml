@@ -1,0 +1,39 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+networking:
+  disableDefaultCNI: true        # Calico will be installed later
+  # Disable the default CNI plugin to allow for custom CNI installation
+  # This is necessary to prevent conflicts with Calico
+  podSubnet: "10.0.0.0/16"
+  serviceSubnet: "10.1.0.0/16"
+
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.100"
+
+  - role: worker
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.101"
+
+  - role: worker
+    extraPortMappings:
+      - containerPort: 30081
+        hostPort: 30081
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.102"
