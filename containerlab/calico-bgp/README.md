@@ -1,9 +1,9 @@
 # Calico BGP
 
-This lab demonstrates Calico's BGP (Border Gateway Protocol) functionality, showing how Calico can integrate with external network infrastructure by advertising pod routes via BGP to upstream routers and switches. BGP enables Calico to provide native routing capabilities without requiring overlay networks.
+This lab demonstrates Calico's BGP (Border Gateway Protocol) functionality. BGP peering with upstream networks can be used to advertise pod as well as service CIDRs.
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/calico-bgp`
 
 ## Lab
@@ -17,36 +17,22 @@ First, let's inspect the lab topology.
 containerlab inspect topology.clab.yaml 
 ```
 ##### output
-```
-╭────────────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────┬─────────┬───────────────────────╮
-│          Name          │                                          Kind/Image                                          │  State  │     IPv4/6 Address    │
-├────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┼─────────┼───────────────────────┤
-│ k01-control-plane      │ ext-container                                                                                │ running │ 172.18.0.2            │
-│                        │ kindest/node:v1.32.2                                                                        │         │ fc00:f853:ccd:e793::2 │
-├────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┼─────────┼───────────────────────┤
-│ k01-worker             │ ext-container                                                                                │ running │ 172.18.0.3            │
-│                        │ kindest/node:v1.32.2                                                                        │         │ fc00:f853:ccd:e793::3 │
-├────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┼─────────┼───────────────────────┤
-│ k01-worker2            │ ext-container                                                                                │ running │ 172.18.0.4            │
-│                        │ kindest/node:v1.32.2                                                                        │         │ fc00:f853:ccd:e793::4 │
-├────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┼─────────┼───────────────────────┤
-│ clab-calico-bgp-ceos01 │ arista_ceos                                                                                  │ running │ 172.20.20.2           │
-│                        │ ceos:4.34.0F                                                                                 │         │ 3fff:172:20:20::2     │
-├────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┼─────────┼───────────────────────┤
-│ k01-control-plane      │ k8s-kind                                                                                     │ running │ 172.18.0.2            │
-│                        │ kindest/node:v1.32.2                                                                        │         │ fc00:f853:ccd:e793::2 │
-├────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┼─────────┼───────────────────────┤
-│ k01-worker             │ k8s-kind                                                                                     │ running │ 172.18.0.3            │
-│                        │ kindest/node:v1.32.2                                                                        │         │ fc00:f853:ccd:e793::3 │
-├────────────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┼─────────┼───────────────────────┤
-│ k01-worker2            │ k8s-kind                                                                                     │ running │ 172.18.0.4            │
-│                        │ kindest/node:v1.32.2                                                                        │         │ fc00:f853:ccd:e793::4 │
-╰────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────┴─────────┴───────────────────────╯
-```
+| Name                   | Kind          | Image                | State   | IPv4 Address | IPv6 Address         |
+|------------------------|---------------|----------------------|---------|--------------|----------------------|
+| k01-control-plane      | ext-container | kindest/node:v1.32.2 | running | 172.18.0.2   | fc00:f853:ccd:e793::2 |
+| k01-worker             | ext-container | kindest/node:v1.32.2 | running | 172.18.0.3   | fc00:f853:ccd:e793::3 |
+| k01-worker2            | ext-container | kindest/node:v1.32.2 | running | 172.18.0.4   | fc00:f853:ccd:e793::4 |
+| clab-calico-bgp-ceos01 | arista_ceos   | ceos:4.34.0F         | running | 172.20.20.2  | 3fff:172:20:20::2 |
+| k01-control-plane      | k8s-kind      | kindest/node:v1.32.2 | running | 172.18.0.2   | fc00:f853:ccd:e793::2 |
+| k01-worker             | k8s-kind      | kindest/node:v1.32.2 | running | 172.18.0.3   | fc00:f853:ccd:e793::3 |
+| k01-worker2            | k8s-kind      | kindest/node:v1.32.2 | running | 172.18.0.4   | fc00:f853:ccd:e793::4 |
 
 Next, let's inspect the Kubernetes cluster.
 ```
 export KUBECONFIG=/home/ubuntu/containerlab/calico-bgp/k01.kubeconfig
+```
+```
+kubectl get nodes
 ```
 
 ```
@@ -234,15 +220,6 @@ This lab successfully demonstrates Calico's BGP integration capabilities with ex
 - **Calico Side**: AS 65010 with disabled node-to-node mesh, external BGP peering to switch
 - **Switch Side**: AS 65001 with dynamic peer group accepting connections from Calico nodes
 - **Peering**: Successful BGP sessions established between all Calico nodes and the cEOS switch
+.
 
-### Key Technologies
-- **ContainerLab**: Network topology orchestration with ext-container wrappers for Kind nodes
-- **Calico BGP**: Native routing without overlay networks, external route advertisement
-- **Arista cEOS**: Enterprise-grade network switch simulation with full BGP capabilities
-
-### Validation Results
-- BGP peer configurations successfully applied in Calico cluster
-- All BGP sessions established and maintained in "Estab" state
-- Message exchange confirming active BGP communication between peers
-
-This lab provides a foundation for understanding how Calico can integrate with real-world network infrastructure using standard BGP protocols, enabling scalable and efficient pod networking without overlay encapsulation.
+This lab provides a foundation for understanding how Calico can integrate with real-world network infrastructure using standard BGP protocols.
