@@ -336,6 +336,9 @@ This ECMP configuration ensures optimal traffic distribution and resilience for 
 We can now verify connectivity to the nginx service from the cEOS container.
 
 Run the following from the cEOS container.
+> [!Note]
+> <mark> The LB IP in your lab could be different from the IP shown blow<mark>
+
 
 ##### command
 ```
