@@ -149,9 +149,7 @@ All nodes should show `STATUS: Ready` indicating the Kubernetes cluster is opera
 
 Once the cluster is running, you can examine how Calico manages pod networking by inspecting the network interfaces and routing tables within pods.
 
-<div style="background-color:rgb(252, 241, 168); border-left: 4px solid #34a853; padding: 10px;">
-  <strong>💡 Note:</strong> The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab. 
-</div>
+> **💡 Note:** The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.
 
 
 ### 1. Verify Test Pod is Running
