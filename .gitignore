@@ -15,6 +15,7 @@ terraform.tfvars
 # Instance IP and inventory files (generated)
 ec2_ip.txt
 inventory.ini
+instructions.md
 
 # Large container images
 *.tar.xz

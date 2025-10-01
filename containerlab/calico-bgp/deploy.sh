@@ -68,6 +68,13 @@ echo "=== TigeraStatus final check ==="
 kubectl get tigerastatus
 echo "=== Calico installation completed successfully! ==="
 
+echo "=== Applying Calico BGP Configuration ==="
+kubectl apply -f calico-cni-config/bgpconfiguration.yaml || { echo "Failed to apply bgp configuration"; exit 1; }
+kubectl apply -f calico-cni-config/bgppeer.yaml || { echo "Failed to apply bgp peer"; exit 1; }
+
+echo "Kubernetes nodes:"
+kubectl get nodes -o wide
+
 echo ""
 echo "To use this cluster with kubectl, run:"
 echo "export KUBECONFIG=$(pwd)/k01.kubeconfig"
