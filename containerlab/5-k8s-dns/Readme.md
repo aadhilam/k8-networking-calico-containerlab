@@ -49,7 +49,7 @@ containerlab inspect k8s-dns.clab.yaml
 
 ```
 # Set kubeconfig to use the cluster
-export KUBECONFIG=/home/ubuntu/containerlab/k8s-dns/k8s-dns.kubeconfig
+export KUBECONFIG=/home/ubuntu/containerlab/5-k8s-dns/k8s-dns.kubeconfig
 
 # Check cluster nodes
 kubectl get pods -o wide

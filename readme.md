@@ -48,8 +48,9 @@ Once connected to the EC2 instance:
 - The ubuntu user has passwordless sudo access
 
 #### Lessons
-1. [Calico IP Address Management (IPAM) for Kubernetes](containerlab/calico-ipam/README.md)
-2. [Calico Pod Networking with Veth Pairs and Routing](containerlab/pod-network/README.md)
+1. [Calico IP Address Management (IPAM) for Kubernetes](containerlab/1-calico-ipam/)
+2. [Calico Pod Networking with Veth Pairs and Routing](containerlab/2-pod-network/)
+3. [Calico Pod Networking with Veth Pairs and Routing](containerlab/2-pod-network/)
 
 
 

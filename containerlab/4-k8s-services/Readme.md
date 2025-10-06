@@ -85,7 +85,7 @@ containerlab inspect -t k8s-services.clab.yaml
 
 ```
 # Set kubeconfig to use the cluster
-export KUBECONFIG=/home/ubuntu/containerlab/k8s-services/k8-services.kubeconfig
+export KUBECONFIG=/home/ubuntu/containerlab/4-k8s-services/k8-services.kubeconfig
 
 # Check cluster nodes
 kubectl get pods -o wide

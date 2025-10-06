@@ -1,0 +1,32 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: k01
+networking:
+  disableDefaultCNI: true
+  podSubnet: "192.168.0.0/16"
+  serviceSubnet: "10.96.0.0/16"
+
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.10"
+
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.11"
+
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.12"

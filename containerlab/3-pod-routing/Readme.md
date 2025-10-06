@@ -102,7 +102,7 @@ This output shows the ContainerLab topology status with three Kubernetes nodes r
 
 ```bash
 # Set kubeconfig to use the cluster
-export KUBECONFIG=/home/ubuntu/containerlab/pod-routing/pod-routing.kubeconfig
+export KUBECONFIG=/home/ubuntu/containerlab/3-pod-routing/pod-routing.kubeconfig
 
 # Check cluster nodes
 kubectl get nodes -o wide

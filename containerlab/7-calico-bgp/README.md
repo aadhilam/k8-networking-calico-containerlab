@@ -29,7 +29,7 @@ containerlab inspect topology.clab.yaml
 
 Next, let's inspect the Kubernetes cluster.
 ```
-export KUBECONFIG=/home/ubuntu/containerlab/calico-bgp/k01.kubeconfig
+export KUBECONFIG=/home/ubuntu/containerlab/7-calico-bgp/k01.kubeconfig
 ```
 ```
 kubectl get nodes

@@ -97,7 +97,7 @@ containerlab inspect -t calico-ipam.clab.yaml
 ### 2. Check Calico Installation Status
 
 ```bash
-export KUBECONFIG=/home/ubuntu/containerlab/calico-ipam/calico-ipam.kubeconfig
+export KUBECONFIG=/home/ubuntu/containerlab/1-calico-ipam/calico-ipam.kubeconfig
 kubectl get tigerastatus
 ```
 

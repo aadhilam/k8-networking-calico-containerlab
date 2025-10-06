@@ -129,7 +129,7 @@ All nodes should show `State: running` for a healthy cluster setup.
 
 ```bash
 # Set kubeconfig to use the cluster
-export KUBECONFIG=/home/ubuntu/containerlab/pod-network/pod-network.kubeconfig
+export KUBECONFIG=/home/ubuntu/containerlab/2-pod-network/pod-network.kubeconfig
 
 # Check cluster nodes
 kubectl get nodes -o wide

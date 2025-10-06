@@ -4,7 +4,7 @@ This lab demonstrates Calico's BGP (Border Gateway Protocol) functionality. BGP 
 
 ## Lab Setup
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
-The lab folder is - `/containerlab/calico-bgp-lb`
+The lab folder is - `/containerlab/8-calico-bgp-lb`
 
 ## Lab
 
@@ -29,7 +29,7 @@ containerlab inspect topology.clab.yaml
 
 Next, let's inspect the Kubernetes cluster.
 ```
-export KUBECONFIG=/home/ubuntu/containerlab/calico-bgp-lb/k01.kubeconfig
+export KUBECONFIG=/home/ubuntu/containerlab/8-calico-bgp-lb/k01.kubeconfig
 ```
 ```
 kubectl get nodes
@@ -41,6 +41,10 @@ k01-control-plane   Ready    control-plane   47m   v1.32.2
 k01-worker          Ready    <none>          46m   v1.32.2
 k01-worker2         Ready    <none>          46m   v1.32.2
 ```
+
+The objective of this lesson is to advertise the load balancer IPAM prefixes to the upstream router as shown in the diagram below.
+
+![BGP LB Intro](../../images/bgp-lb-intro.png)
 
 ### 2. Configure Load Balancer Type Service and BGP Advertisements
 

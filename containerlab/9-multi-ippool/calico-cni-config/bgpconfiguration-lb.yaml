@@ -1,0 +1,10 @@
+apiVersion: projectcalico.org/v3
+kind: BGPConfiguration
+metadata:
+  name: default
+spec:
+  logSeverityScreen: Info
+  asNumber: 65010
+  nodeToNodeMeshEnabled: false
+  serviceLoadBalancerIPs:
+  - cidr: 172.16.0.240/28

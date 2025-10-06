@@ -1,0 +1,8 @@
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: bgppeer-arista
+spec:
+  peerIP: 10.10.10.1           # IP address of your Arista switch
+  asNumber: 65001              # AS number of the Arista switch
+  nodeSelector: all()  
