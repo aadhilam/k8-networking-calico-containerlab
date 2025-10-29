@@ -50,7 +50,13 @@ Once connected to the EC2 instance:
 #### Lessons
 1. [Calico IP Address Management (IPAM) for Kubernetes](containerlab/1-calico-ipam/)
 2. [Calico Pod Networking with Veth Pairs and Routing](containerlab/2-pod-network/)
-3. [Calico Pod Networking with Veth Pairs and Routing](containerlab/2-pod-network/)
+3. [Calico Pod Routing Across Nodes](containerlab/3-pod-routing/)
+4. [Kubernetes Services - ClusterIP](containerlab/4-k8s-services/)
+5. [Kubernetes DNS](containerlab/5-k8s-dns/)
+6. [Calico Overlay Networks](containerlab/6-calico-overlay/)
+7. [Calico BGP](containerlab/7-calico-bgp/)
+8. [LoadBalancer Type Service and BGP Advertisements](containerlab/8-calico-bgp-lb/)
+9. [Calico Multiple IPPools](containerlab/9-multi-ippool/)
 
 
 
