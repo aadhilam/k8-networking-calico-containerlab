@@ -13,6 +13,7 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
             node-ip: "10.10.10.10"
+            node-labels: "vlan=10"
       - |
         kind: ClusterConfiguration
         apiServer:
@@ -29,6 +30,7 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
             node-ip: "10.10.10.11"
+            node-labels: "vlan=10"
 
   - role: worker
     kubeadmConfigPatches:
@@ -37,6 +39,7 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
             node-ip: "10.10.10.12"
+            node-labels: "vlan=10"
 
   - role: worker
     kubeadmConfigPatches:
@@ -45,3 +48,4 @@ nodes:
         nodeRegistration:
           kubeletExtraArgs:
             node-ip: "10.10.20.20"
+            node-labels: "vlan=20"

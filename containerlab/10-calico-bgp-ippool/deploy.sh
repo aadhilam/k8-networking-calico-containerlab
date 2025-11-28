@@ -3,8 +3,13 @@
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-echo "=== Importing Arista cEOS image ==="
-docker import ../cEOS64-lab-4.34.0F.tar.xz ceos:4.34.0F || { echo "Failed to import cEOS image"; exit 1; }
+echo "=== Checking for Arista cEOS image ==="
+if ! docker image inspect ceos:4.34.0F &>/dev/null; then
+    echo "Image not found. Importing Arista cEOS image..."
+    docker import ../cEOS64-lab-4.34.0F.tar.xz ceos:4.34.0F || { echo "Failed to import cEOS image"; exit 1; }
+else
+    echo "Arista cEOS image already exists. Skipping import."
+fi
 
 echo "=== Destroying existing ContainerLab topology ==="
 sudo containerlab destroy -t topology.clab.yaml || { echo "Failed to destroy existing topology"; exit 1; }
@@ -70,7 +75,8 @@ echo "=== Calico installation completed successfully! ==="
 
 echo "=== Applying Calico BGP Configuration ==="
 kubectl apply -f calico-cni-config/bgpconfiguration-lb.yaml || { echo "Failed to apply bgp configuration"; exit 1; }
-kubectl apply -f calico-cni-config/bgppeer.yaml || { echo "Failed to apply bgp peer"; exit 1; }
+kubectl apply -f calico-cni-config/bgppeer-vlan-10.yaml || { echo "Failed to apply bgp peer vlan 10"; exit 1; }
+kubectl apply -f calico-cni-config/bgppeer-vlan-20.yaml || { echo "Failed to apply bgp peer vlan 20"; exit 1; }
 
 echo "=== Applying Calico LB Configuration ==="
 kubectl apply -f k8s-manifests/lb-ippool.yaml || { echo "Failed to apply calico lb ipam configuration"; exit 1; }
