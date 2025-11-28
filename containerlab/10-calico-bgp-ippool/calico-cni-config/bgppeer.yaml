@@ -1,0 +1,8 @@
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+  name: bgppeer-arista
+spec:
+  peerIP: 10.10.10.1           # IP address of your Arista switch
+  asNumber: 65010             # AS number of the Arista switch
+  nodeSelector: kubernetes.io/hostname != 'k01-worker3'  

@@ -1,0 +1,49 @@
+name: calico-bgp-lb
+topology:
+  nodes:
+    ceos01:
+      kind: arista_ceos
+      image: ceos:4.34.0F
+      startup-config: startup-configs/ceos01-startup-config.config
+    k01:
+      kind: k8s-kind
+      startup-config: k01-no-cni.yaml
+      extras:
+        k8s_kind:
+          deploy:
+            wait: 0s
+
+    k01-control-plane:
+      kind: ext-container
+      exec:
+        - "ip link set dev eth1 mtu 9000"
+        - "ip addr add dev eth1 10.10.10.10/24"
+        - "ip route add 10.10.20.0/24 via 10.10.10.1 src 10.10.10.10"
+
+    k01-worker:
+      kind: ext-container
+      exec:
+        - "ip link set dev eth1 mtu 9000"
+        - "ip addr add dev eth1 10.10.10.11/24"
+        - "ip route add 10.10.20.0/24 via 10.10.10.1 src 10.10.10.11"
+
+
+    k01-worker2:
+      kind: ext-container
+      exec:
+        - "ip link set dev eth1 mtu 9000"
+        - "ip addr add dev eth1 10.10.10.12/24"
+        - "ip route add 10.10.20.0/24 via 10.10.10.1 src 10.10.10.12"
+
+    k01-worker3:
+      kind: ext-container
+      exec:
+        - "ip link set dev eth1 mtu 9000"
+        - "ip addr add dev eth1 10.10.20.20/24"
+        - "ip route add 10.10.10.0/24 via 10.10.20.1 src 10.10.20.20"
+
+  links:
+    - endpoints: ["ceos01:eth1", "k01-control-plane:eth1"]
+    - endpoints: ["ceos01:eth2", "k01-worker:eth1"]
+    - endpoints: ["ceos01:eth3", "k01-worker2:eth1"]
+    - endpoints: ["ceos01:eth4", "k01-worker3:eth1"]
