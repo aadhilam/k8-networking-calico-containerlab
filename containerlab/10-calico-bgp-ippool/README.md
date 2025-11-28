@@ -1,5 +1,6 @@
 # Calico Advertise IPPool Using BGP
-#TODO add a 2 sentence introduction to this lab
+
+This lab demonstrates how to advertise Calico IP pools to external networks using BGP. You will learn how to configure BGP peering between Calico nodes and an upstream router to make pod IP addresses routable outside the Kubernetes cluster.
 
 
 
