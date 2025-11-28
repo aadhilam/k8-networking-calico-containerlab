@@ -208,8 +208,8 @@ The BGP peer resources are used to create BGP peerings from the Kubernetes clust
 
 The BGP peer resources are used to create BGP peerings from the Kubernetes cluster to the upstream network. Let's verify the BGP peers for this lab.
 
-[BGP peers for control, worker1 and worker2 which are in subnet or VLAN 10](./calico-cni-config/bgppeer.yaml)
-[BGP peer for worker3 which is in VLAN 20](./calico-cni-config/bgppeer-w3.yaml)
+- [BGP peers for control, worker1 and worker2 which are in subnet or VLAN 10](./calico-cni-config/bgppeer.yaml)
+- [BGP peer for worker3 which is in VLAN 20](./calico-cni-config/bgppeer-w3.yaml)
 
 The reason that there are two BGP peers is because the top of rack switch or the BGP peer IP is different for the two VLANs that we have in this topology.
 
