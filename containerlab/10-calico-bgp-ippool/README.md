@@ -321,6 +321,9 @@ This BGP router configuration on the Arista cEOS device establishes it as a BGP 
 
 #### 3.4 Verfiy BGP Status in the ToR
 
+This section demonstrates how to verify that BGP sessions between the Calico nodes and the ToR (Top of Rack) router are established and working correctly. Using CLI commands on the cEOS router (ToR), you'll confirm that all Kubernetes nodes are peered via BGP, and that the expected routing information is being exchanged. This validation step ensures that pod IPs from the Calico IPPools are being advertised to the external network as intended.
+
+Let's first look at the established BGB peers in the ToR. 
 
 ##### command
 
@@ -346,10 +349,10 @@ Neighbor Status Codes: m - Under maintenance
 
 The BGP summary shows four established peering sessions with Calico nodes:
 
-- **10.10.10.10** - k01-control-plane (VLAN 10)
-- **10.10.10.11** - k01-worker (VLAN 10)
-- **10.10.10.12** - k01-worker2 (VLAN 10)
-- **10.10.20.20** - k01-worker3 (VLAN 20)
+- ``10.10.10.10`` - k01-control-plane (VLAN 10)
+- ``10.10.10.11`` - k01-worker (VLAN 10)
+- ``10.10.10.12`` - k01-worker2 (VLAN 10)
+- ``10.10.20.20`` - k01-worker3 (VLAN 20)
 
 Each peer has received 2 prefixes (PfxRcd) from the route reflector clients.
 
@@ -357,10 +360,15 @@ Each peer has received 2 prefixes (PfxRcd) from the route reflector clients.
 graph TB
   RR[Route Reflector<br/>cEOS ToR]
   
-  CP[k01-control-plane<br/>10.10.10.10<br/>RR Client]
-  W1[k01-worker<br/>10.10.10.11<br/>RR Client]
-  W2[k01-worker2<br/>10.10.10.12<br/>RR Client]
-  W3[k01-worker3<br/>10.10.20.20<br/>RR Client]
+  subgraph VLAN10["VLAN 10"]
+    CP[k01-control-plane<br/>10.10.10.10<br/>RR Client]
+    W1[k01-worker<br/>10.10.10.11<br/>RR Client]
+    W2[k01-worker2<br/>10.10.10.12<br/>RR Client]
+  end
+  
+  subgraph VLAN20["VLAN 20"]
+    W3[k01-worker3<br/>10.10.20.20<br/>RR Client]
+  end
   
   RR <-.->|iBGP<br/>VLAN 10| CP
   RR <-.->|iBGP<br/>VLAN 10| W1
@@ -374,6 +382,12 @@ graph TB
   style W3 fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
 ```
 
+Next, let's look at the routing table of the ToR. 
+
+##### command
+```
+show ip route
+```
 
 ##### output
 
@@ -405,13 +419,12 @@ Gateway of last resort is not set
 
 ##### Explanation
 
-The routing table shows that the cEOS router has learned the following routes via BGP:
+The routing table shows that the ToR has learned the following pod routes via BGP:
 
-- **172.16.0.240/28** - LoadBalancer IP pool via k01-control-plane (10.10.10.10)
-- **192.168.42.192/26** - Pod CIDR block for k01-worker (10.10.10.11)
-- **192.168.46.128/26** - Pod CIDR block for k01-worker3 (10.10.20.20)
-- **192.168.69.0/26** - Pod CIDR block for k01-control-plane (10.10.10.10)
-- **192.168.88.192/26** - Pod CIDR block for k01-worker2 (10.10.10.12)
+- `192.168.42.192/26` - Pod CIDR block for k01-worker (10.10.10.11)
+- `192.168.46.128/26` - Pod CIDR block for k01-worker3 (10.10.20.20)
+- `192.168.69.0/26` - Pod CIDR block for k01-control-plane (10.10.10.10)
+- `192.168.88.192/26` - Pod CIDR block for k01-worker2 (10.10.10.12)
 
 The correlation between BGP routes and IPAM block affinities:
 
@@ -420,7 +433,6 @@ k01-control-plane-192-168-69-0-26   2025-11-28T23:32:10Z
 k01-worker-192-168-42-192-26        2025-11-28T23:32:11Z
 k01-worker2-192-168-88-192-26       2025-11-28T23:32:07Z
 k01-worker3-192-168-46-128-26       2025-11-28T23:32:11Z
-load-balancer-172-16-0-240-28       2025-11-28T23:33:01Z
 ```
 
 ```mermaid
@@ -451,10 +463,11 @@ graph TB
     B4[k01-worker3<br/>192-168-46-128-26]
   end
   
-  TOR <--- R1
-  TOR <--- R2
-  TOR <--- R3
-  TOR <--- R4
+
+  TOR .-|advertised to|R1
+  TOR .-|advertised to| R2
+  TOR .-|advertised to| R3
+  TOR .-|advertised to| R4
      
     R1 ---|advertised by| CP
     R2 ---|advertised by| W1
@@ -466,28 +479,23 @@ graph TB
     W2 -.maps to.-> B3
     W3 -.maps to.-> B4
   
-  style TOR fill:#f96,stroke:#333,stroke-width:3px
-  style CP fill:#9cf,stroke:#333,stroke-width:2px
-  style W1 fill:#9cf,stroke:#333,stroke-width:2px
-  style W2 fill:#9cf,stroke:#333,stroke-width:2px
-  style W3 fill:#9cf,stroke:#333,stroke-width:2px
-  style VLAN10 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-  style VLAN20 fill:#fff3e0,stroke:#e65100,stroke-width:2px
-  style BGP_Routes fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-  style IPAM fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+  style TOR fill:#f96,stroke:#333,stroke-width:3px,rx:10,ry:10
+  style CP fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
+  style W1 fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
+  style W2 fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
+  style W3 fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
+  style VLAN10 fill:#e1f5ff,stroke:#01579b,stroke-width:2px,rx:10,ry:10
+  style VLAN20 fill:#fff3e0,stroke:#e65100,stroke-width:2px,rx:10,ry:10
+  style BGP_Routes fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,rx:10,ry:10
+  style IPAM fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,rx:10,ry:10
 ```
 
 Each Kubernetes node advertises its allocated IPAM block to the ToR router via BGP, making pod IPs routable from the external network.
 
 
-From the cEOS CLI, you can verify the BGP configuration and peering status.
 
 
 
-
-
-
-docker exec -it clab-calico-bgp-lb-ceos01 Cli
 
 docker exec -it k01-control-plane  /bin/bash
 docker exec -it k01-worker3  /bin/bash
