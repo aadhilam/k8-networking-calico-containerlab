@@ -375,7 +375,108 @@ graph TB
 ```
 
 
+##### output
 
+```bash
+ceos#show ip route
+
+VRF: default
+## truncated response. 
+
+Gateway of last resort is not set
+
+ C        10.10.10.0/24
+       directly connected, Vlan10
+ C        10.10.20.0/24
+       directly connected, Vlan20
+ B I      172.16.0.240/28 [200/0]
+       via 10.10.10.10, Vlan10
+ C        172.20.20.0/24
+       directly connected, Management0
+ B I      192.168.42.192/26 [200/0]
+       via 10.10.10.11, Vlan10
+ B I      192.168.46.128/26 [200/0]
+       via 10.10.20.20, Vlan20
+ B I      192.168.69.0/26 [200/0]
+       via 10.10.10.10, Vlan10
+ B I      192.168.88.192/26 [200/0]
+       via 10.10.10.12, Vlan10
+```
+
+##### Explanation
+
+The routing table shows that the cEOS router has learned the following routes via BGP:
+
+- **172.16.0.240/28** - LoadBalancer IP pool via k01-control-plane (10.10.10.10)
+- **192.168.42.192/26** - Pod CIDR block for k01-worker (10.10.10.11)
+- **192.168.46.128/26** - Pod CIDR block for k01-worker3 (10.10.20.20)
+- **192.168.69.0/26** - Pod CIDR block for k01-control-plane (10.10.10.10)
+- **192.168.88.192/26** - Pod CIDR block for k01-worker2 (10.10.10.12)
+
+The correlation between BGP routes and IPAM block affinities:
+
+```yaml
+k01-control-plane-192-168-69-0-26   2025-11-28T23:32:10Z
+k01-worker-192-168-42-192-26        2025-11-28T23:32:11Z
+k01-worker2-192-168-88-192-26       2025-11-28T23:32:07Z
+k01-worker3-192-168-46-128-26       2025-11-28T23:32:11Z
+load-balancer-172-16-0-240-28       2025-11-28T23:33:01Z
+```
+
+```mermaid
+graph TB
+  TOR[cEOS ToR Router<br/>BGP Route Reflector<br/>AS 65010]
+  
+  subgraph BGP_Routes["BGP Routes in ToR"]
+    R1[192.168.69.0/26]
+    R2[192.168.42.192/26]
+    R3[192.168.88.192/26]
+    R4[192.168.46.128/26]
+  end
+  
+  subgraph VLAN10["VLAN 10 (10.10.10.0/24)"]
+    CP[k01-control-plane<br/>10.10.10.10]
+    W1[k01-worker<br/>10.10.10.11]
+    W2[k01-worker2<br/>10.10.10.12]
+  end
+  
+  subgraph VLAN20["VLAN 20 (10.10.20.0/24)"]
+    W3[k01-worker3<br/>10.10.20.20]
+  end
+  
+  subgraph IPAM["IPAM Block Affinities"]
+    B1[k01-control-plane<br/>192-168-69-0-26]
+    B2[k01-worker<br/>192-168-42-192-26]
+    B3[k01-worker2<br/>192-168-88-192-26]
+    B4[k01-worker3<br/>192-168-46-128-26]
+  end
+  TOR --- R1
+  TOR --- R2
+  TOR --- R3
+  TOR --- R4
+     
+    R1 <---|advertised by| CP
+    R2 <---|advertised by| W1
+    R3 <---|advertised by| W2
+    R4 <---|advertised by| W3
+
+    CP -.maps to.-> B1
+    W1 -.maps to.-> B2
+    W2 -.maps to.-> B3
+    W3 -.maps to.-> B4
+  
+  style TOR fill:#f96,stroke:#333,stroke-width:3px
+  style CP fill:#9cf,stroke:#333,stroke-width:2px
+  style W1 fill:#9cf,stroke:#333,stroke-width:2px
+  style W2 fill:#9cf,stroke:#333,stroke-width:2px
+  style W3 fill:#9cf,stroke:#333,stroke-width:2px
+  style VLAN10 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+  style VLAN20 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+  style BGP_Routes fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+  style IPAM fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+```
+
+Each Kubernetes node advertises its allocated IPAM block to the ToR router via BGP, making pod IPs routable from the external network.
 
 
 From the cEOS CLI, you can verify the BGP configuration and peering status.
