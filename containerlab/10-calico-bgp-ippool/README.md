@@ -450,15 +450,16 @@ graph TB
     B3[k01-worker2<br/>192-168-88-192-26]
     B4[k01-worker3<br/>192-168-46-128-26]
   end
-  TOR --- R1
-  TOR --- R2
-  TOR --- R3
-  TOR --- R4
+  
+  TOR <--- R1
+  TOR <--- R2
+  TOR <--- R3
+  TOR <--- R4
      
-    R1 <---|advertised by| CP
-    R2 <---|advertised by| W1
-    R3 <---|advertised by| W2
-    R4 <---|advertised by| W3
+    R1 ---|advertised by| CP
+    R2 ---|advertised by| W1
+    R3 ---|advertised by| W2
+    R4 ---|advertised by| W3
 
     CP -.maps to.-> B1
     W1 -.maps to.-> B2
