@@ -48,15 +48,16 @@ Once connected to the EC2 instance:
 - The ubuntu user has passwordless sudo access
 
 #### Lessons
-1. [Calico IP Address Management (IPAM) for Kubernetes](containerlab/1-calico-ipam/)
-2. [Calico Pod Networking with Veth Pairs and Routing](containerlab/2-pod-network/)
-3. [Calico Pod Routing Across Nodes](containerlab/3-pod-routing/)
-4. [Kubernetes Services - ClusterIP](containerlab/4-k8s-services/)
-5. [Kubernetes DNS](containerlab/5-k8s-dns/)
-6. [Calico Overlay Networks](containerlab/6-calico-overlay/)
-7. [Calico BGP](containerlab/7-calico-bgp/)
-8. [LoadBalancer Type Service and BGP Advertisements](containerlab/8-calico-bgp-lb/)
-9. [Calico Multiple IPPools](containerlab/9-multi-ippool/)
+1. [Calico IP Address Management (IPAM) for Kubernetes](containerlab/01-calico-ipam/)
+2. [Calico Pod Networking with Veth Pairs and Routing](containerlab/02-pod-network/)
+3. [Calico Pod Routing Across Nodes](containerlab/03-pod-routing/)
+4. [Kubernetes Services - ClusterIP](containerlab/04-k8s-services/)
+5. [Kubernetes DNS](containerlab/05-k8s-dns/)
+6. [Calico Overlay Networks](containerlab/06-calico-overlay/)
+7. [Calico BGP](containerlab/07-calico-bgp/)
+8. [LoadBalancer Type Service and BGP Advertisements](containerlab/08-calico-bgp-lb/)
+9. [Calico Multiple IPPools](containerlab/09-multi-ippool/)
+10. [Calico Advertise IPPool Using BGP](containerlab/10-calico-bgp-ippool/)
 
 
 
