@@ -4,7 +4,7 @@ This lab demonstrates how to advertise Calico IP pools to external networks usin
 
 ## Lab Setup
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
-The lab folder is - `/containerlab/10-multi-ippool`
+The lab folder is - `/containerlab/10-calico-bgp-ippool`
 
 
 
@@ -590,6 +590,17 @@ kubectl get pod -o json --field-selector spec.nodeName=k01-worker3 | jq -r '.ite
 192.168.46.129
 ```
 
+Let's also retrieve the IP address of the `multitool-1` pod in `k01-worker`
+
+##### command
+```bash
+kubectl get pod -o json --field-selector spec.nodeName=k01-worker | jq -r '.items[] | select(.metadata.name | test("multitool-1")) | .status.podIP'
+```
+##### output
+```
+192.168.42.193
+```
+
 
 Next, let's `exec` into the `multitool-1` pod in node k01-worker
 
@@ -628,7 +639,7 @@ flowchart TD
     direction LR
     subgraph VLAN10["VLAN 10"]
       W1[k01-worker<br/>10.10.10.11<br/>Pod CIDR: 192.168.42.192/26]
-      POD1[multitool-1 pod<br/>Source]
+      POD1[multitool-1 pod<br/>Source 192.168.42.193]
     end
 
     subgraph VLAN20["VLAN 20"]
@@ -661,7 +672,7 @@ The following diagram illustrates the step-by-step journey of an ICMP packet fro
 ```mermaid
 sequenceDiagram
     autonumber
-    participant POD1 as multitool-1 Pod<br/>(k01-worker)
+    participant POD1 as multitool-1 Pod<br/>(k01-worker)<br/>192.168.42.193
     participant W1 as k01-worker<br/>10.10.10.11
     participant TOR as ToR Router<br/>10.10.10.1
     participant W3 as k01-worker3<br/>10.10.20.20
@@ -695,6 +706,55 @@ sequenceDiagram
 
 The diagram above illustrates the cross-subnet pod-to-pod connectivity path. Traffic from the `multitool-1` pod on `k01-worker` (VLAN 10) is routed through the ToR (acting as a BGP route reflector), which forwards it to `k01-worker3` (VLAN 20) based on the BGP-learned routes. The reply follows the reverse path, demonstrating successful native IP routing without overlay encapsulation.
 
+Next, let's `exec` into the ToR and ping the two `multitool-1` pod IPs 
 
+##### command
+```bash
+docker exec -it clab-calico-bgp-lb-ceos01 Cli
+ping 192.168.42.193
 
+```
 
+##### output
+
+```bash
+ceos>ping 192.168.42.193
+PING 192.168.42.193 (192.168.42.193) 72(100) bytes of data.
+80 bytes from 192.168.42.193: icmp_seq=1 ttl=63 time=4.02 ms
+80 bytes from 192.168.42.193: icmp_seq=2 ttl=63 time=3.24 ms
+80 bytes from 192.168.42.193: icmp_seq=3 ttl=63 time=0.711 ms
+80 bytes from 192.168.42.193: icmp_seq=4 ttl=63 time=0.827 ms
+80 bytes from 192.168.42.193: icmp_seq=5 ttl=63 time=0.784 ms
+
+--- 192.168.42.193 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 15ms
+rtt min/avg/max/mdev = 0.711/1.917/4.020/1.421 ms, ipg/ewma 3.783/2.884 ms
+```
+
+##### output
+
+```bash
+ping 192.168.46.129
+PING 192.168.46.129 (192.168.46.129) 72(100) bytes of data.
+80 bytes from 192.168.46.129: icmp_seq=1 ttl=63 time=1.06 ms
+80 bytes from 192.168.46.129: icmp_seq=2 ttl=63 time=0.629 ms
+80 bytes from 192.168.46.129: icmp_seq=3 ttl=63 time=0.480 ms
+80 bytes from 192.168.46.129: icmp_seq=4 ttl=63 time=0.534 ms
+80 bytes from 192.168.46.129: icmp_seq=5 ttl=63 time=0.859 ms
+
+--- 192.168.46.129 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4ms
+rtt min/avg/max/mdev = 0.480/0.713/1.064/0.218 ms, ipg/ewma 1.034/0.888 ms
+```
+
+##### explanation
+
+The outputs above confirm that the pod IPs are now reachable by the external network as well. 
+
+## Summary
+
+Here's a quick recap of what you just accomplished in this lab:
+
+- You just advertised your Calico pod CIDRs via BGP through the ToR route reflector, so your pods are reachable without overlays or NAT.
+- You walked through the IPPool, IPAM, BGPConfiguration, and BGPPeer resources to confirm they match the topology you built.
+- You proved the BGP sessions and learned routes on both the nodes and the ToR, so pods can talk across subnets and from outside the cluster.
