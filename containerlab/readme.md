@@ -2,7 +2,7 @@
 This section explains how you can deploy the individual labs for this learning series. 
 
 You need an EC2 instance or VM configured with containerlab. This repo provides a script to provision an EC2 instance with containerlab and other tools. 
-📖 **[Back to Main Labs](../../README.md)** | 🚀 **[Deploy Lab Environment](../../README.md#deploying-the-lab-environment)**
+📖 **[Back to Main Labs](../readme.md)** | 🚀 **[Deploy Lab Environment](../readme.md#deploying-the-lab-environment)**
 
 If you are using your own VM with containerlab, make sure you have cloned the repo (link below) to this machine prior to going through the rest of the steps in this guide. You will find a folder for each lesson and a `deploy.sh` script in each folder that will provision a lab for that lesson.  
 
