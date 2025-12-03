@@ -492,15 +492,11 @@ graph TB
 
 Each Kubernetes node advertises its allocated IPAM block to the ToR router via BGP, making pod IPs routable from the external network.
 
+#### 3.5 Verfiy BGP Status for a Node
 
+Apply the following manifest
 
-
-
-
-docker exec -it k01-control-plane  /bin/bash
-docker exec -it k01-worker3  /bin/bash
-
-
+```yaml
 kubectl apply -f -<<EOF
 apiVersion: projectcalico.org/v3
 kind: CalicoNodeStatus
@@ -514,23 +510,191 @@ spec:
   node: k01-control-plane
   updatePeriodSeconds: 10
 EOF
+```
+
+##### command
+
+```bash
+kubectl get caliconodestatus k01-control-plane -o json | jq '.status.routes.routesV4[] | select(.learnedFrom.sourceType == "BGPPeer" and .type == "FIB")'
+```
+
+##### output
+```yaml
+{
+  "destination": "192.168.88.192/26",
+  "gateway": "10.10.10.1",
+  "interface": "eth1",
+  "learnedFrom": {
+    "peerIP": "10.10.10.1",
+    "sourceType": "BGPPeer"
+  },
+  "type": "FIB"
+}
+{
+  "destination": "192.168.42.192/26",
+  "gateway": "10.10.10.1",
+  "interface": "eth1",
+  "learnedFrom": {
+    "peerIP": "10.10.10.1",
+    "sourceType": "BGPPeer"
+  },
+  "type": "FIB"
+}
+{
+  "destination": "192.168.46.128/26",
+  "gateway": "10.10.10.1",
+  "interface": "eth1",
+  "learnedFrom": {
+    "peerIP": "10.10.10.1",
+    "sourceType": "BGPPeer"
+  },
+  "type": "FIB"
+```
+
+##### explanation
+The output above shows the IPv4 routes that the Calico node `k01-control-plane` has learned via BGP from the peer at `10.10.10.1` (the ToR router). Each object details a route including the destination prefix (e.g., `192.168.88.192/26`), the gateway IP, and the interface used to reach the gateway. The `learnedFrom.sourceType` is `"BGPPeer"`, indicating these routes were received via a BGP peering session, and `type` is `"FIB"`, meaning these routes are programmed into the node's Forwarding Information Base (FIB) and are being used for actual packet forwarding.
+
+This output confirms that the node is successfully receiving external routes, and that BGP-based pod network advertisement is functioning as expected.
+
+You can also confirm this by looking at the nodes routing table. 
+
+First, `exec` into the control plane node. 
+```bash
+docker exec -it  k01-control-plane /bin/bash 
+```
+
+Next, let's grep for routes learned through BGP. 
+
+```bash
+root@k01-control-plane:/# ip route | grep bird
+192.168.42.192/26 via 10.10.10.1 dev eth1 proto bird 
+192.168.46.128/26 via 10.10.10.1 dev eth1 proto bird 
+blackhole 192.168.69.0/26 proto bird 
+192.168.88.192/26 via 10.10.10.1 dev eth1 proto bird 
+```
 
 
-kubectl apply -f -<<EOF
-apiVersion: projectcalico.org/v3
-kind: CalicoNodeStatus
-metadata:
-  name: k01-control-plane
-spec:
-  classes:
-    - Agent
-    - BGP
-    - Routes
-  node: k01-control-plane
-  updatePeriodSeconds: 10
-EOF
 
 
- kubectl get caliconodestatus k01-control-plane -o yaml
+### Testing Connectivity
 
-[customResourcesDefinition]: ./calico-cni-config/custom-resources.yaml
+Next, let's perform some connectivity testing. First retrieve the IP address of the `multitool-1` pod in `k01-worker3`. 
+
+
+##### command
+```bash
+kubectl get pod -o json --field-selector spec.nodeName=k01-worker3 | jq -r '.items[] | select(.metadata.name | test("multitool-1")) | .status.podIP'
+```
+##### output
+```
+192.168.46.129
+```
+
+
+Next, let's `exec` into the `multitool-1` pod in node k01-worker
+
+##### command
+```bash
+kubectl exec -it $(kubectl get pods -o wide --field-selector spec.nodeName=k01-worker | awk '/multitool-1/ {print $1}') -- /bin/sh
+
+ping 192.168.46.129
+```
+##### output
+```
+PING 192.168.46.129 (192.168.46.129) 56(84) bytes of data.
+64 bytes from 192.168.46.129: icmp_seq=1 ttl=61 time=1.97 ms
+64 bytes from 192.168.46.129: icmp_seq=2 ttl=61 time=1.49 ms
+64 bytes from 192.168.46.129: icmp_seq=3 ttl=61 time=1.56 ms
+64 bytes from 192.168.46.129: icmp_seq=4 ttl=61 time=1.42 ms
+64 bytes from 192.168.46.129: icmp_seq=5 ttl=61 time=1.56 ms
+64 bytes from 192.168.46.129: icmp_seq=6 ttl=61 time=1.52 ms
+64 bytes from 192.168.46.129: icmp_seq=7 ttl=61 time=1.77 ms
+64 bytes from 192.168.46.129: icmp_seq=8 ttl=61 time=1.79 ms
+```
+
+##### explanation
+
+The output above demonstrates successful connectivity between two pods (`multitool-1`) running on separate Kubernetes nodes (`k01-worker` and `k01-worker3`), each located in different subnets. The first command retrieves the pod IP address on `k01-worker3`, and the second command execs into the pod on `k01-worker` to ping that IP.
+
+The successful ping replies confirm that Calico's BGP configuration is correctly advertising pod network routes between subnets. Each node's pod CIDR block is announced to the upstream router (ToR) via BGP, and the ToR redistributes these routes back to all nodes. As a result, packets between pods in different subnets are routed efficiently, without NAT or overlay tunneling, using native IP routing. This validates that cross-subnet pod-to-pod connectivity is working as intended in the lab setup.
+
+```mermaid
+flowchart TD
+  subgraph TOR["cEOS ToR Router - Route Reflector"]
+    RR[BGP Route Reflector<br/>10.10.10.1 / 10.10.20.1]
+  end
+
+  subgraph Workers[" "]
+    direction LR
+    subgraph VLAN10["VLAN 10"]
+      W1[k01-worker<br/>10.10.10.11<br/>Pod CIDR: 192.168.42.192/26]
+      POD1[multitool-1 pod<br/>Source]
+    end
+
+    subgraph VLAN20["VLAN 20"]
+      W3[k01-worker3<br/>10.10.20.20<br/>Pod CIDR: 192.168.46.128/26]
+      POD2[multitool-1 pod<br/>192.168.46.129<br/>Destination]
+    end
+  end
+
+  RR <-->|iBGP| W1
+  RR <-->|iBGP| W3
+  W1 --- POD1
+  W3 --- POD2
+  POD1 -. "ping 192.168.46.129" .-> POD2
+
+  style TOR fill:#f96,stroke:#333,stroke-width:2px
+  style Workers fill:none,stroke:none
+  style VLAN10 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+  style VLAN20 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+  style POD1 fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+  style POD2 fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+  style W1 fill:#9cf,stroke:#333,stroke-width:2px
+  style W3 fill:#9cf,stroke:#333,stroke-width:2px
+  style RR fill:#ffcc80,stroke:#333,stroke-width:2px
+```
+
+#### Packet Flow: Life of a Ping
+
+The following diagram illustrates the step-by-step journey of an ICMP packet from the source pod on `k01-worker` (VLAN 10) to the destination pod on `k01-worker3` (VLAN 20):
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant POD1 as multitool-1 Pod<br/>(k01-worker)
+    participant W1 as k01-worker<br/>10.10.10.11
+    participant TOR as ToR Router<br/>10.10.10.1
+    participant W3 as k01-worker3<br/>10.10.20.20
+    participant POD2 as multitool-1 Pod<br/>(k01-worker3)<br/>192.168.46.129
+
+    Note over POD1,POD2: ICMP Echo Request
+    POD1->>W1: Packet leaves pod via veth<br/>Dest: 192.168.46.129
+    Note over W1: Route lookup: 192.168.46.128/26<br/>via 10.10.10.1 (learned from BGP)
+    W1->>TOR: Forward to ToR gateway<br/>via eth1 (VLAN 10)
+    Note over TOR: Route lookup: 192.168.46.128/26<br/>next-hop 10.10.20.20
+    TOR->>W3: Forward to k01-worker3<br/>via VLAN 20
+    Note over W3: Local route: 192.168.46.128/26<br/>Destination pod is local
+    W3->>POD2: Deliver to pod via veth
+
+    Note over POD1,POD2: ICMP Echo Reply
+    POD2-->>W3: Reply leaves pod via veth<br/>Dest: 192.168.42.x (source pod)
+    Note over W3: Route lookup: 192.168.42.192/26<br/>via 10.10.20.1 (learned from BGP)
+    W3-->>TOR: Forward to ToR gateway<br/>via eth1 (VLAN 20)
+    Note over TOR: Route lookup: 192.168.42.192/26<br/>next-hop 10.10.10.11
+    TOR-->>W1: Forward to k01-worker<br/>via VLAN 10
+    Note over W1: Local route: 192.168.42.192/26<br/>Destination pod is local
+    W1-->>POD1: Deliver reply to pod via veth
+```
+
+**Key observations:**
+
+1. **No overlay/encapsulation**: Packets are routed using native IP routing, not tunneled
+2. **BGP-learned routes**: Each node learns routes to other pod CIDRs via the ToR route reflector
+3. **ToR as transit**: The ToR router forwards traffic between VLANs using BGP-learned routes
+4. **TTL=61**: The ping output shows TTL=61, indicating 3 hops (64-3=61): Worker → ToR → Worker3 → Pod
+
+The diagram above illustrates the cross-subnet pod-to-pod connectivity path. Traffic from the `multitool-1` pod on `k01-worker` (VLAN 10) is routed through the ToR (acting as a BGP route reflector), which forwards it to `k01-worker3` (VLAN 20) based on the BGP-learned routes. The reply follows the reverse path, demonstrating successful native IP routing without overlay encapsulation.
+
+
+
+
