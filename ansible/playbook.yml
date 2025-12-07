@@ -12,7 +12,8 @@
         - iproute2
         - bridge-utils
         - tcpdump
-        - jq  # Added jq installation
+        - jq
+        - tree
 
     - name: Install containerlab
       shell: |
@@ -34,6 +35,11 @@
         curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
         chmod +x kubectl
         mv kubectl /usr/local/bin/
+
+    - name: Install k9s
+      shell: |
+        curl -sL https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz | tar xz -C /usr/local/bin k9s
+        chmod +x /usr/local/bin/k9s
         
     - name: Add ubuntu user to docker group
       user:

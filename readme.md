@@ -15,6 +15,8 @@ Perfect for:
 - Ansible (2.9+)
 - SSH key pair in `~/.ssh/id_rsa` (public key in `~/.ssh/id_rsa.pub`)
 
+
+
 ## Getting Started
 
 ### Deploying the Lab Environment
@@ -22,10 +24,17 @@ Perfect for:
 1. Clone this repository:
    ```
    git clone https://github.com/aadhilam/k8-networking-calico-containerlab.git
-   cd container-labs
+   cd k8-networking-calico-containerlab
    ```
 
-2. Run the deployment script:
+2. Download and place the Arista cEOS image:
+   - Follow the [Downloading the Arista cEOS Image](#downloading-the-arista-ceos-image) instructions above
+   - Place the downloaded `cEOS64-lab-4.34.0F.tar.xz` file in the `containerlab/` directory:
+     ```bash
+     cp ~/Downloads/cEOS64-lab-4.34.0F.tar.xz containerlab/
+     ```
+
+3. Run the deployment script:
    ```
    chmod +x deploy.sh
    ./deploy.sh
@@ -90,6 +99,7 @@ container-labs/
 └── outputs.tf              # Terraform output definitions
 ```
 
+
 ## Cleanup
 
 When you're done with the lab environment, you can clean everything up:
@@ -125,3 +135,34 @@ ssh -v ubuntu@$(cat ec2_ip.txt)
 # Connect using specific key file
 ssh -i ~/.ssh/id_rsa ubuntu@$(cat ec2_ip.txt)
 ```
+
+## Downloading the Arista cEOS Image
+
+Several labs in this repository (06-calico-overlay, 07-calico-bgp, 08-calico-bgp-lb, 09-multi-ippool, 10-calico-bgp-ippool) use an Arista cEOS (containerized EOS) switch image. You'll need to download this image before running those labs.
+
+### Steps to Download
+
+1. **Create an Arista Account** (free):
+   - Go to [https://www.arista.com/en/user-registration](https://www.arista.com/en/user-registration)
+   - Complete the registration form and verify your email
+
+2. **Download the cEOS Image**:
+   - Log in to your Arista account at [https://www.arista.com/en/login](https://www.arista.com/en/login)
+   - Navigate to **Software Downloads** → **cEOS-lab**
+   - Or go directly to: [https://www.arista.com/en/support/software-download](https://www.arista.com/en/support/software-download)
+   - Select **cEOS-lab** from the product list
+   - Download `cEOS64-lab-4.34.0F.tar.xz` (or the latest available version)
+
+3. **Place the Image in the ContainerLab Directory**:
+   - Copy the downloaded image to `/containerlab/` directory:
+     ```bash
+     cp ~/Downloads/cEOS64-lab-4.34.0F.tar.xz containerlab/
+     ```
+
+4. **Image Import** (automatic):
+   - The `deploy.sh` scripts in the relevant labs will automatically import the image into Docker:
+     ```bash
+     docker import containerlab/cEOS64-lab-4.34.0F.tar.xz ceos:4.34.0F
+     ```
+
+> **Note**: The cEOS image is proprietary and cannot be distributed with this repository. You must download it directly from Arista with your own account.

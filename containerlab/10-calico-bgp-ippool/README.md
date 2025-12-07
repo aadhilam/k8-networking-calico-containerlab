@@ -221,15 +221,15 @@ kubectl get bgppeers
 ##### output
 ```
 NAME              CREATED AT
-bgppeer-vlan10    2025-11-28T15:58:00Z
-bgppeer-vlan20    2025-11-28T15:58:00Z
+bgppeer-vlan-10    2025-11-28T15:58:00Z
+bgppeer-vlan-20    2025-11-28T15:58:00Z
 ```
 
 Now let's inspect the detailed configuration for each BGP peer:
 
 ##### command
 ```bash
-kubectl get bgppeer bgppeer-vlan10 -o yaml
+kubectl get bgppeer bgppeer-vlan-10 -o yaml
 ```
 
 ##### output
@@ -252,7 +252,7 @@ spec:
 
 ##### command
 ```bash
-kubectl get bgppeer bgppeer-vlan20 -o yaml
+kubectl get bgppeer bgppeer-vlan-20 -o yaml
 ```
 
 ##### output
@@ -284,6 +284,7 @@ The BGP configuration on the Arista cEOS router can be found in the startup conf
 ##### command
 ```bash
 docker exec -it clab-calico-bgp-lb-ceos01 Cli
+enable
 show running-config | s bgp
 ```
 
