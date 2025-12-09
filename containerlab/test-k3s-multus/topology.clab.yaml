@@ -1,0 +1,167 @@
+name: test-k3s-multus
+topology:
+  nodes:
+    ceos01:
+      kind: arista_ceos
+      image: ceos:4.34.0F
+      startup-config: startup-configs/ceos01-startup-config.config
+    
+    k01:
+      kind: k8s-kind
+      startup-config: k01-no-cni.yaml
+      extras:
+        k8s_kind:
+          deploy:
+            wait: 0s
+
+    k01-control-plane:
+      kind: ext-container
+      exec:
+        # Bring up physical interface and set MTU
+        - "ip link set dev eth1 mtu 9000"
+        - "ip link set eth1 up"
+        # Create VLAN 10 interface (native VLAN - but we'll use tagged for consistency)
+        - "ip link add link eth1 name eth1.10 type vlan id 10"
+        - "ip link set dev eth1.10 mtu 9000"
+        - "ip link set eth1.10 up"
+        # Create VLAN 20 interface
+        - "ip link add link eth1 name eth1.20 type vlan id 20"
+        - "ip link set dev eth1.20 mtu 9000"
+        - "ip link set eth1.20 up"
+        # Create bridge for VLAN 10 and add VLAN interface to it
+        - "ip link add name br-vlan10 type bridge"
+        - "ip link set dev br-vlan10 mtu 9000"
+        - "ip link set br-vlan10 up"
+        - "ip link set eth1.10 master br-vlan10"
+        - "ip addr add dev br-vlan10 10.10.10.10/24"
+        # Create bridge for VLAN 20 and add VLAN interface to it (no IP on bridge)
+        - "ip link add name br-vlan20 type bridge"
+        - "ip link set dev br-vlan20 mtu 9000"
+        - "ip link set br-vlan20 up"
+        - "ip link set eth1.20 master br-vlan20"
+        # Add route for VLAN 20 subnet via gateway
+        - "ip route add 10.10.20.0/24 via 10.10.10.1 dev br-vlan10"
+        # Create VLAN-aware bridge for Multus (VLANs 100, 200)
+        - "ip link add name br-multus type bridge vlan_filtering 1"
+        - "ip link set dev br-multus mtu 9000"
+        - "ip link set br-multus up"
+        # Create VLAN 100 and 200 subinterfaces
+        - "ip link add link eth1 name eth1.100 type vlan id 100"
+        - "ip link set dev eth1.100 mtu 9000"
+        - "ip link set eth1.100 master br-multus"
+        - "ip link set eth1.100 up"
+        - "ip link add link eth1 name eth1.200 type vlan id 200"
+        - "ip link set dev eth1.200 mtu 9000"
+        - "ip link set eth1.200 master br-multus"
+        - "ip link set eth1.200 up"
+        # Configure VLANs on bridge
+        - "bridge vlan add dev eth1.100 vid 100 pvid untagged"
+        - "bridge vlan add dev eth1.200 vid 200 pvid untagged"
+        - "bridge vlan add dev br-multus vid 100 self"
+        - "bridge vlan add dev br-multus vid 200 self"
+        # Add routes for VLAN 100 and 200 subnets
+        - "ip route add 10.10.100.0/24 via 10.10.10.1 dev br-vlan10"
+        - "ip route add 10.10.200.0/24 via 10.10.10.1 dev br-vlan10"
+
+    k01-worker:
+      kind: ext-container
+      exec:
+        # Bring up physical interface and set MTU
+        - "ip link set dev eth1 mtu 9000"
+        - "ip link set eth1 up"
+        # Create VLAN 10 interface (native VLAN - but we'll use tagged for consistency)
+        - "ip link add link eth1 name eth1.10 type vlan id 10"
+        - "ip link set dev eth1.10 mtu 9000"
+        - "ip link set eth1.10 up"
+        # Create VLAN 20 interface
+        - "ip link add link eth1 name eth1.20 type vlan id 20"
+        - "ip link set dev eth1.20 mtu 9000"
+        - "ip link set eth1.20 up"
+        # Create bridge for VLAN 10 and add VLAN interface to it
+        - "ip link add name br-vlan10 type bridge"
+        - "ip link set dev br-vlan10 mtu 9000"
+        - "ip link set br-vlan10 up"
+        - "ip link set eth1.10 master br-vlan10"
+        - "ip addr add dev br-vlan10 10.10.10.11/24"
+        # Create bridge for VLAN 20 and add VLAN interface to it (no IP on bridge)
+        - "ip link add name br-vlan20 type bridge"
+        - "ip link set dev br-vlan20 mtu 9000"
+        - "ip link set br-vlan20 up"
+        - "ip link set eth1.20 master br-vlan20"
+        # Add route for VLAN 20 subnet via gateway
+        - "ip route add 10.10.20.0/24 via 10.10.10.1 dev br-vlan10"
+        # Create VLAN-aware bridge for Multus (VLANs 100, 200)
+        - "ip link add name br-multus type bridge vlan_filtering 1"
+        - "ip link set dev br-multus mtu 9000"
+        - "ip link set br-multus up"
+        # Create VLAN 100 and 200 subinterfaces
+        - "ip link add link eth1 name eth1.100 type vlan id 100"
+        - "ip link set dev eth1.100 mtu 9000"
+        - "ip link set eth1.100 master br-multus"
+        - "ip link set eth1.100 up"
+        - "ip link add link eth1 name eth1.200 type vlan id 200"
+        - "ip link set dev eth1.200 mtu 9000"
+        - "ip link set eth1.200 master br-multus"
+        - "ip link set eth1.200 up"
+        # Configure VLANs on bridge
+        - "bridge vlan add dev eth1.100 vid 100 pvid untagged"
+        - "bridge vlan add dev eth1.200 vid 200 pvid untagged"
+        - "bridge vlan add dev br-multus vid 100 self"
+        - "bridge vlan add dev br-multus vid 200 self"
+        # Add routes for VLAN 100 and 200 subnets
+        - "ip route add 10.10.100.0/24 via 10.10.10.1 dev br-vlan10"
+        - "ip route add 10.10.200.0/24 via 10.10.10.1 dev br-vlan10"
+
+    k01-worker2:
+      kind: ext-container
+      exec:
+        # Bring up physical interface and set MTU
+        - "ip link set dev eth1 mtu 9000"
+        - "ip link set eth1 up"
+        # Create VLAN 10 interface (native VLAN - but we'll use tagged for consistency)
+        - "ip link add link eth1 name eth1.10 type vlan id 10"
+        - "ip link set dev eth1.10 mtu 9000"
+        - "ip link set eth1.10 up"
+        # Create VLAN 20 interface
+        - "ip link add link eth1 name eth1.20 type vlan id 20"
+        - "ip link set dev eth1.20 mtu 9000"
+        - "ip link set eth1.20 up"
+        # Create bridge for VLAN 10 and add VLAN interface to it
+        - "ip link add name br-vlan10 type bridge"
+        - "ip link set dev br-vlan10 mtu 9000"
+        - "ip link set br-vlan10 up"
+        - "ip link set eth1.10 master br-vlan10"
+        - "ip addr add dev br-vlan10 10.10.10.12/24"
+        # Create bridge for VLAN 20 and add VLAN interface to it (no IP on bridge)
+        - "ip link add name br-vlan20 type bridge"
+        - "ip link set dev br-vlan20 mtu 9000"
+        - "ip link set br-vlan20 up"
+        - "ip link set eth1.20 master br-vlan20"
+        # Add route for VLAN 20 subnet via gateway
+        - "ip route add 10.10.20.0/24 via 10.10.10.1 dev br-vlan10"
+        # Create VLAN-aware bridge for Multus (VLANs 100, 200)
+        - "ip link add name br-multus type bridge vlan_filtering 1"
+        - "ip link set dev br-multus mtu 9000"
+        - "ip link set br-multus up"
+        # Create VLAN 100 and 200 subinterfaces
+        - "ip link add link eth1 name eth1.100 type vlan id 100"
+        - "ip link set dev eth1.100 mtu 9000"
+        - "ip link set eth1.100 master br-multus"
+        - "ip link set eth1.100 up"
+        - "ip link add link eth1 name eth1.200 type vlan id 200"
+        - "ip link set dev eth1.200 mtu 9000"
+        - "ip link set eth1.200 master br-multus"
+        - "ip link set eth1.200 up"
+        # Configure VLANs on bridge
+        - "bridge vlan add dev eth1.100 vid 100 pvid untagged"
+        - "bridge vlan add dev eth1.200 vid 200 pvid untagged"
+        - "bridge vlan add dev br-multus vid 100 self"
+        - "bridge vlan add dev br-multus vid 200 self"
+        # Add routes for VLAN 100 and 200 subnets
+        - "ip route add 10.10.100.0/24 via 10.10.10.1 dev br-vlan10"
+        - "ip route add 10.10.200.0/24 via 10.10.10.1 dev br-vlan10"
+
+  links:
+    - endpoints: ["ceos01:eth1", "k01-control-plane:eth1"]
+    - endpoints: ["ceos01:eth2", "k01-worker:eth1"]
+    - endpoints: ["ceos01:eth3", "k01-worker2:eth1"]

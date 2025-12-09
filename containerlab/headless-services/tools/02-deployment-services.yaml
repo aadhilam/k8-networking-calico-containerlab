@@ -1,0 +1,77 @@
+# Deployment with both ClusterIP and Headless Services
+# This demonstrates the difference in DNS resolution between the two types
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:stable
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                echo "<html><body><h1>Deployment Pod: $(hostname)</h1><p>IP: $(hostname -i)</p></body></html>" > /usr/share/nginx/html/index.html
+---
+# Regular ClusterIP Service - for comparison
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-clusterip
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  # Default type is ClusterIP - gets a VIP
+  type: ClusterIP
+---
+# Headless Service for the same Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-headless
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  # clusterIP: None makes this a headless service
+  clusterIP: None

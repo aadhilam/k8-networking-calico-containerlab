@@ -1,0 +1,79 @@
+# Redis StatefulSet with Headless Service
+# This demonstrates pod-specific DNS records (redis-0.redis-headless, redis-1.redis-headless, etc.)
+# In production, Redis Sentinel or Redis Cluster would use these DNS records for peer discovery
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-headless
+  namespace: default
+  labels:
+    app: redis
+spec:
+  ports:
+  - port: 6379
+    name: redis
+  # clusterIP: None makes this a headless service
+  clusterIP: None
+  selector:
+    app: redis
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: default
+spec:
+  # serviceName must match the headless service name for DNS to work
+  serviceName: "redis-headless"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        # Simple Redis configuration - standalone mode for lab purposes
+        command:
+        - redis-server
+        args:
+        - --bind
+        - "0.0.0.0"
+        - --protected-mode
+        - "no"
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 15
+          periodSeconds: 10
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule

@@ -389,3 +389,5 @@ This lab demonstrated how to integrate Calico BGP with LoadBalancer services to 
 
 This approach enables production-grade external access to Kubernetes services while leveraging existing network infrastructure and providing built-in redundancy and load balancing capabilities.
 
+## Lab Cleanup
+to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**

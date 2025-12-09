@@ -18,6 +18,8 @@ The labs typically consist of:
 - Block size: /26 (64 IPs per block)
 - Two multitool DaemonSets (multitool-1 and multitool-2) and an nginx deployment with a cluster-ip service for testing pod to service connectivity
 
+[![Watch the video](https://img.youtube.com/vi/r72rNLBYkeU/maxresdefault.jpg)](https://www.youtube.com/watch?v=r72rNLBYkeU&list=PL8Uu0OU0g8SlNOIZ9_gNPDuNFkrsplB8C)
+
 ## Deployment
 
 1. **ContainerLab Topology Deployment**: Creates a 3-node Kind cluster using the `lab-name.clab.yaml` configuration

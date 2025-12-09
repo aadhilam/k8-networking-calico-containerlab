@@ -223,3 +223,6 @@ This lab successfully demonstrates Calico's BGP integration capabilities with ex
 .
 
 This lab provides a foundation for understanding how Calico can integrate with real-world network infrastructure using standard BGP protocols.
+
+## Lab Cleanup
+to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**

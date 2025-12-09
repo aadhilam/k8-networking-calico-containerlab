@@ -248,3 +248,5 @@ The following key concepts were covered.
 
 4. IPAM Block Affinity Verification: Observed how Calico dynamically allocates IP blocks to nodes only when workloads request IPs from specific pools
 
+## Lab Cleanup
+to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**

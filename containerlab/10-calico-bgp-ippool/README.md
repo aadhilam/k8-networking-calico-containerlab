@@ -759,3 +759,6 @@ Here's a quick recap of what you just accomplished in this lab:
 - You just advertised your Calico pod CIDRs via BGP through the ToR route reflector, so your pods are reachable without overlays or NAT.
 - You walked through the IPPool, IPAM, BGPConfiguration, and BGPPeer resources to confirm they match the topology you built.
 - You proved the BGP sessions and learned routes on both the nodes and the ToR, so pods can talk across subnets and from outside the cluster.
+
+## Lab Cleanup
+to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
