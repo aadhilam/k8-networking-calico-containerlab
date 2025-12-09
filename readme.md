@@ -19,6 +19,10 @@ Perfect for:
 
 ## Getting Started
 
+### 🎬 Video Walkthrough
+
+[![Watch the video](https://img.youtube.com/vi/r72rNLBYkeU/maxresdefault.jpg)](https://www.youtube.com/watch?v=r72rNLBYkeU&list=PL8Uu0OU0g8SlNOIZ9_gNPDuNFkrsplB8C)
+
 ### Deploying the Lab Environment
 
 1. Clone this repository:
