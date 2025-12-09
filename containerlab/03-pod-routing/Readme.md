@@ -30,22 +30,8 @@ Cross-node pod communication introduces additional complexity requiring cluster-
 
 
 ## Lab Setup
-
-You need an EC2 instance or VM configured with containerlab. This repo provides a script to provision a preconfigured EC2 instance. 
-📖 **[Back to Main Labs](../../README.md)** | 🚀 **[Deploy Lab Environment](../../README.md#deploying-the-lab-environment)**
-
-Make sure you have cloned the repo to this machine prior to going through the rest of the steps in this lab. 
-
-   ```
-   git clone https://github.com/aadhilam/k8-networking-calico-containerlab.git
-   ```
-
-This lab consists of:
-- 3-node Kind cluster (1 control-plane, 2 workers)
-- Calico CNI with IPAM enabled
-- Pod CIDR: 192.168.0.0/16
-- Block size: /26 (64 IPs per block)
-- Two multitool DaemonSets (multitool-1 and multitool-2) for testing pod-to-pod connectivity
+To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+The lab folder is - `/containerlab/03-pod-routing`
 
 ## Deployment
 

@@ -20,7 +20,7 @@ Demonstrates how Calico handles pod-to-pod communication when Kubernetes nodes a
 
 ## Lab Setup
 To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
-The lab folder is - `/containerlab/calico-overlay`
+The lab folder is - `/containerlab/06-calico-overlay`
 
 ## Lab
 

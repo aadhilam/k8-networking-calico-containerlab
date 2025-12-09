@@ -3,8 +3,8 @@
 This lab demonstrates how multiple IP pools can be configured in Calico for advanced network segmentation and IP address management. Multiple IP pools are typically used in scenarios where you want to demarcate workloads in the cluster.
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
-The lab folder is - `/containerlab/9-multi-ippool`
+To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+The lab folder is - `/containerlab/09-multi-ippool`
 
 
 ## Lab
