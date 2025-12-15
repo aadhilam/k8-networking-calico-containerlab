@@ -1,0 +1,136 @@
+# Redis StatefulSet with Headless Service and Replication
+# This demonstrates:
+# 1. Pod-specific DNS records (redis-0.redis-headless, redis-1.redis-headless, etc.)
+# 2. How Redis replicas discover and connect to the master using headless service DNS
+# 
+# Architecture:
+# - redis-0: Master (primary) - accepts writes
+# - redis-1, redis-2: Replicas - discover master via redis-0.redis-headless DNS
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-headless
+  namespace: default
+  labels:
+    app: redis
+spec:
+  ports:
+  - port: 6379
+    name: redis
+  # clusterIP: None makes this a headless service
+  clusterIP: None
+  selector:
+    app: redis
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: default
+spec:
+  # serviceName must match the headless service name for DNS to work
+  serviceName: "redis-headless"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      terminationGracePeriodSeconds: 10
+      initContainers:
+      # Init container waits for DNS to be ready for replicas
+      # This ensures redis-0 is discoverable before replicas start
+      - name: init-redis
+        image: redis:7-alpine
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -ex
+          # Extract pod ordinal from hostname (e.g., redis-0 -> 0)
+          ORDINAL=${HOSTNAME##*-}
+          
+          # If this is a replica (ordinal > 0), wait for master to be available
+          if [ "$ORDINAL" != "0" ]; then
+            echo "This is replica redis-$ORDINAL, waiting for master redis-0..."
+            until redis-cli -h redis-0.redis-headless.default.svc.cluster.local ping; do
+              echo "Waiting for redis-0.redis-headless to be ready..."
+              sleep 2
+            done
+            echo "Master redis-0 is ready!"
+          else
+            echo "This is the master redis-0, no need to wait"
+          fi
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        # Redis configuration with dynamic master/replica setup
+        # Replicas discover master using headless service DNS: redis-0.redis-headless
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -ex
+          # Extract pod ordinal from hostname (e.g., redis-0 -> 0)
+          ORDINAL=${HOSTNAME##*-}
+          
+          if [ "$ORDINAL" = "0" ]; then
+            # This is the master
+            echo "Starting as MASTER (redis-0)"
+            exec redis-server \
+              --bind 0.0.0.0 \
+              --protected-mode no \
+              --replica-announce-ip ${POD_NAME}.redis-headless.default.svc.cluster.local
+          else
+            # This is a replica - connect to master using headless service DNS
+            # KEY CONCEPT: Replicas discover master via: redis-0.redis-headless.default.svc.cluster.local
+            echo "Starting as REPLICA (redis-$ORDINAL), replicating from redis-0.redis-headless"
+            exec redis-server \
+              --bind 0.0.0.0 \
+              --protected-mode no \
+              --replicaof redis-0.redis-headless.default.svc.cluster.local 6379 \
+              --replica-announce-ip ${POD_NAME}.redis-headless.default.svc.cluster.local
+          fi
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 15
+          periodSeconds: 10
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule

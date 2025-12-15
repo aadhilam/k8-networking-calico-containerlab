@@ -1,0 +1,32 @@
+---
+# iperf3 server WITH QoS bandwidth limits
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iperf-server-qos
+  labels:
+    app: iperf-server-qos
+  annotations:
+    # Calico QoS annotations - limit bandwidth to 10 Mbps
+    qos.projectcalico.org/ingressBandwidth: "10M"
+    qos.projectcalico.org/egressBandwidth: "10M"
+spec:
+  containers:
+  - name: iperf-server
+    image: networkstatic/iperf3
+    command: ["iperf3", "-s"]
+    ports:
+    - containerPort: 5201
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iperf-server-qos
+spec:
+  selector:
+    app: iperf-server-qos
+  ports:
+  - port: 5201
+    targetPort: 5201
+    protocol: TCP

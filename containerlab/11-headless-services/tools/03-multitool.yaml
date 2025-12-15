@@ -1,5 +1,5 @@
-# Multitool DaemonSet for DNS testing
-# Provides dig, nslookup, curl, and other network tools
+# Multitool DaemonSet for DNS and Redis testing
+# Provides dig, nslookup, curl, redis-cli, and other network tools
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -40,8 +40,10 @@ spec:
         - /bin/bash
         - -c
         - |
+          echo "Installing redis-cli..."
+          apk add --no-cache redis > /dev/null 2>&1
           echo "Multitool pod started on node: $HOSTNAME"
-          echo "Available tools: curl, wget, nslookup, dig, ping, traceroute, netstat, ss, iperf3, tcpdump"
+          echo "Available tools: curl, wget, nslookup, dig, ping, traceroute, netstat, ss, iperf3, tcpdump, redis-cli"
           echo "Pod IP: $(hostname -i)"
           nginx -g "daemon off;"
       restartPolicy: Always

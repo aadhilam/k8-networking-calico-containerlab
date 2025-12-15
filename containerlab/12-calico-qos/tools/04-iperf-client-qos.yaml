@@ -1,0 +1,17 @@
+---
+# iperf3 client WITH QoS bandwidth limits
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iperf-client-qos
+  labels:
+    app: iperf-client-qos
+  annotations:
+    # Calico QoS annotations - limit bandwidth to 10 Mbps
+    qos.projectcalico.org/ingressBandwidth: "10M"
+    qos.projectcalico.org/egressBandwidth: "10M"
+spec:
+  containers:
+  - name: iperf-client
+    image: networkstatic/iperf3
+    command: ["sleep", "infinity"]

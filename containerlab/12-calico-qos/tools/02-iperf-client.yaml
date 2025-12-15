@@ -1,0 +1,13 @@
+---
+# iperf3 client without QoS limits (baseline test)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iperf-client
+  labels:
+    app: iperf-client
+spec:
+  containers:
+  - name: iperf-client
+    image: networkstatic/iperf3
+    command: ["sleep", "infinity"]
