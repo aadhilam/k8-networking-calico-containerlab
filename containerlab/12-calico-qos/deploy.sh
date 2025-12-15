@@ -3,7 +3,7 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 
 echo "=== Destroying existing ContainerLab topology ==="
-sudo containerlab destroy -t calico-qos.clab.yaml || { echo "Failed to destroy existing topology"; exit 1; }
+sudo containerlab destroy -t calico-qos.clab.yaml || { echo "No existing topology to destroy"; }
 
 echo "=== Deploying ContainerLab topology ==="
 sudo containerlab deploy -t calico-qos.clab.yaml || { echo "Failed to deploy topology"; exit 1; }
