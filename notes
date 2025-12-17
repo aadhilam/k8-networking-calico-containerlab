@@ -57,4 +57,4 @@ spec:
     nodePort: 30081  # Choose any port in range 30000–32767
 
 
-scp -i ~/.ssh/id_rsa -r /Users/aadhilamajeed/k824/container-labs/containerlab/13-wireguard ubuntu@$(cat ec2_ip.txt):/home/ubuntu/containerlab/ 
+scp -i ~/.ssh/id_rsa -r /Users/aadhilamajeed/k824/container-labs/containerlab/14-calico-ipv6 ubuntu@$(cat ec2_ip.txt):/home/ubuntu/containerlab/ 

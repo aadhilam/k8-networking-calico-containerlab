@@ -1,0 +1,88 @@
+# Test pods for IPv6 connectivity testing
+
+---
+# DaemonSet deploys a pod on each node
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: multitool
+  labels:
+    app: multitool
+spec:
+  selector:
+    matchLabels:
+      app: multitool
+  template:
+    metadata:
+      labels:
+        app: multitool
+    spec:
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: multitool
+          image: wbitt/network-multitool:alpine-extra
+          env:
+            - name: HTTP_PORT
+              value: "8080"
+          # Override nginx config to listen on both IPv4 and IPv6
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              # Create nginx config that listens on both IPv4 and IPv6
+              cat > /etc/nginx/nginx.conf << 'EOF'
+              worker_processes 1;
+              events { worker_connections 1024; }
+              http {
+                server {
+                  listen 8080;
+                  listen [::]:8080;
+                  location / {
+                    return 200 'WBITT Network MultiTool - IPv6 enabled\n';
+                    add_header Content-Type text/plain;
+                  }
+                }
+              }
+              EOF
+              nginx -g 'daemon off;'
+
+---
+# Dual-stack service (has both IPv4 and IPv6 ClusterIPs)
+apiVersion: v1
+kind: Service
+metadata:
+  name: multitool-dual-stack
+  labels:
+    app: multitool
+spec:
+  ipFamilyPolicy: RequireDualStack
+  ipFamilies:
+    - IPv4
+    - IPv6
+  type: ClusterIP
+  selector:
+    app: multitool
+  ports:
+    - port: 80
+      targetPort: 8080
+
+---
+# IPv6-only service (has only IPv6 ClusterIP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: multitool-ipv6-only
+  labels:
+    app: multitool
+spec:
+  ipFamilyPolicy: SingleStack
+  ipFamilies:
+    - IPv6
+  type: ClusterIP
+  selector:
+    app: multitool
+  ports:
+    - port: 80
+      targetPort: 8080

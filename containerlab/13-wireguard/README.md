@@ -322,6 +322,9 @@ chmod +x deploy.sh
 
 ## Lab Exercises
 
+> [!Note]
+> <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
+
 ### 1. Verify the Lab Setup
 
 ```bash
@@ -348,9 +351,9 @@ kubectl get pods -o wide
 
 ##### Expected output
 ```
-NAME               READY   STATUS    RESTARTS   AGE   IP               NODE               
-frontend-client    1/1     Running   0          2m    192.168.183.65   wireguard-worker   
-backend-api        1/1     Running   0          2m    192.168.140.65   wireguard-worker2  
+NAME              READY   STATUS    RESTARTS   AGE     IP               NODE                NOMINATED NODE   READINESS GATES
+backend-api       1/1     Running   0          7h57m   192.168.58.200   wireguard-worker2   <none>           <none>
+frontend-client   1/1     Running   0          7h57m   192.168.128.66   wireguard-worker    <none>           <none>
 ```
 
 > [!IMPORTANT]
@@ -478,25 +481,49 @@ docker exec -it wireguard-worker wg show
 ##### Expected output
 ```
 interface: wireguard.cali
-  public key: aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcdefg=
+  public key: eD2VBB3lnJqVkkYVk4BIhkfmw/BIVChjFA88CH6MREs=
   private key: (hidden)
   listening port: 51820
-  fwmark: 0x100000
+  fwmark: 0x200000
 
-peer: xYz987654321AbCdEfGhIjKlMnOpQrStUvWxYz098765=
-  endpoint: 172.18.0.3:51820
-  allowed ips: 192.168.140.64/26, 172.18.0.3/32
-  latest handshake: 5 seconds ago
-  transfer: 1.24 KiB received, 1.56 KiB sent
+peer: FJ8Dm2CABHZGF7fQd1vKqrGTyccDQajiDdrLqjJ2G0c=
+  endpoint: 172.18.0.4:51820
+  allowed ips: 192.168.58.192/26, 192.168.58.192/32, 192.168.58.201/32
+  latest handshake: 34 seconds ago
+  transfer: 8.11 MiB received, 6.00 MiB sent
+
+peer: /ANe/52zDtjZyaiDpHOYsM7KeyHwbvO0NagdNZzWi3M=
+  endpoint: 172.18.0.2:51820
+  allowed ips: 192.168.141.128/32, 192.168.141.128/26, 192.168.141.130/32
 ```
 
 **Key Observations:**
 - **wireguard.cali** interface is created
 - **Public/private keys** are automatically generated
 - **Listening port 51820** (WireGuard's standard port)
+- **fwmark: 0x200000** - This is the firewall mark that WireGuard stamps on packets **after** encrypting them. It works with policy routing (`ip rule`) to prevent routing loops: unencrypted packets (no mark) are routed into the tunnel via Table 1, while encrypted packets (with `0x200000` mark) skip Table 1 and exit via the main table to `eth0`.
 - **Peers** are automatically configured for other nodes
 - **Allowed IPs** include pod CIDRs and node IPs.
   > **Note on Configuration:** Calico's **Felix** agent automatically configures these Allowed IPs. It calculates them to include the remote node's Pod CIDR (e.g., `192.168.140.64/26`) and the node's internal IP (e.g., `172.18.0.3/32`), ensuring traffic destined for those networks is routed through the tunnel. You do not need to manually configure peers or routes.
+
+#### 4.5 - View WireGuard Interface IP Address
+
+The WireGuard interface also has its own IP address assigned by Calico.
+
+##### command
+```bash
+docker exec -it wireguard-worker ip addr show wireguard.cali
+```
+
+##### Expected output
+```
+10: wireguard.cali: <POINTOPOINT,NOARP,UP,LOWER_UP> mtu 1440 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/none 
+    inet 192.168.128.67/32 scope global wireguard.cali
+       valid_lft forever preferred_lft forever
+```
+
+**Key Observation:** The `wireguard.cali` interface is assigned an IP from the node's pod CIDR (`192.168.128.67/32`). This IP is used as the source address for encrypted tunnel traffic and is advertised to peers in the `allowed ips` list.
 
 
 ### 5. Capture Encrypted Traffic (After WireGuard)
@@ -528,13 +555,44 @@ docker exec -it wireguard-worker2 tcpdump -Z root -i eth0 -c 10 'udp port 51820'
 
 ##### Expected output (just encrypted UDP packets)
 ```
-15:45:23.456789 IP 172.18.0.2.51820 > 172.18.0.3.51820: UDP, length 132
-15:45:23.457012 IP 172.18.0.3.51820 > 172.18.0.2.51820: UDP, length 132
-15:45:24.458234 IP 172.18.0.2.51820 > 172.18.0.3.51820: UDP, length 196
-15:45:24.458567 IP 172.18.0.3.51820 > 172.18.0.2.51820: UDP, length 548
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+21:17:40.237446 IP wireguard-worker.kind.51820 > wireguard-worker2.51820: UDP, length 128
+21:17:40.237487 IP wireguard-worker.kind.51820 > wireguard-worker2.51820: UDP, length 128
+21:17:40.237905 IP wireguard-worker2.51820 > wireguard-worker.kind.51820: UDP, length 176
+21:17:40.237936 IP wireguard-worker2.51820 > wireguard-worker.kind.51820: UDP, length 208
+21:17:40.238456 IP wireguard-worker.kind.51820 > wireguard-worker2.51820: UDP, length 96
+21:17:40.238624 IP wireguard-worker2.51820 > wireguard-worker.kind.51820: UDP, length 96
+21:17:40.238769 IP wireguard-worker.kind.51820 > wireguard-worker2.51820: UDP, length 96
+21:17:40.238832 IP wireguard-worker.kind.51820 > wireguard-worker2.51820: UDP, length 176
+21:17:40.238932 IP wireguard-worker2.51820 > wireguard-worker.kind.51820: UDP, length 96
+21:17:40.239262 IP wireguard-worker2.51820 > wireguard-worker.kind.51820: UDP, length 224
 ```
 
-#### 5.3 - Try to Read the Payload (It's Unreadable!)
+#### 5.3 - View Source and Destination IP Addresses
+
+Use the `-n` flag to see numeric IP addresses in the outer IP headers:
+
+##### command
+```bash
+docker exec -it wireguard-worker2 tcpdump -Z root -i eth0 -n -c 10 'udp port 51820' 2>/dev/null
+```
+
+##### Expected output
+```
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+21:18:10.123456 IP 172.18.0.3.51820 > 172.18.0.4.51820: UDP, length 128
+21:18:10.123512 IP 172.18.0.3.51820 > 172.18.0.4.51820: UDP, length 128
+21:18:10.123890 IP 172.18.0.4.51820 > 172.18.0.3.51820: UDP, length 176
+21:18:10.123945 IP 172.18.0.4.51820 > 172.18.0.3.51820: UDP, length 208
+21:18:10.124301 IP 172.18.0.3.51820 > 172.18.0.4.51820: UDP, length 96
+```
+
+**Key Observation:** The outer IP headers show **node IPs** (`172.18.0.3` ↔ `172.18.0.4`), not pod IPs. The original pod-to-pod traffic (e.g., `192.168.128.66` → `192.168.58.200`) is encrypted inside the UDP payload. This is how WireGuard hides the true source and destination of the inner traffic.
+
+
+#### 5.4 - Try to Read the Payload (It's Unreadable!)
 
 ##### command
 ```bash
@@ -605,60 +663,90 @@ WireGuard Packet Structure (detailed):
 
 WireGuard changes how traffic is routed between nodes. When enabled, Calico creates a `wireguard.cali` interface and updates the routing table so that traffic destined for pods on other nodes goes through the encrypted WireGuard tunnel.
 
-```mermaid
-flowchart LR
-    subgraph Node1["wireguard-worker"]
-        Pod1[frontend-client]
-        WG1[wireguard.cali<br/>Encrypt]
-    end
-    
-    subgraph Network[" "]
-        Wire[Encrypted UDP<br/>Port 51820]
-    end
-    
-    subgraph Node2["wireguard-worker2"]
-        WG2[wireguard.cali<br/>Decrypt]
-        Pod2[backend-api]
-    end
-    
-    Pod1 -->|HTTP + Creds| WG1
-    WG1 -->|Encrypted| Wire
-    Wire -->|Encrypted| WG2
-    WG2 -->|HTTP + Creds| Pod2
-    
-    style WG1 fill:#4CAF50,color:white
-    style WG2 fill:#4CAF50,color:white
-    style Pod1 fill:#2196F3,color:white
-    style Pod2 fill:#2196F3,color:white
-    style Wire fill:#FF9800,color:white
-```
 
-**How WireGuard Routing Works:**
+**7.1 How WireGuard Routing Works (Policy Routing):**
 
-1. **Pod sends packet** - frontend-client sends HTTP request to backend-api (192.168.140.65)
-2. **Route lookup** - Kernel checks routing table for destination
-3. **WireGuard route match** - Route `192.168.140.64/26 via wireguard.cali` matches
-4. **Encryption** - WireGuard encrypts the entire packet and wraps it in UDP (port 51820)
-5. **Network transit** - Encrypted packet travels over physical network
-6. **Reception** - Destination node receives UDP packet on port 51820
-7. **Decryption** - WireGuard decrypts and extracts original packet
-8. **Local routing** - Packet is routed to local pod via veth interface
-9. **Delivery** - backend-api receives the original HTTP request
+WireGuard changes how traffic is routed between nodes. When enabled, Calico creates a `wireguard.cali` interface and updates the routing table so that traffic destined for pods on other nodes goes through the encrypted WireGuard tunnel.
+
+![WireGuard Routing](../../images/wg.png)
+
+1. **Pod sends packet** - frontend-client sends HTTP request to backend-api (e.g., 192.168.58.200)
+2. **Policy Rule Match** - Kernel checks `ip rule` policies.
+   - It sees the packet is **not** marked (no `fwmark 0x200000`).
+   - Rule `not from all fwmark 0x200000 lookup 1` directs it to **Routing Table 1**.
+3. **Table 1 Lookup** - Inside Table 1, a route exists for the destination: `192.168.58.192/26 dev wireguard.cali`.
+4. **Encryption** - Packet enters `wireguard.cali`. WireGuard encrypts it, wraps it in UDP (port 51820), and **marks** the new packet with `0x200000`.
+5. **Main Table Lookup** - The encrypted UDP packet is sent out. The kernel sees the `0x200000` mark, so it **skips** Table 1 (preventing a loop) and uses the **Main Table**.
+6. **Network transit** - Main table routes the UDP packet via `eth0` to the destination node.
+7. **Reception & Decryption** - Destination node receives UDP packet, decrypts it, and delivers it to the target pod.
 
 ##### command
 ```bash
-# View routes on worker node - traffic to other nodes goes via wireguard.cali
-docker exec -it wireguard-worker ip route | grep -E "wireguard|192.168"
+# 1. View Policy Rules (Directs unencrypted traffic to Table 1)
+docker exec -it wireguard-worker ip rule
+
+# 2. View Table 1 Routes (Sends traffic into WireGuard tunnel)
+docker exec -it wireguard-worker ip route show table 1
 ```
 
 ##### Expected output
-```
-192.168.140.64/26 via 172.18.0.3 dev wireguard.cali onlink
-192.168.166.128/26 via 172.18.0.4 dev wireguard.cali onlink
-blackhole 192.168.183.64/26 proto 80
+```bash
+# ip rule output:
+0:      from all lookup local
+99:     not from all fwmark 0x200000/0x200000 lookup 1  <-- The Magic Rule
+32766:  from all lookup main
+
+# ip route show table 1 output:
+192.168.140.64/26 dev wireguard.cali scope link  <-- Route to remote pods
 ```
 
-**Key Observation:** Routes to other nodes' pod CIDRs now go through `wireguard.cali` instead of `eth0` or `vxlan.calico`.
+**Key Observation:** WireGuard uses **Policy Based Routing**. Unencrypted packets are forced into a special routing table (Table 1) that pushes them into the tunnel. Encrypted packets (marked by WireGuard) stay in the main table to leave the node via `eth0`.
+
+**Cryptokey Routing & Outer Header Construction:**
+
+When a packet enters the `wireguard.cali` interface, WireGuard and the kernel work together:
+
+| Component | Responsibility |
+|-----------|----------------|
+| **WireGuard** | Looks up destination IP in `allowed ips` to find the correct **peer** |
+| **WireGuard** | Selects the **encryption keys** associated with that peer |
+| **WireGuard** | Encrypts the packet and wraps it in UDP (port 51820) |
+| **WireGuard** | Sets the **destination IP:port** from the peer's `endpoint` |
+| **WireGuard** | Applies `fwmark 0x200000` to the encrypted packet |
+| **Kernel (Main Table)** | Determines the **outgoing interface** (e.g., `eth0`) |
+| **Kernel (Main Table)** | Determines the **source IP** (e.g., `172.18.0.3`) |
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  DETAILED PACKET FLOW                                                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. Original Packet:  192.168.128.66 → 192.168.58.200 (Pod IPs)             │
+│                              ↓                                              │
+│  2. Table 1 routes packet to wireguard.cali                                 │
+│                              ↓                                              │
+│  3. WireGuard Processing:                                                   │
+│     • Checks: "Which peer has 192.168.58.200 in allowed ips?"               │
+│     • Found: Peer FJ8Dm2C... has "192.168.58.192/26"                        │
+│     • Encrypts using FJ8Dm2C's session key                                  │
+│     • Creates UDP packet → Destination: 172.18.0.4:51820 (peer's endpoint)  │
+│     • Marks packet with fwmark 0x200000                                     │
+│                              ↓                                              │
+│  4. Kernel (Main Table):                                                    │
+│     • Destination 172.18.0.4 → route via eth0                               │
+│     • Source IP: 172.18.0.3 (eth0's address)                                │
+│                              ↓                                              │
+│  5. Final Packet on Wire:                                                   │
+│     ┌─────────────────────────────────────────────────────────────────┐     │
+│     │ Outer IP:  Src: 172.18.0.3  →  Dst: 172.18.0.4                  │     │
+│     │ Outer UDP: Src: 51820       →  Dst: 51820                       │     │
+│     │ Payload:   [Encrypted original packet]                          │     │
+│     └─────────────────────────────────────────────────────────────────┘     │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+This is why `allowed ips` is critical - it determines both **which peer to send to** and **which keys to use for encryption**.
 
 ### 8. Disable WireGuard (Optional)
 

@@ -1,0 +1,13 @@
+# ContainerLab topology for IPv6/Dual-Stack Calico Lab
+# Simple 3-node Kind cluster demonstrating IPv6 pod networking
+
+name: ipv6-lab
+topology:
+  nodes:
+    ipv6-lab:
+      kind: k8s-kind
+      startup-config: ipv6-lab-no-cni.yaml
+      extras:
+        k8s_kind:
+          deploy:
+            wait: 0s

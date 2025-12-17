@@ -8,6 +8,9 @@ The lab folder is - `/containerlab/07-calico-bgp`
 
 ## Lab
 
+> [!Note]
+> <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
+
 ### 1. Inspect ContainerLab Topology
 
 First, let's inspect the lab topology.
