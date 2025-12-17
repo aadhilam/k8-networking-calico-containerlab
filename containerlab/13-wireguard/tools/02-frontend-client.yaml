@@ -34,7 +34,7 @@ spec:
     - -c
     - |
       echo "Frontend client starting..."
-      echo "Continuously querying backend-api with sensitive credentials..."
+      echo "Continuously querying backend-api with fake sensitive credentials..."
       echo ""
       
       while true; do
