@@ -1,0 +1,56 @@
+# ContainerLab topology for Dual-Stack Lab
+# 3-node Kind cluster connected to Arista cEOS switch
+# Demonstrates pods reaching external IPv4 and IPv6 destinations
+
+name: dual-stack
+topology:
+  nodes:
+    # Arista cEOS switch - acts as upstream router
+    ceos01:
+      kind: arista_ceos
+      image: ceos:4.34.0F
+      startup-config: startup-configs/ceos01-startup-config.config
+
+    # Kind cluster with 3 nodes
+    dual-stack:
+      kind: k8s-kind
+      startup-config: dual-stack-no-cni.yaml
+      extras:
+        k8s_kind:
+          deploy:
+            wait: 0s
+
+    # External container configs - add eth1 interface with IPv4+IPv6
+    dual-stack-control-plane:
+      kind: ext-container
+      exec:
+        # IPv4 address on eth1
+        - "ip addr add dev eth1 10.10.10.10/24"
+        # IPv6 address on eth1
+        - "ip -6 addr add dev eth1 fd00:10:10::10/64"
+        # IPv4 default route via cEOS (for external IPv4)
+        - "ip route add 1.1.1.1/32 via 10.10.10.1 dev eth1"
+        # IPv6 default route via cEOS (for external IPv6)
+        - "ip -6 route add 2001:db8::/32 via fd00:10:10::1 dev eth1"
+
+    dual-stack-worker:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.11/24"
+        - "ip -6 addr add dev eth1 fd00:10:10::11/64"
+        - "ip route add 1.1.1.1/32 via 10.10.10.1 dev eth1"
+        - "ip -6 route add 2001:db8::/32 via fd00:10:10::1 dev eth1"
+
+    dual-stack-worker2:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.12/24"
+        - "ip -6 addr add dev eth1 fd00:10:10::12/64"
+        - "ip route add 1.1.1.1/32 via 10.10.10.1 dev eth1"
+        - "ip -6 route add 2001:db8::/32 via fd00:10:10::1 dev eth1"
+
+  # Network links between cEOS and Kind nodes
+  links:
+    - endpoints: ["ceos01:eth1", "dual-stack-control-plane:eth1"]
+    - endpoints: ["ceos01:eth2", "dual-stack-worker:eth1"]
+    - endpoints: ["ceos01:eth3", "dual-stack-worker2:eth1"]

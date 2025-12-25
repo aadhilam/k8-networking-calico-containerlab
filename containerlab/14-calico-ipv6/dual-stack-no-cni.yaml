@@ -1,0 +1,38 @@
+# Kind cluster configuration for Dual-Stack networking
+# Pods and services get both IPv4 and IPv6 addresses
+
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: dual-stack
+networking:
+  disableDefaultCNI: true
+  # Dual-stack pod subnets
+  podSubnet: "192.168.0.0/16,fd00:10:244::/48"
+  # Dual-stack service subnets  
+  serviceSubnet: "10.96.0.0/16,fd00:10:96::/112"
+  ipFamily: dual
+
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.10,fd00:10:10::10"
+
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.11,fd00:10:10::11"
+
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.12,fd00:10:10::12"

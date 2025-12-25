@@ -1,7 +1,7 @@
-# Test pods for IPv6 connectivity testing
+# Test pods for dual-stack connectivity testing
+# These pods can reach both IPv4 and IPv6 external destinations
 
 ---
-# DaemonSet deploys a pod on each node
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -27,11 +27,10 @@ spec:
           env:
             - name: HTTP_PORT
               value: "8080"
-          # Override nginx config to listen on both IPv4 and IPv6
+          # Configure nginx to listen on both IPv4 and IPv6
           command: ["/bin/sh", "-c"]
           args:
             - |
-              # Create nginx config that listens on both IPv4 and IPv6
               cat > /etc/nginx/nginx.conf << 'EOF'
               worker_processes 1;
               events { worker_connections 1024; }
@@ -40,7 +39,7 @@ spec:
                   listen 8080;
                   listen [::]:8080;
                   location / {
-                    return 200 'WBITT Network MultiTool - IPv6 enabled\n';
+                    return 200 'Dual-Stack Pod - IPv4 and IPv6 enabled\n';
                     add_header Content-Type text/plain;
                   }
                 }
@@ -49,7 +48,7 @@ spec:
               nginx -g 'daemon off;'
 
 ---
-# Dual-stack service (has both IPv4 and IPv6 ClusterIPs)
+# Dual-stack service
 apiVersion: v1
 kind: Service
 metadata:
@@ -69,7 +68,7 @@ spec:
       targetPort: 8080
 
 ---
-# IPv6-only service (has only IPv6 ClusterIP)
+# IPv6-only service
 apiVersion: v1
 kind: Service
 metadata:

@@ -1,6 +1,6 @@
-# Calico Installation with dual-stack (IPv4 + IPv6) pod networking
-# Pods receive both IPv4 and IPv6 addresses
-# IPv6 traffic between nodes is encapsulated in VXLAN (works on IPv4-only infrastructure)
+# Calico Installation with Dual-Stack (IPv4 + IPv6) networking
+# - VXLAN for pod-to-pod communication (works over IPv4 infrastructure)
+# - Native IPv6 routing for external destinations (via node's eth1)
 
 apiVersion: operator.tigera.io/v1
 kind: Installation
@@ -9,7 +9,7 @@ metadata:
 spec:
   calicoNetwork:
     ipPools:
-      # IPv4 IP Pool
+      # IPv4 IP Pool for pods
       - name: default-ipv4-ippool
         blockSize: 26
         cidr: 192.168.0.0/16
@@ -17,14 +17,24 @@ spec:
         natOutgoing: Enabled
         nodeSelector: all()
 
-      # IPv6 IP Pool
-      # VXLAN encapsulation allows IPv6 pods even when nodes only have IPv4
+      # IPv6 IP Pool for pods
+      # Using VXLAN for pod-to-pod, but external IPv6 goes via native routing
       - name: default-ipv6-ippool
         blockSize: 122
         cidr: fd00:10:244::/48
         encapsulation: VXLAN
         natOutgoing: Enabled
         nodeSelector: all()
+
+    # Node address auto-detection
+    # Uses eth1 addresses (connected to cEOS) for node identification
+    nodeAddressAutodetectionV4:
+      cidrs:
+        - 10.10.10.0/24
+
+    nodeAddressAutodetectionV6:
+      cidrs:
+        - fd00:10:10::/64
 
 ---
 
