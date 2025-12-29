@@ -1,0 +1,57 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: k01
+networking:
+  disableDefaultCNI: true
+  podSubnet: "192.168.0.0/16"
+  serviceSubnet: "10.96.0.0/16"
+
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.10"
+
+  # BGP Peer Worker Node 1 - Labeled for BGP peering
+  - role: worker
+    labels:
+      bgp-peer: "true"
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.11"
+
+  # BGP Peer Worker Node 2 - Labeled for BGP peering
+  - role: worker
+    labels:
+      bgp-peer: "true"
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.12"
+
+  # Non-BGP Worker Node 3
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.13"
+
+  # Non-BGP Worker Node 4
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.14"
+
