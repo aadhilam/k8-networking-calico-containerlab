@@ -1,0 +1,12 @@
+---
+# IPReservation to reserve a range of IPs from automatic assignment
+# These IPs can still be used for static assignments via annotations
+# /29 = 8 IPs (192.168.100.8 - 192.168.100.15)
+apiVersion: crd.projectcalico.org/v1
+kind: IPReservation
+metadata:
+  name: reserved-ips
+spec:
+  reservedCIDRs:
+  - 192.168.100.8/29
+
