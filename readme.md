@@ -71,6 +71,13 @@ Once connected to the EC2 instance:
 8. [LoadBalancer Type Service and BGP Advertisements](containerlab/08-calico-bgp-lb/)
 9. [Calico Multiple IPPools](containerlab/09-multi-ippool/)
 10. [Calico Advertise IPPool Using BGP](containerlab/10-calico-bgp-ippool/)
+11. [Kubernetes Headless Services](containerlab/11-headless-services/)
+12. [Calico Network QoS - Bandwidth Limiting](containerlab/12-calico-qos/)
+13. [Calico WireGuard Encryption](containerlab/13-wireguard/)
+14. [Calico IPv4 and IPv6 - Dual-Stack Networking](containerlab/14-calico-ipv6/)
+15. [Selective BGP Peering with Node Labels](containerlab/15-selective-bgp-peering/)
+16. [IP Reservations and Static IPs for Pods](containerlab/16-static-ip/)
+17. [NodeLocal DNSCache](containerlab/17-nodelocal-dnscache/)
 
 
 
