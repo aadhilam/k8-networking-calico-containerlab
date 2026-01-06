@@ -1,0 +1,29 @@
+# HTTPRoute for traffic splitting between app-v1 (stable) and app-v2 (canary)
+# Initial split: 80% to v1 (stable), 20% to v2 (canary)
+# Hostname filtering: Only routes requests with Host: app.demo.lab
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: canary-traffic-split
+  namespace: default
+spec:
+  hostnames:
+    - "app.demo.lab"
+  parentRefs:
+    - name: calico-ingress-gateway
+      namespace: default
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: app-v1
+          namespace: ingress-gateway-demo
+          port: 80
+          weight: 80
+        - name: app-v2
+          namespace: ingress-gateway-demo
+          port: 80
+          weight: 20
+

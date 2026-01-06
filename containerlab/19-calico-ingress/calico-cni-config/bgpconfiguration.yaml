@@ -1,0 +1,13 @@
+apiVersion: projectcalico.org/v3
+kind: BGPConfiguration
+metadata:
+  name: default
+spec:
+  logSeverityScreen: Info
+  asNumber: 65010
+  nodeToNodeMeshEnabled: false
+  # Advertise LoadBalancer IPs to the ToR switch
+  # This will allow the Ingress Gateway service to be reachable from external networks
+  serviceLoadBalancerIPs:
+  - cidr: 172.16.0.240/28
+

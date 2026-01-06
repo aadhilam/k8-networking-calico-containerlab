@@ -1,0 +1,63 @@
+name: calico-ingress
+topology:
+  nodes:
+    ceos01:
+      kind: arista_ceos
+      image: ceos:4.34.0F
+      startup-config: startup-configs/ceos01-startup-config.config
+
+    k01:
+      kind: k8s-kind
+      startup-config: k01-no-cni.yaml
+      extras:
+        k8s_kind:
+          deploy:
+            wait: 0s
+
+    k01-control-plane:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.10/24"
+
+    # BGP Peer Node 1 - Connected to ToR (Gateway Node)
+    k01-worker:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.11/24"
+
+    # BGP Peer Node 2 - Connected to ToR (Gateway Node)
+    k01-worker2:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.12/24"
+
+    # Non-BGP Worker Node - Connected to ToR but no BGP peering
+    k01-worker3:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.13/24"
+
+    # Non-BGP Worker Node - Connected to ToR but no BGP peering
+    k01-worker4:
+      kind: ext-container
+      exec:
+        - "ip addr add dev eth1 10.10.10.14/24"
+
+    # External User Host on VLAN 30 - Simulates external client accessing services
+    user:
+      kind: linux
+      image: nicolaka/netshoot:latest
+      exec:
+        - "ip addr add dev eth1 10.30.30.100/24"
+        - "ip route add 172.16.0.0/16 via 10.30.30.1"
+
+  links:
+    # All K8s nodes connected to ToR in VLAN 10
+    - endpoints: ["ceos01:eth1", "k01-control-plane:eth1"]
+    - endpoints: ["ceos01:eth2", "k01-worker:eth1"]
+    - endpoints: ["ceos01:eth3", "k01-worker2:eth1"]
+    - endpoints: ["ceos01:eth4", "k01-worker3:eth1"]
+    - endpoints: ["ceos01:eth5", "k01-worker4:eth1"]
+    # User host connected to ToR in VLAN 30
+    - endpoints: ["ceos01:eth6", "user:eth1"]
+

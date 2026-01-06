@@ -1,0 +1,101 @@
+# App Version 1 (Stable) - ConfigMap, Deployment, and Service
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-gateway-demo
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-v1-html
+  namespace: ingress-gateway-demo
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>App Version 1</title>
+        <style>
+            body { font-family: Arial, sans-serif; background: #2d5a27; color: white; 
+                   display: flex; justify-content: center; align-items: center; 
+                   height: 100vh; margin: 0; }
+            .container { text-align: center; padding: 40px; 
+                        background: rgba(255,255,255,0.1); border-radius: 10px; }
+            h1 { font-size: 3em; margin-bottom: 20px; }
+            p { font-size: 1.2em; opacity: 0.8; }
+            .version { background: #1a3d18; padding: 10px 20px; 
+                      border-radius: 20px; display: inline-block; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 App Version 1</h1>
+            <p class="version">STABLE RELEASE</p>
+            <p>This is the stable version of the application.</p>
+            <p>Served via Calico Ingress Gateway</p>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-v1
+  namespace: ingress-gateway-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ingress-gateway-demo
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: ingress-gateway-demo
+        version: v1
+    spec:
+      # Schedule on worker3/worker4 (nodes without bgp-peer label)
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: bgp-peer
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      containers:
+        - name: busybox
+          image: busybox:latest
+          command: ["sh", "-c", "httpd -f -p 80 -h /var/www/html"]
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /var/www/html
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+      volumes:
+        - name: html
+          configMap:
+            name: app-v1-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-v1
+  namespace: ingress-gateway-demo
+spec:
+  selector:
+    app: ingress-gateway-demo
+    version: v1
+  ports:
+    - port: 80
+      targetPort: 80
+

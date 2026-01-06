@@ -1,0 +1,18 @@
+# Gateway resource that creates an Envoy-based ingress gateway
+# The gateway listens on port 80 for HTTP traffic (accepts all hostnames)
+# Hostname filtering is done at the HTTPRoute level
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: calico-ingress-gateway
+  namespace: default
+spec:
+  gatewayClassName: tigera-gateway-class
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+
