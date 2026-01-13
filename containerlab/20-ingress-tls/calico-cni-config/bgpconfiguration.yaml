@@ -1,0 +1,14 @@
+# BGP Configuration for Calico
+# This configures BGP settings for nodes with bgp-peer=true label
+apiVersion: projectcalico.org/v3
+kind: BGPConfiguration
+metadata:
+  name: default
+spec:
+  logSeverityScreen: Info
+  nodeToNodeMeshEnabled: false
+  asNumber: 65010
+  # Advertise LoadBalancer IPs via BGP
+  serviceLoadBalancerIPs:
+    - cidr: 172.16.0.240/28
+

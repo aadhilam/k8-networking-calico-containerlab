@@ -1,0 +1,39 @@
+# ClusterIssuers for Lab Environment
+# ClusterIssuers are cluster-scoped and can issue certificates in any namespace
+#
+# This lab uses LOCAL Certificate Authorities that work without internet access:
+# 1. Self-Signed Issuer - For bootstrapping (creating the root CA)
+# 2. Internal CA Issuer - For issuing certificates signed by our local CA
+#
+# These demonstrate the same cert-manager concepts used in production
+# (where you might use Let's Encrypt, Vault PKI, or enterprise CAs)
+---
+# Self-Signed ClusterIssuer
+# Used to bootstrap the Internal CA certificate
+# Self-signed certs are signed by their own private key (no CA chain)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}
+---
+# Internal CA ClusterIssuer
+# This is the PRIMARY issuer for the lab - it issues certificates signed by our local CA
+# 
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: lab-ca-issuer
+spec:
+  ca:
+    secretName: lab-ca-secret
+
+# Benefits of using a CA issuer:
+# - Certificates have a proper trust chain (CA -> leaf cert)
+# - You can trust the CA once and all issued certs are trusted
+# - Mimics how enterprise PKI and ACME (Let's Encrypt) work
+# - Supports certificate revocation (in production setups)
+#
+# The CA certificate is created separately (see certificates.yaml)

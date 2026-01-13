@@ -1,0 +1,133 @@
+# Certificate resources for the demo applications
+#
+# This lab demonstrates two certificate strategies using a LOCAL CA:
+#
+# 1. Wildcard certificate (*.demo.lab)
+#    - Shared by multiple apps: store.demo.lab, blog.demo.lab
+#    - Single certificate covers all subdomains
+#    - Easier management, fewer certificates to track
+#
+# 2. Dedicated certificate (api.demo.lab)
+#    - Specific to the API service only
+#    - Better security isolation
+#    - Independent lifecycle (can rotate without affecting other services)
+#
+# Both certificates are signed by our Lab CA, demonstrating a proper PKI chain:
+#   Root CA (self-signed) -> Lab CA -> Leaf Certificates
+---
+# =============================================================================
+# STEP 1: Create the Lab CA Certificate (Root of Trust)
+# =============================================================================
+# This CA certificate is used by lab-ca-issuer to sign all other certificates
+# It's self-signed (bootstrapped using selfsigned-issuer)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: lab-ca
+  namespace: cert-manager
+spec:
+  # Mark this as a CA certificate
+  isCA: true
+  # Secret where the CA cert and key will be stored
+  secretName: lab-ca-secret
+  # CA certificate details
+  commonName: "Demo Lab Certificate Authority"
+  subject:
+    organizations:
+      - "Demo Lab"
+    organizationalUnits:
+      - "Infrastructure"
+  # Long validity for CA (10 years)
+  duration: 87600h
+  # Renew 1 year before expiry
+  renewBefore: 8760h
+  # Private key configuration
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  # Bootstrap using self-signed issuer
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+# =============================================================================
+# STEP 2: Wildcard Certificate for *.demo.lab
+# =============================================================================
+# This certificate covers ALL subdomains under demo.lab
+# Used by: store.demo.lab, blog.demo.lab (and any future *.demo.lab services)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-demo-lab
+  namespace: cert-manager-demo
+spec:
+  # Secret where the certificate will be stored
+  secretName: wildcard-demo-lab-tls
+  # Certificate validity (90 days - mimics Let's Encrypt default)
+  duration: 2160h
+  # Renew 30 days before expiry (cert-manager handles this automatically)
+  renewBefore: 720h
+  # Certificate subject
+  commonName: "*.demo.lab"
+  subject:
+    organizations:
+      - "Demo Lab"
+  # DNS names this certificate is valid for
+  dnsNames:
+    - "*.demo.lab"      # Wildcard - covers all subdomains
+    - "demo.lab"        # Also cover the apex domain
+  # Use our Lab CA to sign this certificate
+  issuerRef:
+    name: lab-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  # Private key configuration
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  # Certificate usage
+  usages:
+    - server auth
+    - client auth
+---
+# =============================================================================
+# STEP 3: Dedicated Certificate for api.demo.lab
+# =============================================================================
+# This certificate is SPECIFIC to the API service
+# Demonstrates per-service certificate isolation
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: api-demo-lab
+  namespace: cert-manager-demo
+spec:
+  # Secret where the certificate will be stored
+  secretName: api-demo-lab-tls
+  # Certificate validity
+  duration: 2160h
+  # Renew 30 days before expiry
+  renewBefore: 720h
+  # Certificate subject
+  commonName: "api.demo.lab"
+  subject:
+    organizations:
+      - "Demo Lab"
+    organizationalUnits:
+      - "API Services"
+  # DNS names - only api.demo.lab
+  dnsNames:
+    - "api.demo.lab"
+  # Use our Lab CA to sign this certificate
+  issuerRef:
+    name: lab-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  # Private key configuration
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  # Certificate usage
+  usages:
+    - server auth
+    - client auth

@@ -1,0 +1,68 @@
+# Gateway resource with TLS listeners for HTTPS traffic
+# This Gateway terminates TLS using certificates managed by cert-manager
+#
+# Listeners:
+# 1. HTTP (port 80) - For HTTP to HTTPS redirects
+# 2. HTTPS Wildcard (port 443) - For store.demo.lab and blog.demo.lab
+# 3. HTTPS API (port 443) - For api.demo.lab with dedicated certificate
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: tls-gateway
+  namespace: default
+spec:
+  gatewayClassName: tigera-gateway-class
+  listeners:
+    # HTTP listener for HTTP to HTTPS redirects
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+    
+    # HTTPS listener for store.demo.lab (wildcard cert)
+    - name: https-store
+      protocol: HTTPS
+      port: 443
+      hostname: "store.demo.lab"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: wildcard-demo-lab-tls
+            namespace: cert-manager-demo
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: All
+    
+    # HTTPS listener for api.demo.lab (dedicated cert)
+    - name: https-api
+      protocol: HTTPS
+      port: 443
+      hostname: "api.demo.lab"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: api-demo-lab-tls
+            namespace: cert-manager-demo
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: All
+
+    # HTTPS listener for blog.demo.lab (same wildcard cert)
+    - name: https-blog
+      protocol: HTTPS
+      port: 443
+      hostname: "blog.demo.lab"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: wildcard-demo-lab-tls
+            namespace: cert-manager-demo
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: All

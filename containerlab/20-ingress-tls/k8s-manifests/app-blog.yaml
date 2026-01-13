@@ -1,0 +1,281 @@
+# Blog App - Uses wildcard certificate (*.demo.lab)
+# This app shares the wildcard certificate with store.demo.lab
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blog-html
+  namespace: cert-manager-demo
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Demo Blog | Tech Insights</title>
+        <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,600;1,300&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            
+            body { 
+                font-family: 'Inter', sans-serif;
+                min-height: 100vh;
+                background: #faf9f7;
+                color: #2d2d2d;
+            }
+            
+            .hero {
+                background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+                color: #fff;
+                padding: 80px 30px;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .hero::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: 
+                    radial-gradient(circle at 30% 70%, rgba(234, 179, 8, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 30%, rgba(239, 68, 68, 0.08) 0%, transparent 50%);
+            }
+            
+            .hero-content {
+                position: relative;
+                z-index: 1;
+                max-width: 700px;
+                margin: 0 auto;
+            }
+            
+            .logo {
+                font-family: 'Crimson Pro', serif;
+                font-size: 1.2rem;
+                letter-spacing: 4px;
+                text-transform: uppercase;
+                color: #eab308;
+                margin-bottom: 30px;
+            }
+            
+            h1 {
+                font-family: 'Crimson Pro', serif;
+                font-size: 4rem;
+                font-weight: 300;
+                line-height: 1.1;
+                margin-bottom: 20px;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+                color: #9ca3af;
+                margin-bottom: 40px;
+            }
+            
+            .cert-info {
+                display: inline-flex;
+                align-items: center;
+                gap: 15px;
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                padding: 12px 25px;
+                border-radius: 8px;
+            }
+            
+            .cert-info .shield { font-size: 28px; }
+            .cert-info .details { text-align: left; }
+            .cert-info .title { font-weight: 600; color: #22c55e; font-size: 0.9rem; }
+            .cert-info .desc { font-size: 0.8rem; color: #9ca3af; }
+            
+            .content {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 60px 30px;
+            }
+            
+            .section-title {
+                font-family: 'Crimson Pro', serif;
+                font-size: 1.8rem;
+                color: #1a1a2e;
+                margin-bottom: 30px;
+                text-align: center;
+            }
+            
+            .card-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            .card {
+                background: #fff;
+                border: 1px solid #e5e5e5;
+                border-radius: 12px;
+                padding: 25px;
+                transition: box-shadow 0.3s;
+            }
+            
+            .card:hover {
+                box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            }
+            
+            .card-label {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 1.5px;
+                color: #9ca3af;
+                margin-bottom: 8px;
+            }
+            
+            .card-value {
+                font-size: 1rem;
+                color: #1a1a2e;
+                font-weight: 600;
+            }
+            
+            .wildcard {
+                background: linear-gradient(90deg, #ec4899, #f97316);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+            
+            .shared-note {
+                margin-top: 40px;
+                padding: 25px;
+                background: linear-gradient(135deg, #fef3c7, #fde68a);
+                border-radius: 12px;
+                text-align: center;
+            }
+            
+            .shared-note .icon { font-size: 30px; margin-bottom: 10px; }
+            .shared-note .text { color: #92400e; font-weight: 600; }
+            .shared-note .subtext { color: #a16207; font-size: 0.9rem; margin-top: 5px; }
+            
+            .footer {
+                text-align: center;
+                padding: 30px;
+                color: #9ca3af;
+                font-size: 0.85rem;
+                border-top: 1px solid #e5e5e5;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="hero">
+            <div class="hero-content">
+                <div class="logo">✦ Demo Blog</div>
+                <h1>Tech Insights & Stories</h1>
+                <p class="subtitle">Exploring Kubernetes, security, and modern infrastructure</p>
+                
+                <div class="cert-info">
+                    <span class="shield">🛡️</span>
+                    <div class="details">
+                        <div class="title">TLS Protected</div>
+                        <div class="desc">Wildcard Certificate Active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <h2 class="section-title">Certificate Details</h2>
+            
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-label">Hostname</div>
+                    <div class="card-value">blog.demo.lab</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Certificate CN</div>
+                    <div class="card-value"><span class="wildcard">*.demo.lab</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Certificate Type</div>
+                    <div class="card-value">Wildcard (Shared)</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Issuer</div>
+                    <div class="card-value">Lab CA</div>
+                </div>
+            </div>
+            
+            <div class="shared-note">
+                <div class="icon">🔗</div>
+                <div class="text">Shared Certificate with store.demo.lab</div>
+                <div class="subtext">Both apps use the same *.demo.lab wildcard certificate, reducing management overhead</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Managed by cert-manager • Automated certificate lifecycle</p>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog
+  namespace: cert-manager-demo
+  labels:
+    app: blog
+    app.kubernetes.io/name: blog
+    app.kubernetes.io/part-of: demo-apps
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: blog
+  template:
+    metadata:
+      labels:
+        app: blog
+        app.kubernetes.io/name: blog
+        app.kubernetes.io/part-of: demo-apps
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: bgp-peer
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+      volumes:
+        - name: html
+          configMap:
+            name: blog-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blog
+  namespace: cert-manager-demo
+spec:
+  selector:
+    app: blog
+  ports:
+    - port: 80
+      targetPort: 80
+

@@ -1,0 +1,265 @@
+# Store App - Uses wildcard certificate (*.demo.lab)
+# This app demonstrates using a shared wildcard certificate with blog.demo.lab
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: store-html
+  namespace: cert-manager-demo
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Demo Store | Secure Shopping</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            
+            body { 
+                font-family: 'Outfit', sans-serif;
+                min-height: 100vh;
+                background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2d1b4e 100%);
+                color: #e8e8f0;
+                overflow-x: hidden;
+            }
+            
+            .background-pattern {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: 
+                    radial-gradient(circle at 20% 80%, rgba(120, 80, 220, 0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(60, 180, 220, 0.1) 0%, transparent 50%),
+                    repeating-linear-gradient(
+                        0deg,
+                        transparent,
+                        transparent 50px,
+                        rgba(255,255,255,0.02) 50px,
+                        rgba(255,255,255,0.02) 51px
+                    );
+                pointer-events: none;
+                z-index: 0;
+            }
+            
+            .container {
+                position: relative;
+                z-index: 1;
+                max-width: 900px;
+                margin: 0 auto;
+                padding: 60px 30px;
+                text-align: center;
+            }
+            
+            .lock-icon {
+                width: 80px;
+                height: 80px;
+                margin: 0 auto 30px;
+                background: linear-gradient(135deg, #4ade80, #22d3ee);
+                border-radius: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 40px;
+                box-shadow: 0 10px 40px rgba(74, 222, 128, 0.3);
+                animation: float 3s ease-in-out infinite;
+            }
+            
+            @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+            
+            h1 {
+                font-size: 3.5rem;
+                font-weight: 700;
+                margin-bottom: 15px;
+                background: linear-gradient(90deg, #fff, #a78bfa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+            
+            .tagline {
+                font-size: 1.3rem;
+                color: #a5a5c0;
+                margin-bottom: 40px;
+                font-weight: 300;
+            }
+            
+            .cert-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 12px;
+                background: rgba(74, 222, 128, 0.15);
+                border: 1px solid rgba(74, 222, 128, 0.3);
+                padding: 15px 30px;
+                border-radius: 50px;
+                margin-bottom: 50px;
+            }
+            
+            .cert-badge .icon { font-size: 24px; }
+            .cert-badge .text { font-weight: 600; color: #4ade80; }
+            .cert-badge .subtext { font-size: 0.85rem; color: #86efac; }
+            
+            .info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 25px;
+                margin-bottom: 50px;
+            }
+            
+            .info-card {
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 16px;
+                padding: 30px;
+                backdrop-filter: blur(10px);
+                transition: transform 0.3s, box-shadow 0.3s;
+            }
+            
+            .info-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            }
+            
+            .info-card .label {
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                color: #8b8ba7;
+                margin-bottom: 10px;
+            }
+            
+            .info-card .value {
+                font-size: 1.1rem;
+                color: #fff;
+                font-family: 'Monaco', 'Consolas', monospace;
+                word-break: break-all;
+            }
+            
+            .wildcard-highlight {
+                background: linear-gradient(90deg, #f472b6, #c084fc);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-weight: 600;
+            }
+            
+            .footer {
+                margin-top: 40px;
+                padding-top: 30px;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                color: #6b6b8a;
+                font-size: 0.9rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="background-pattern"></div>
+        <div class="container">
+            <div class="lock-icon">🛒</div>
+            <h1>Demo Store</h1>
+            <p class="tagline">Secure e-commerce powered by TLS</p>
+            
+            <div class="cert-badge">
+                <span class="icon">🔐</span>
+                <div>
+                    <div class="text">TLS Secured</div>
+                    <div class="subtext">Wildcard Certificate</div>
+                </div>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="label">Hostname</div>
+                    <div class="value">store.demo.lab</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Certificate</div>
+                    <div class="value"><span class="wildcard-highlight">*.demo.lab</span></div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Certificate Type</div>
+                    <div class="value">Wildcard (Shared)</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Issuer</div>
+                    <div class="value">Lab CA</div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>🛡️ Secured by cert-manager with automated certificate lifecycle management</p>
+                <p style="margin-top: 10px;">Shares certificate with <strong>blog.demo.lab</strong></p>
+            </div>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store
+  namespace: cert-manager-demo
+  labels:
+    app: store
+    app.kubernetes.io/name: store
+    app.kubernetes.io/part-of: demo-apps
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: store
+  template:
+    metadata:
+      labels:
+        app: store
+        app.kubernetes.io/name: store
+        app.kubernetes.io/part-of: demo-apps
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: bgp-peer
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+      volumes:
+        - name: html
+          configMap:
+            name: store-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: store
+  namespace: cert-manager-demo
+spec:
+  selector:
+    app: store
+  ports:
+    - port: 80
+      targetPort: 80
+

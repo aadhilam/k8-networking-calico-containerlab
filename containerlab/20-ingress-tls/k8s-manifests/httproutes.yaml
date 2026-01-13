@@ -1,0 +1,110 @@
+# HTTPRoutes for routing traffic to demo applications
+# Each route attaches to the TLS Gateway and routes based on hostname
+---
+# ReferenceGrant to allow Gateway to reference secrets in cert-manager-demo namespace
+# apiVersion: gateway.networking.k8s.io/v1beta1
+# kind: ReferenceGrant
+# metadata:
+#   name: allow-gateway-to-demo
+#   namespace: cert-manager-demo
+# spec:
+#   from:
+#     - group: gateway.networking.k8s.io
+#       kind: Gateway
+#       namespace: default
+#     - group: gateway.networking.k8s.io
+#       kind: HTTPRoute
+#       namespace: default
+#   to:
+#     - group: ""
+#       kind: Service
+#     - group: ""
+#       kind: Secret
+---
+# HTTPRoute for Store application
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: store-route
+  namespace: default
+spec:
+  hostnames:
+    - "store.demo.lab"
+  parentRefs:
+    - name: tls-gateway
+      namespace: default
+      sectionName: https-store
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: store
+          namespace: cert-manager-demo
+          port: 80
+---
+# HTTPRoute for API application
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api-route
+  namespace: default
+spec:
+  hostnames:
+    - "api.demo.lab"
+  parentRefs:
+    - name: tls-gateway
+      namespace: default
+      sectionName: https-api
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: api
+          namespace: cert-manager-demo
+          port: 80
+---
+# HTTP to HTTPS redirect route
+# Redirects all HTTP traffic to HTTPS
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: http-redirect
+  namespace: default
+spec:
+  parentRefs:
+    - name: tls-gateway
+      namespace: default
+      sectionName: http
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+---
+# HTTPRoute for Blog application
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: blog-route
+  namespace: default
+spec:
+  hostnames:
+    - "blog.demo.lab"
+  parentRefs:
+    - name: tls-gateway
+      namespace: default
+      sectionName: https-blog
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: blog
+          namespace: cert-manager-demo
+          port: 80

@@ -40,6 +40,10 @@
       shell: |
         curl -sL https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz | tar xz -C /usr/local/bin k9s
         chmod +x /usr/local/bin/k9s
+
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
         
     - name: Add ubuntu user to docker group
       user:

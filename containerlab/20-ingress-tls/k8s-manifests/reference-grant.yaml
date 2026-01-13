@@ -1,0 +1,38 @@
+# ReferenceGrant allows resources in the default namespace to reference
+# resources in the cert-manager-demo namespace
+#
+# This is required because:
+# 1. The Gateway (in default namespace) needs to reference TLS Secrets
+#    in cert-manager-demo namespace for TLS termination
+# 2. The HTTPRoutes need to reference Services in cert-manager-demo namespace
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-gateway-secrets
+  namespace: cert-manager-demo
+spec:
+  # Allow the Gateway in default namespace to reference Secrets here
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: default
+  to:
+    - group: ""
+      kind: Secret
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-httproute-services
+  namespace: cert-manager-demo
+spec:
+  # Allow HTTPRoutes in default namespace to reference Services here
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: default
+  to:
+    - group: ""
+      kind: Service
+

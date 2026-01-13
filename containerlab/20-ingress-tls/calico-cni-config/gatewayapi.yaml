@@ -1,0 +1,17 @@
+# Enable Gateway API support in Calico
+# This creates the necessary Envoy Gateway components for ingress traffic management
+apiVersion: operator.tigera.io/v1
+kind: GatewayAPI
+metadata:
+  name: default
+spec:
+  gatewayClasses:
+    - name: tigera-gateway-class
+      gatewayDeployment:
+        spec:
+          template:
+            spec:
+              # Deploy Envoy Gateway pods only on BGP peer nodes
+              nodeSelector:
+                bgp-peer: "true"
+

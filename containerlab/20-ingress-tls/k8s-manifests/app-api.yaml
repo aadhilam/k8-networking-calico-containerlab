@@ -1,0 +1,360 @@
+# API App - Uses dedicated certificate (api.demo.lab)
+# This app has its own specific certificate, demonstrating per-service TLS
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-html
+  namespace: cert-manager-demo
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Demo API | Developer Portal</title>
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            
+            body { 
+                font-family: 'Space Grotesk', sans-serif;
+                min-height: 100vh;
+                background: #0a0a0a;
+                color: #e5e5e5;
+            }
+            
+            .grid-bg {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: 
+                    linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+                background-size: 50px 50px;
+                pointer-events: none;
+            }
+            
+            .container {
+                position: relative;
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 50px 30px;
+            }
+            
+            .header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 60px;
+                padding-bottom: 30px;
+                border-bottom: 1px solid #222;
+            }
+            
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            
+            .logo-icon {
+                width: 45px;
+                height: 45px;
+                background: linear-gradient(135deg, #22c55e, #10b981);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+            }
+            
+            .logo-text {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #fff;
+            }
+            
+            .status-badge {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(34, 197, 94, 0.1);
+                border: 1px solid rgba(34, 197, 94, 0.3);
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 0.85rem;
+            }
+            
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                background: #22c55e;
+                border-radius: 50%;
+                animation: pulse 2s infinite;
+            }
+            
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+            
+            .hero {
+                text-align: center;
+                margin-bottom: 60px;
+            }
+            
+            h1 {
+                font-size: 3rem;
+                font-weight: 700;
+                margin-bottom: 15px;
+                background: linear-gradient(90deg, #22c55e, #3b82f6);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+            
+            .description {
+                font-size: 1.15rem;
+                color: #888;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            
+            .cert-section {
+                background: #111;
+                border: 1px solid #222;
+                border-radius: 16px;
+                padding: 40px;
+                margin-bottom: 40px;
+            }
+            
+            .cert-header {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 30px;
+            }
+            
+            .cert-icon {
+                font-size: 35px;
+            }
+            
+            .cert-title {
+                font-size: 1.3rem;
+                font-weight: 600;
+                color: #fff;
+            }
+            
+            .cert-subtitle {
+                font-size: 0.9rem;
+                color: #22c55e;
+            }
+            
+            .cert-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            .cert-item {
+                background: #0a0a0a;
+                border: 1px solid #1a1a1a;
+                border-radius: 10px;
+                padding: 20px;
+            }
+            
+            .cert-item-label {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                color: #666;
+                margin-bottom: 8px;
+            }
+            
+            .cert-item-value {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.95rem;
+                color: #fff;
+            }
+            
+            .dedicated {
+                color: #3b82f6;
+                font-weight: 600;
+            }
+            
+            .highlight-box {
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
+                border: 1px solid rgba(59, 130, 246, 0.2);
+                border-radius: 12px;
+                padding: 25px;
+                text-align: center;
+            }
+            
+            .highlight-box .icon { font-size: 30px; margin-bottom: 10px; }
+            .highlight-box .title { font-weight: 600; color: #3b82f6; margin-bottom: 5px; }
+            .highlight-box .text { font-size: 0.9rem; color: #888; }
+            
+            .code-block {
+                background: #111;
+                border: 1px solid #222;
+                border-radius: 10px;
+                padding: 20px;
+                margin-top: 40px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.85rem;
+            }
+            
+            .code-block .comment { color: #666; }
+            .code-block .key { color: #22c55e; }
+            .code-block .value { color: #3b82f6; }
+            
+            .footer {
+                text-align: center;
+                margin-top: 50px;
+                padding-top: 30px;
+                border-top: 1px solid #222;
+                color: #666;
+                font-size: 0.85rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="grid-bg"></div>
+        <div class="container">
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span class="logo-text">Demo API</span>
+                </div>
+                <div class="status-badge">
+                    <div class="status-dot"></div>
+                    <span>Secured</span>
+                </div>
+            </div>
+            
+            <div class="hero">
+                <h1>Developer API Portal</h1>
+                <p class="description">High-performance REST API with dedicated TLS certificate for enhanced security isolation</p>
+            </div>
+            
+            <div class="cert-section">
+                <div class="cert-header">
+                    <span class="cert-icon">🔒</span>
+                    <div>
+                        <div class="cert-title">Dedicated Certificate</div>
+                        <div class="cert-subtitle">Per-service TLS isolation</div>
+                    </div>
+                </div>
+                
+                <div class="cert-grid">
+                    <div class="cert-item">
+                        <div class="cert-item-label">Hostname</div>
+                        <div class="cert-item-value">api.demo.lab</div>
+                    </div>
+                    <div class="cert-item">
+                        <div class="cert-item-label">Certificate CN</div>
+                        <div class="cert-item-value"><span class="dedicated">api.demo.lab</span></div>
+                    </div>
+                    <div class="cert-item">
+                        <div class="cert-item-label">Certificate Type</div>
+                        <div class="cert-item-value">Dedicated (Specific)</div>
+                    </div>
+                    <div class="cert-item">
+                        <div class="cert-item-label">Issuer</div>
+                        <div class="cert-item-value">Lab CA</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <div class="icon">🎯</div>
+                <div class="title">Independent Certificate Lifecycle</div>
+                <div class="text">This API uses its own certificate, separate from the wildcard used by other services. This provides better security isolation and independent rotation.</div>
+            </div>
+            
+            <div class="code-block">
+                <span class="comment"># Certificate Resource</span><br>
+                <span class="key">apiVersion:</span> <span class="value">cert-manager.io/v1</span><br>
+                <span class="key">kind:</span> <span class="value">Certificate</span><br>
+                <span class="key">metadata:</span><br>
+                &nbsp;&nbsp;<span class="key">name:</span> <span class="value">api-demo-lab</span><br>
+                <span class="key">spec:</span><br>
+                &nbsp;&nbsp;<span class="key">dnsNames:</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- <span class="value">api.demo.lab</span><br>
+                &nbsp;&nbsp;<span class="key">issuerRef:</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">name:</span> <span class="value">lab-ca-issuer</span>
+            </div>
+            
+            <div class="footer">
+                <p>Powered by cert-manager • Automated TLS certificate management</p>
+            </div>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: cert-manager-demo
+  labels:
+    app: api
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: demo-apps
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+        app.kubernetes.io/name: api
+        app.kubernetes.io/part-of: demo-apps
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: bgp-peer
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+      volumes:
+        - name: html
+          configMap:
+            name: api-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: cert-manager-demo
+spec:
+  selector:
+    app: api
+  ports:
+    - port: 80
+      targetPort: 80
+

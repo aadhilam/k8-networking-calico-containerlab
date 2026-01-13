@@ -46,3 +46,8 @@ license-tokens.yml
 notes.txt
 container-labs.code-workspace
 
+# Demo Magic
+demo-magic/
+demo/
+
+
