@@ -30,48 +30,9 @@ This lab demonstrates two common certificate strategies:
 - **Cons**: More certificates to manage
 - **Use case**: Critical APIs requiring enhanced security isolation
 
-## Lab Architecture
+## Lab Setup
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                        CERT-MANAGER LAB ARCHITECTURE                            │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                 │
-│                 ┌─────────────────┐     ┌─────────────────┐                    │
-│                 │    Lab CA       │     │   cert-manager  │                    │
-│                 │  (Local Root)   │◄────│  ClusterIssuers │                    │
-│                 └────────┬────────┘     └────────┬────────┘                    │
-│                          │                       │                              │
-│                          │ Signs                 │                              │
-│                          ▼                       ▼                              │
-│           ┌─────────────────────────────────────────────────────┐              │
-│           │                   Certificates                       │              │
-│           │  ┌─────────────────────┐  ┌─────────────────────┐   │              │
-│           │  │     *.demo.lab      │  │    api.demo.lab     │   │              │
-│           │  │     (wildcard)      │  │    (dedicated)      │   │              │
-│           │  │   store + blog      │  │      API only       │   │              │
-│           │  └─────────────────────┘  └─────────────────────┘   │              │
-│           └───────────────────────────┬─────────────────────────┘              │
-│                                       │                                         │
-│                                       ▼                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐          │
-│  │                        TLS Gateway                               │          │
-│  │  ┌─────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐  │          │
-│  │  │ HTTP:80 │  │ HTTPS:443   │  │ HTTPS:443   │  │ HTTPS:443  │  │          │
-│  │  │(redirect)│ │store.demo.lab│ │blog.demo.lab│  │api.demo.lab│  │          │
-│  │  │         │  │ (wildcard)  │  │ (wildcard)  │  │(dedicated) │  │          │
-│  │  └─────────┘  └─────────────┘  └─────────────┘  └────────────┘  │          │
-│  └─────────────────────────────────────────────────────────────────┘          │
-│                                     │                                          │
-│              ┌──────────────────────┼──────────────────────┐                   │
-│              ▼                      ▼                      ▼                   │
-│      ┌─────────────┐        ┌─────────────┐        ┌─────────────┐            │
-│      │   Store     │        │    Blog     │        │    API      │            │
-│      │   App       │        │    App      │        │    App      │            │
-│      └─────────────┘        └─────────────┘        └─────────────┘            │
-│                                                                                 │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
+![TLS Ingress Architecture](../../images/tls-ingress.png)
 
 ## Prerequisites
 
@@ -435,6 +396,8 @@ api     ClusterIP   10.96.x.x       <none>        80/TCP    1m
 
 In this phase, you'll create ClusterIssuers that define how certificates are obtained. Since this is a lab environment, we use **local Certificate Authorities** instead of public CAs like Let's Encrypt.
 
+![Cert Issuers](../../images/cert-issuers.png)
+
 ### 15. Understand ClusterIssuers
 
 Examine the ClusterIssuer manifest:
@@ -513,6 +476,8 @@ lab-ca-issuer       False   Error initializing issuer: secret not found         
 ## Phase 4: Issue Certificates
 
 Now you'll create Certificate resources that request certificates from our Lab CA.
+
+![Issue Certs](../../images/issue-certs.png)
 
 ### 18. Understand the Certificate Resources
 
@@ -665,6 +630,9 @@ flowchart TB
 
 > [!IMPORTANT]
 > **Self-signing explained:** When `selfsigned-issuer` processes a certificate, cert-manager generates a new private key, creates a CSR, then signs that CSR with the **same private key** it just generated. The certificate literally signs itself - that's why it's called "self-signed." This is only used for root CAs.
+
+![Cert Process](../../images/cert-process.png)
+
 
 ### 19. Create the Certificates
 
@@ -1310,9 +1278,9 @@ kubectl get certificate api-demo-lab -n cert-manager-demo -w
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        CERT-MANAGER ARCHITECTURE                         │
+│                        CERT-MANAGER ARCHITECTURE                        │
 ├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
+│                                                                         │
 │  ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐   │
 │  │   Controller     │    │    CA Injector   │    │     Webhook      │   │
 │  │                  │    │                  │    │                  │   │
@@ -1321,15 +1289,15 @@ kubectl get certificate api-demo-lab -n cert-manager-demo -w
 │  │ • Multiple       │    │ • Updates        │    │ • Converts       │   │
 │  │   issuer types   │    │   annotations    │    │   versions       │   │
 │  └────────┬─────────┘    └──────────────────┘    └──────────────────┘   │
-│           │                                                              │
-│           ▼                                                              │
+│           │                                                             │
+│           ▼                                                             │
 │  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                      Custom Resources                            │    │
-│  │  ┌───────────┐  ┌────────────┐  ┌───────────┐  ┌────────────┐  │    │
-│  │  │ClusterIss.│  │Certificate │  │CertReq    │  │Order       │  │    │
-│  │  └───────────┘  └────────────┘  └───────────┘  └────────────┘  │    │
+│  │                      Custom Resources                           │    │
+│  │  ┌───────────┐  ┌────────────┐  ┌───────────┐  ┌────────────┐   │    │
+│  │  │ClusterIss.│  │Certificate │  │CertReq    │  │Order       │   │    │
+│  │  └───────────┘  └────────────┘  └───────────┘  └────────────┘   │    │
 │  └─────────────────────────────────────────────────────────────────┘    │
-│                                                                          │
+│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
