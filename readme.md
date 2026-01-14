@@ -1,6 +1,6 @@
 # Kubernetes Networking with Calico and ContainerLab
 
-🎯 **Learn Kubernetes networking hands-on!** This repository provides a complete toolkit for deploying and experimenting with **Calico CNI**, **ContainerLab topologies**, and **Kubernetes networking concepts** on AWS infrastructure.
+🎯 **Learn Kubernetes networking hands-on!** This repository provides a complete toolkit for deploying and experimenting with **Calico CNI**, **ContainerLab topologies**, and **Kubernetes networking concepts**
 
 Perfect for:
 - 🔬 **Network engineers** exploring Kubernetes networking
@@ -49,8 +49,6 @@ The deployment script will:
 - Configure the instance with Docker, ContainerLab, Kind, and kubectl using Ansible
 - Copy lab files to the instance
 - Establish an SSH session to the instance
-
-![EC2 ContainerLab Environment](images/ec2_containerlab.png)
 
 ### Working with the Lab
 
