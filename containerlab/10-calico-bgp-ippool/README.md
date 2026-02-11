@@ -3,7 +3,7 @@
 This lab demonstrates how to advertise Calico IP pools to external networks using BGP. You will learn how to configure BGP peering between Calico nodes and an upstream router to make pod IP addresses routable outside the Kubernetes cluster.
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/10-calico-bgp-ippool`
 
 
@@ -764,4 +764,4 @@ Here's a quick recap of what you just accomplished in this lab:
 - You proved the BGP sessions and learned routes on both the nodes and the ToR, so pods can talk across subnets and from outside the cluster.
 
 ## Lab Cleanup
-to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**

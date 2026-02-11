@@ -199,7 +199,7 @@ This ensures Calico uses the `eth1` interface (connected to the cEOS switch) rat
 
 ## Lab Setup
 
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/14-calico-ipv6`
 
 ## Deployment
@@ -671,4 +671,4 @@ The key takeaway is that **dual-stack networking allows pods to communicate over
 ./destroy.sh
 ```
 
-Or follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+Or follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**

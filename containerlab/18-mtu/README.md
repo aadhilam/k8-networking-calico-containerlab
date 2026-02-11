@@ -62,7 +62,7 @@ This lab setup helps visualize MTU mismatch issues between container network int
 
 ## Lab Setup
 
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/18-mtu`
 
 ## Deployment
@@ -994,7 +994,7 @@ tcpdump -i eth1 host <destination> -vv | grep mss
 
 ## Lab Cleanup
 
-To cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+To cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**
 
 Or run:
 ```bash

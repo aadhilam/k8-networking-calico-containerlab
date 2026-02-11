@@ -18,7 +18,7 @@ Services provide a stable virtual IP and DNS name in front of pods. They decoupl
 - Headless (`clusterIP: None`): no VIP; DNS returns pod IPs.
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/04-k8s-services`
 
 ## Deployment
@@ -280,4 +280,4 @@ Notes and nuances:
 - Dual-stack: For dual-stack clusters, Services can have both IPv4/IPv6 VIPs; kube-proxy programs rules for each family.
 
 ## Lab Cleanup
-to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**

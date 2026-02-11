@@ -19,7 +19,7 @@ Demonstrates how Calico handles pod-to-pod communication when Kubernetes nodes a
 
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/06-calico-overlay`
 
 ## Lab
@@ -418,4 +418,4 @@ This lab demonstrated overlay networks in Kubernetes. We looked at how to:
 - Validate routing, VXLAN interface state, neighbor/FDB entries, and encapsulation steps to confirm end-to-end overlay forwarding.
 
 ## Lab Cleanup
-to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**

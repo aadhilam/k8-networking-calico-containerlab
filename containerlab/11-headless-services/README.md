@@ -35,7 +35,7 @@ Headless services create different DNS records depending on the workload type:
 - No individual pod DNS records (pods don't have stable identities)
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/headless-services`
 
 ## Deployment
@@ -716,4 +716,4 @@ This pattern ensures:
 - Clients can connect to specific roles (master vs replica) by DNS name
 
 ## Lab Cleanup
-to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**

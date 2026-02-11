@@ -91,7 +91,7 @@ When kube-proxy runs in **iptables mode**, NodeLocal DNSCache uses the transpare
 
 ## Lab Setup
 
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/17-nodelocal-dnscache`
 
@@ -932,7 +932,7 @@ This allows the routing decision to see `10.96.0.10` (bound locally) rather than
 
 ## Lab Cleanup
 
-To cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+To cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**
 
 Or run:
 ```bash

@@ -19,7 +19,7 @@ In Kubernetes, every pod needs a unique IP address to communicate with other pod
 ![Calico IPAM Architecture](../../images/calico-pod-ip.png)
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/01-calico-ipam`
 
 ## Deployment
@@ -252,5 +252,5 @@ If you see issues with IP allocation:
 4. Review Calico logs: `kubectl logs -n calico-system -l k8s-app=calico-node`
 
 ## Lab Cleanup
-to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**
 

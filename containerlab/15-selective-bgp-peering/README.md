@@ -30,7 +30,7 @@ In large Kubernetes clusters, establishing BGP peering from every node to the To
 
 ## Lab Setup
 
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/15-selective-bgp-peering`
 
@@ -357,5 +357,5 @@ This lab demonstrated selective BGP peering using Calico's `nodeSelector` featur
 
 ## Lab Cleanup
 
-To cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+To cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**
 

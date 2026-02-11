@@ -3,7 +3,7 @@
 This lab demonstrates Calico's BGP (Border Gateway Protocol) functionality. BGP peering with upstream networks can be used to advertise pod as well as service CIDRs.
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/07-calico-bgp`
 
 ## Lab
@@ -228,4 +228,4 @@ This lab successfully demonstrates Calico's BGP integration capabilities with ex
 This lab provides a foundation for understanding how Calico can integrate with real-world network infrastructure using standard BGP protocols.
 
 ## Lab Cleanup
-to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**

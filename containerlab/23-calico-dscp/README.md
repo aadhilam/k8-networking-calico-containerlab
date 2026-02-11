@@ -76,7 +76,7 @@ Calico's DSCP annotation (`qos.projectcalico.org/dscp`) marks egress traffic at 
 
 ## Lab Setup
 
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/23-calico-dscp`
 
@@ -340,4 +340,4 @@ chmod +x destroy.sh
 ./destroy.sh
 ```
 
-Or follow **[Lab cleanup](../README.md#lab-cleanup)**
+Or follow **[Lab cleanup](../readme.md#lab-cleanup)**

@@ -42,7 +42,7 @@ Each node has:
 
 ## Lab Setup
 
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/22-ipvlan`
 
@@ -1085,7 +1085,7 @@ This lab provides a foundation for understanding IPvlan and how it differs from 
 
 ## Lab Cleanup
 
-To cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+To cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**
 
 ```bash
 ./destroy.sh

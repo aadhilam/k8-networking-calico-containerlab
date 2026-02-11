@@ -30,7 +30,7 @@ Cross-node pod communication introduces additional complexity requiring cluster-
 
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/03-pod-routing`
 
 ## Deployment
@@ -434,4 +434,4 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 This hands-on lab explores how Calico enables pod-to-pod communication in Kubernetes through its advanced routing capabilities. You'll examine both intra-node (same node) and inter-node (cross-node) communication patterns, understand Calico's per-node IP block allocation strategy, and observe how packets flow through the network infrastructure. The lab uses practical examples with multitool pods to demonstrate routing tables, network interfaces, and traffic analysis across a 3-node Kind cluster.
 
 ## Lab Cleanup
-to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**

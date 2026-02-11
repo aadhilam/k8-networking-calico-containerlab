@@ -55,7 +55,7 @@ Additionally
 
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/02-pod-network`
 
 ## Deployment
@@ -361,5 +361,5 @@ This diagram illustrates how a Kubernetes Pod connects to the host network using
 
 
 ## Lab Cleanup
-to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**
 

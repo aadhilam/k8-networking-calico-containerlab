@@ -14,7 +14,7 @@ In Kubernetes, DNS is a foundational service that enables reliable service-to-se
 - Supports both in-cluster lookups (service discovery) and external DNS resolution from Pods.
 
 ## Lab Setup
-To setup the lab for this module **[Lab setup](../README.md#lab-setup)**
+To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/05-k8s-dns`
 
 ## Lab
@@ -377,4 +377,4 @@ This lab demonstrated how Kubernetes DNS works end to end.
 
 
 ## Lab Cleanup
-to cleanup the lab follow steps in **[Lab cleanup](../README.md#lab-cleanup)**
+to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**
