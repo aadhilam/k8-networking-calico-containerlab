@@ -1,0 +1,53 @@
+# Pods for comparing IPVLAN L2 and L3 modes
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ipvlan-l2-pod-1
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/networks: vlan30-ipvlan-l2
+spec:
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot
+    command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ipvlan-l2-pod-2
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/networks: vlan30-ipvlan-l2
+spec:
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot
+    command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ipvlan-l3-pod-1
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/networks: vlan30-ipvlan-l3
+spec:
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot
+    command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ipvlan-l3-pod-2
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/networks: vlan30-ipvlan-l3
+spec:
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot
+    command: ["sleep", "infinity"]

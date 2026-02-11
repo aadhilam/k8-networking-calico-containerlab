@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ipvlan-l3-test-pod
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/networks: vlan30-ipvlan-l3
+spec:
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot
+    command: ["sleep", "infinity"]

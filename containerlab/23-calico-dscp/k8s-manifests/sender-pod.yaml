@@ -1,0 +1,52 @@
+# Pod without DSCP marking - baseline test
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sender-no-dscp
+  labels:
+    app: sender
+    dscp: none
+spec:
+  nodeName: k01-worker
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot:latest
+    command: ["sleep", "infinity"]
+---
+# Pod with DSCP AF11 marking (decimal 10)
+# Traffic from this pod will be throttled to 1 Mbps by the switch
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sender-dscp-af11
+  labels:
+    app: sender
+    dscp: af11
+  annotations:
+    # Calico DSCP annotation - marks all egress traffic with DSCP AF11
+    qos.projectcalico.org/dscp: "AF11"
+spec:
+  nodeName: k01-worker
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot:latest
+    command: ["sleep", "infinity"]
+---
+# Pod with DSCP EF marking (decimal 46)
+# Traffic from this pod will be throttled to 5 Mbps by the switch
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sender-dscp-ef
+  labels:
+    app: sender
+    dscp: ef
+  annotations:
+    # Calico DSCP annotation - marks all egress traffic with DSCP EF
+    qos.projectcalico.org/dscp: "EF"
+spec:
+  nodeName: k01-worker
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot:latest
+    command: ["sleep", "infinity"]

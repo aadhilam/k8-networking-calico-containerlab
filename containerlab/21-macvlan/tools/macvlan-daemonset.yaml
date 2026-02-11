@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: macvlan-test-ds
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: macvlan-test
+  template:
+    metadata:
+      labels:
+        app: macvlan-test
+      annotations:
+        k8s.v1.cni.cncf.io/networks: vlan20-macvlan
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: netshoot
+        image: nicolaka/netshoot
+        command: ["sleep", "infinity"]

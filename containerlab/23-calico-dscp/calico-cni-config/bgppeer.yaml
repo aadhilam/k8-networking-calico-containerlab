@@ -1,0 +1,10 @@
+# BGP Peer configuration for ToR switch
+# Only nodes with bgp-peer=true will establish BGP sessions
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: tor-peer
+spec:
+  peerIP: 10.10.10.1
+  asNumber: 65001
+  nodeSelector: bgp-peer == 'true'
