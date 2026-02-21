@@ -2,7 +2,9 @@
 
 This lab demonstrates how Calico can set DSCP (Differentiated Services Code Point) markings on pod egress traffic, enabling upstream network devices to classify and prioritize that traffic accordingly.
 
-## What is DSCP?
+## Overview
+
+### What is DSCP?
 
 DSCP is a 6-bit field in the IP header that allows network devices to classify and prioritize traffic. It's part of the DiffServ (Differentiated Services) architecture defined in RFC 2474.
 
@@ -14,7 +16,7 @@ DSCP is a 6-bit field in the IP header that allows network devices to classify a
 | **CS3** (Class Selector) | 24 | 011000 | Signaling traffic |
 | **DF** (Default) | 0 | 000000 | Best effort (no marking) |
 
-## Why DSCP with Calico?
+### Why DSCP with Calico?
 
 Calico's DSCP annotation (`qos.projectcalico.org/dscp`) marks egress traffic at the pod level, allowing:
 
@@ -22,7 +24,7 @@ Calico's DSCP annotation (`qos.projectcalico.org/dscp`) marks egress traffic at 
 2. **Network-level enforcement**: Switches and routers can apply bandwidth policies based on DSCP values
 3. **Application-agnostic**: No application changes needed - Calico marks all egress traffic from the pod
 
-## Lab Architecture
+## Lab Topology
 
 ```
     ┌─────────────────────────────────────────────────────────────┐
@@ -128,7 +130,7 @@ sudo docker exec -it clab-calico-dscp-client iperf3 -s
 
 Keep this running for all tests.
 
-### 5. Test Without DSCP (Baseline)
+### 4. Test Without DSCP (Baseline)
 
 Run iperf3 from the pod **without** DSCP marking:
 
@@ -142,7 +144,7 @@ Expected result: **High bandwidth** (no throttling)
 [  5]   0.00-10.00  sec  1.10 GBytes   944 Mbits/sec    sender
 ```
 
-### 6. Test with DSCP AF11 (1 Mbps Throttle)
+### 5. Test with DSCP AF11 (1 Mbps Throttle)
 
 Run iperf3 from the pod with **DSCP AF11** marking:
 
@@ -156,7 +158,7 @@ Expected result: **~1 Mbps** (throttled by switch)
 [  5]   0.00-10.00  sec  1.19 MBytes  1.00 Mbits/sec    sender
 ```
 
-### 7. Test with DSCP EF (5 Mbps Throttle)
+### 6. Test with DSCP EF (5 Mbps Throttle)
 
 Run iperf3 from the pod with **DSCP EF** marking:
 
@@ -170,11 +172,11 @@ Expected result: **~5 Mbps** (throttled by Linux router)
 [  5]   0.00-10.00  sec  5.96 MBytes  5.00 Mbits/sec    sender
 ```
 
-### 8. Verify DSCP Marking with Packet Capture
+### 7. Verify DSCP Marking with Packet Capture
 
 You can capture packets at multiple points to verify DSCP markings are being applied:
 
-#### Quick Method: Use the Helper Script
+#### 7.1 Quick Method: Use the Helper Script
 
 ```bash
 cd containerlab/23-calico-dscp
@@ -183,7 +185,7 @@ cd containerlab/23-calico-dscp
 
 This interactive script lets you choose where to capture and can compare all pods automatically.
 
-#### Option A: Capture on the Router (Recommended)
+#### 7.2 Capture on the Router (Recommended)
 
 The router is the best place to see DSCP markings as traffic passes through:
 
@@ -205,7 +207,7 @@ IP (tos 0x28, ttl 64, id 12345, ...) 10.30.30.1 > 10.30.30.100: ICMP echo reques
 - `tos 0x28` = DSCP 10 (AF11) - 0x28 = 40 decimal = (10 << 2)
 - `tos 0xb8` = DSCP 46 (EF) - 0xb8 = 184 decimal = (46 << 2)
 
-#### Option B: Capture on the Worker Node
+#### 7.3 Capture on the Worker Node
 
 Capture traffic as it leaves the pod's network namespace:
 
@@ -217,7 +219,7 @@ sudo docker exec -it clab-calico-dscp-k01-worker tcpdump -i eth1 -v -n 'ip' -c 2
 kubectl exec -it sender-dscp-af11 -- ping -c 5 10.30.30.100
 ```
 
-#### Option C: Capture on the Client
+#### 7.4 Capture on the Client
 
 Capture incoming traffic on the client:
 
@@ -229,7 +231,7 @@ sudo docker exec -it clab-calico-dscp-client tcpdump -i eth1 -v -n 'ip' -c 20
 kubectl exec -it sender-dscp-af11 -- ping -c 5 10.30.30.100
 ```
 
-#### Using tcpdump Filters for Specific DSCP Values
+#### 7.5 Using tcpdump Filters for Specific DSCP Values
 
 Filter for specific DSCP values:
 
@@ -246,7 +248,7 @@ sudo docker exec -it clab-calico-dscp-router tcpdump -i eth3 -v -n 'ip[1] & 0xfc
 
 > **Note**: The TOS byte includes DSCP (6 bits) + ECN (2 bits). The filter `ip[1] & 0xfc` masks out the ECN bits (lower 2 bits) to match only the DSCP value.
 
-#### Comparing Marked vs Unmarked Traffic
+#### 7.6 Comparing Marked vs Unmarked Traffic
 
 Compare traffic from different pods:
 
@@ -269,17 +271,15 @@ You should see different `tos` values for each pod:
 - `sender-dscp-af11`: `tos 0x28`
 - `sender-dscp-ef`: `tos 0xb8`
 
-### 9. Inspect Linux Router QoS Configuration
+### 8. Inspect Linux Router QoS Configuration
 
-## Results Summary
+## Summary
 
 | Pod | DSCP Value | Router Policy | Observed Bandwidth |
 |-----|------------|---------------|-------------------|
 | sender-no-dscp | 0 (DF) | No limit | ~1 Gbps |
 | sender-dscp-af11 | 10 (AF11) | 1 Mbps (Linux tc) | ~1 Mbps |
 | sender-dscp-ef | 46 (EF) | 5 Mbps (Linux tc) | ~5 Mbps |
-
-## Key Concepts
 
 ### Calico DSCP Annotation
 
@@ -333,7 +333,7 @@ DSCP markings set by Calico are preserved across the network path as long as:
 - Network devices don't explicitly rewrite DSCP
 - Traffic doesn't cross trust boundaries that reset DSCP
 
-## Cleanup
+## Lab Cleanup
 
 ```bash
 chmod +x destroy.sh

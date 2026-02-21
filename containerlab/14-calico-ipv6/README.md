@@ -2,6 +2,133 @@
 
 This lab demonstrates Kubernetes dual-stack networking with Calico, where pods can communicate using both IPv4 and IPv6 to reach internal services and external destinations.
 
+## Overview
+
+- How to configure a dual-stack Kubernetes cluster with Calico
+- How pods receive both IPv4 and IPv6 addresses
+- How VXLAN encapsulation enables IPv6 pod-to-pod communication
+- How pods can reach external IPv4 and IPv6 destinations
+- How CoreDNS provides A (IPv4) and AAAA (IPv6) records for services
+
+### What is Dual-Stack Networking?
+
+Dual-stack networking means that network entities (nodes, pods, services) have both IPv4 and IPv6 addresses simultaneously. This allows applications to:
+
+- Communicate over IPv4 with legacy systems
+- Communicate over IPv6 with modern infrastructure
+- Gradually transition from IPv4 to IPv6 without breaking compatibility
+
+<mark>In this lab, pods can reach both an IPv4 destination (1.1.1.1) and an IPv6 destination (2001:db8::1) on an upstream router, demonstrating true dual-stack external connectivity.</mark>
+
+### Kind Cluster Configuration for Dual-Stack
+
+To enable dual-stack networking in Kubernetes, the cluster must be configured at creation time. The Kind cluster configuration file (`dual-stack-no-cni.yaml`) contains the key settings:
+
+```yaml
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: dual-stack
+networking:
+  disableDefaultCNI: true
+  podSubnet: "192.168.0.0/16,fd00:10:244::/48"
+  serviceSubnet: "10.96.0.0/16,fd00:10:96::/112"
+  ipFamily: dual
+```
+
+#### Configuration Explained
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `disableDefaultCNI` | `true` | Disables Kind's default CNI so we can install Calico |
+| `podSubnet` | `192.168.0.0/16,fd00:10:244::/48` | Comma-separated IPv4 and IPv6 CIDRs for pods |
+| `serviceSubnet` | `10.96.0.0/16,fd00:10:96::/112` | Comma-separated IPv4 and IPv6 CIDRs for services |
+| `ipFamily` | `dual` | Enables dual-stack mode (both IPv4 and IPv6) |
+
+#### Node IP Configuration
+
+Each node must be configured to advertise both IPv4 and IPv6 addresses to the Kubernetes API:
+
+```yaml
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-ip: "10.10.10.10,fd00:10:10::10"
+```
+
+The `node-ip` parameter is a comma-separated list of the node's IPv4 and IPv6 addresses. This tells kubelet to register both addresses with the API server, enabling:
+- Dual-stack node addressing
+- Proper scheduling of dual-stack pods
+- Correct endpoint selection for services
+
+#### Why These Settings Matter
+
+1. **`ipFamily: dual`** - Without this, Kubernetes defaults to single-stack (IPv4 only)
+2. **Comma-separated subnets** - The order matters: IPv4 first, then IPv6
+3. **`node-ip` on each node** - Ensures kubelet registers both addresses; without this, nodes may only advertise one address family
+
+<mark>⚠️ **Important:** Dual-stack must be configured at cluster creation time. You cannot convert a single-stack cluster to dual-stack after it's created.</mark>
+
+### Calico IP Pools Configuration
+
+After the cluster is created, Calico CNI is installed with dual-stack IP pools. The configuration is in `calico-cni-config/custom-resources.yaml`:
+
+```yaml
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    ipPools:
+      # IPv4 IP Pool for pods
+      - name: default-ipv4-ippool
+        blockSize: 26
+        cidr: 192.168.0.0/16
+        encapsulation: VXLANCrossSubnet
+        natOutgoing: Enabled
+        nodeSelector: all()
+
+      # IPv6 IP Pool for pods
+      - name: default-ipv6-ippool
+        blockSize: 122
+        cidr: fd00:10:244::/48
+        encapsulation: VXLAN
+        natOutgoing: Enabled
+        nodeSelector: all()
+
+    # Node address auto-detection (uses eth1 addresses)
+    nodeAddressAutodetectionV4:
+      cidrs:
+        - 10.10.10.0/24
+    nodeAddressAutodetectionV6:
+      cidrs:
+        - fd00:10:10::/64
+```
+
+#### Configuration Explained
+
+| Setting | IPv4 Pool | IPv6 Pool | Description |
+|---------|-----------|-----------|-------------|
+| **CIDR** | `192.168.0.0/16` | `fd00:10:244::/48` | Address range for pods |
+| **Block Size** | `/26` (64 IPs) | `/122` (64 IPs) | Per-node allocation size |
+| **Encapsulation** | `VXLANCrossSubnet` | `VXLAN` | How pod traffic is tunneled |
+| **NAT Outgoing** | Enabled | Enabled | SNAT for external traffic |
+
+#### Node Address Detection
+
+Calico needs to know which node IP addresses to use for VXLAN tunnels:
+
+| Setting | CIDR | Purpose |
+|---------|------|---------|
+| `nodeAddressAutodetectionV4` | `10.10.10.0/24` | Use IPv4 addresses on eth1 for IPv4 VXLAN |
+| `nodeAddressAutodetectionV6` | `fd00:10:10::/64` | Use IPv6 addresses on eth1 for IPv6 VXLAN |
+
+This ensures Calico uses the `eth1` interface (connected to the cEOS switch) rather than the default Docker network interface.
+
 ## Lab Topology
 
 ```mermaid
@@ -27,26 +154,6 @@ graph TD
 - **Pods** receive both IPv4 (`192.168.x.x`) and IPv6 (`fd00:10:244::x`) addresses
 - **External connectivity**: Pods ping `1.1.1.1` (IPv4) and `2001:db8::1` (IPv6) on the ToR loopback
 - **Internal connectivity**: Pod-to-pod IPv6 uses VXLAN encapsulation
-
-## What You'll Learn
-
-- How to configure a dual-stack Kubernetes cluster with Calico
-- How pods receive both IPv4 and IPv6 addresses
-- How VXLAN encapsulation enables IPv6 pod-to-pod communication
-- How pods can reach external IPv4 and IPv6 destinations
-- How CoreDNS provides A (IPv4) and AAAA (IPv6) records for services
-
-## What is Dual-Stack Networking?
-
-Dual-stack networking means that network entities (nodes, pods, services) have both IPv4 and IPv6 addresses simultaneously. This allows applications to:
-
-- Communicate over IPv4 with legacy systems
-- Communicate over IPv6 with modern infrastructure
-- Gradually transition from IPv4 to IPv6 without breaking compatibility
-
-<mark>In this lab, pods can reach both an IPv4 destination (1.1.1.1) and an IPv6 destination (2001:db8::1) on an upstream router, demonstrating true dual-stack external connectivity.</mark>
-
-## Lab Architecture
 
 ```
                     ┌─────────────────────────────────────────────────────┐
@@ -88,115 +195,6 @@ Dual-stack networking means that network entities (nodes, pods, services) have b
 | Pod Network | 192.168.0.0/16 | fd00:10:244::/48 |
 | Service Network | 10.96.0.0/16 | fd00:10:96::/112 |
 
-## Kind Cluster Configuration for Dual-Stack
-
-To enable dual-stack networking in Kubernetes, the cluster must be configured at creation time. The Kind cluster configuration file (`dual-stack-no-cni.yaml`) contains the key settings:
-
-```yaml
-apiVersion: kind.x-k8s.io/v1alpha4
-kind: Cluster
-name: dual-stack
-networking:
-  disableDefaultCNI: true
-  podSubnet: "192.168.0.0/16,fd00:10:244::/48"
-  serviceSubnet: "10.96.0.0/16,fd00:10:96::/112"
-  ipFamily: dual
-```
-
-### Configuration Explained
-
-| Setting | Value | Description |
-|---------|-------|-------------|
-| `disableDefaultCNI` | `true` | Disables Kind's default CNI so we can install Calico |
-| `podSubnet` | `192.168.0.0/16,fd00:10:244::/48` | Comma-separated IPv4 and IPv6 CIDRs for pods |
-| `serviceSubnet` | `10.96.0.0/16,fd00:10:96::/112` | Comma-separated IPv4 and IPv6 CIDRs for services |
-| `ipFamily` | `dual` | Enables dual-stack mode (both IPv4 and IPv6) |
-
-### Node IP Configuration
-
-Each node must be configured to advertise both IPv4 and IPv6 addresses to the Kubernetes API:
-
-```yaml
-nodes:
-  - role: control-plane
-    kubeadmConfigPatches:
-      - |
-        kind: InitConfiguration
-        nodeRegistration:
-          kubeletExtraArgs:
-            node-ip: "10.10.10.10,fd00:10:10::10"
-```
-
-The `node-ip` parameter is a comma-separated list of the node's IPv4 and IPv6 addresses. This tells kubelet to register both addresses with the API server, enabling:
-- Dual-stack node addressing
-- Proper scheduling of dual-stack pods
-- Correct endpoint selection for services
-
-### Why These Settings Matter
-
-1. **`ipFamily: dual`** - Without this, Kubernetes defaults to single-stack (IPv4 only)
-2. **Comma-separated subnets** - The order matters: IPv4 first, then IPv6
-3. **`node-ip` on each node** - Ensures kubelet registers both addresses; without this, nodes may only advertise one address family
-
-<mark>⚠️ **Important:** Dual-stack must be configured at cluster creation time. You cannot convert a single-stack cluster to dual-stack after it's created.</mark>
-
-## Calico IP Pools Configuration
-
-After the cluster is created, Calico CNI is installed with dual-stack IP pools. The configuration is in `calico-cni-config/custom-resources.yaml`:
-
-```yaml
-apiVersion: operator.tigera.io/v1
-kind: Installation
-metadata:
-  name: default
-spec:
-  calicoNetwork:
-    ipPools:
-      # IPv4 IP Pool for pods
-      - name: default-ipv4-ippool
-        blockSize: 26
-        cidr: 192.168.0.0/16
-        encapsulation: VXLANCrossSubnet
-        natOutgoing: Enabled
-        nodeSelector: all()
-
-      # IPv6 IP Pool for pods
-      - name: default-ipv6-ippool
-        blockSize: 122
-        cidr: fd00:10:244::/48
-        encapsulation: VXLAN
-        natOutgoing: Enabled
-        nodeSelector: all()
-
-    # Node address auto-detection (uses eth1 addresses)
-    nodeAddressAutodetectionV4:
-      cidrs:
-        - 10.10.10.0/24
-    nodeAddressAutodetectionV6:
-      cidrs:
-        - fd00:10:10::/64
-```
-
-### Configuration Explained
-
-| Setting | IPv4 Pool | IPv6 Pool | Description |
-|---------|-----------|-----------|-------------|
-| **CIDR** | `192.168.0.0/16` | `fd00:10:244::/48` | Address range for pods |
-| **Block Size** | `/26` (64 IPs) | `/122` (64 IPs) | Per-node allocation size |
-| **Encapsulation** | `VXLANCrossSubnet` | `VXLAN` | How pod traffic is tunneled |
-| **NAT Outgoing** | Enabled | Enabled | SNAT for external traffic |
-
-### Node Address Detection
-
-Calico needs to know which node IP addresses to use for VXLAN tunnels:
-
-| Setting | CIDR | Purpose |
-|---------|------|---------|
-| `nodeAddressAutodetectionV4` | `10.10.10.0/24` | Use IPv4 addresses on eth1 for IPv4 VXLAN |
-| `nodeAddressAutodetectionV6` | `fd00:10:10::/64` | Use IPv6 addresses on eth1 for IPv6 VXLAN |
-
-This ensures Calico uses the `eth1` interface (connected to the cEOS switch) rather than the default Docker network interface.
-
 ## Lab Setup
 
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
@@ -216,7 +214,7 @@ The script deploys:
 - Calico CNI with IPv4 and IPv6 IP pools
 - Test pods on each node
 
-## Verification
+## Lab Exercises
 
 > [!Note]
 > <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.</mark>
@@ -233,7 +231,7 @@ export KUBECONFIG=$(pwd)/dual-stack.kubeconfig
 containerlab inspect -t topology.clab.yaml
 ```
 
-**Output:**
+Output:
 ```
 ╭─────────────────────────────┬──────────────────────┬─────────┬───────────────────────╮
 │            Name             │      Kind/Image      │  State  │     IPv4/6 Address    │
@@ -258,7 +256,7 @@ containerlab inspect -t topology.clab.yaml
 kubectl get nodes -o wide
 ```
 
-**Output:**
+Output:
 ```
 NAME                       STATUS   ROLES           AGE   VERSION   INTERNAL-IP
 dual-stack-control-plane   Ready    control-plane   5m    v1.28.0   10.10.10.10
@@ -274,7 +272,7 @@ Each node has both IPv4 and IPv6 addresses on eth1 (connected to cEOS):
 docker exec dual-stack-control-plane ip addr show eth1
 ```
 
-**Output:**
+Output:
 ```
 3: eth1@if...: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500
     link/ether ...
@@ -283,7 +281,7 @@ docker exec dual-stack-control-plane ip addr show eth1
     inet6 fe80::a8c1:abff:fe11:da52/64 scope link
 ```
 
-#### Understanding IPv6 Address Scopes
+#### 4.1 Understanding IPv6 Address Scopes
 
 You'll notice two types of IPv6 addresses with different scopes:
 
@@ -301,7 +299,7 @@ You'll notice two types of IPv6 addresses with different scopes:
 calicoctl get ippools -o wide
 ```
 
-**Output:**
+Output:
 ```
 NAME                  CIDR               NAT    IPIPMODE   VXLANMODE        DISABLED   
 default-ipv4-ippool   192.168.0.0/16     true   Never      CrossSubnet      false      
@@ -314,7 +312,7 @@ default-ipv6-ippool   fd00:10:244::/48   true   Never      Always           fals
 calicoctl get workloadendpoints -o wide
 ```
 
-**Output:**
+Output:
 ```
 NAME                                                WORKLOAD        NODE                      NETWORKS                                                     INTERFACE
 dual--stack--control--plane-k8s-multitool--xxx      multitool-xxx   dual-stack-control-plane  192.168.1.5/32,fd00:10:244:xxxx::5/128                       cali...
@@ -324,11 +322,9 @@ dual--stack--worker2-k8s-multitool--zzz             multitool-zzz   dual-stack-w
 
 **Key observation:** Each pod has both an IPv4 and IPv6 address in the NETWORKS column.
 
-## Testing External Dual-Stack Connectivity
+### 7. Test External IPv4 Connectivity
 
 This is the main demonstration of dual-stack networking - pods can reach external destinations via both IPv4 and IPv6.
-
-### 1. Test External IPv4 Connectivity
 
 Ping the cEOS loopback IPv4 address from a pod:
 
@@ -336,7 +332,7 @@ Ping the cEOS loopback IPv4 address from a pod:
 kubectl exec -it $(kubectl get pods -l app=multitool -o name | head -1) -- ping -c 3 1.1.1.1
 ```
 
-**Output:**
+Output:
 ```
 PING 1.1.1.1 (1.1.1.1): 56 data bytes
 64 bytes from 1.1.1.1: seq=0 ttl=63 time=0.892 ms
@@ -344,7 +340,7 @@ PING 1.1.1.1 (1.1.1.1): 56 data bytes
 64 bytes from 1.1.1.1: seq=2 ttl=63 time=0.712 ms
 ```
 
-### 2. Test External IPv6 Connectivity
+### 8. Test External IPv6 Connectivity
 
 Ping the cEOS loopback IPv6 address from a pod:
 
@@ -352,7 +348,7 @@ Ping the cEOS loopback IPv6 address from a pod:
 kubectl exec -it $(kubectl get pods -l app=multitool -o name | head -1) -- ping6 -c 3 2001:db8::1
 ```
 
-**Output:**
+Output:
 ```
 PING 2001:db8::1 (2001:db8::1): 56 data bytes
 64 bytes from 2001:db8::1: seq=0 ttl=63 time=1.021 ms
@@ -362,7 +358,7 @@ PING 2001:db8::1 (2001:db8::1): 56 data bytes
 
 <mark>🎉 **Success!** The pod can reach both IPv4 (1.1.1.1) and IPv6 (2001:db8::1) external destinations, demonstrating true dual-stack connectivity.</mark>
 
-## How External Connectivity Works
+### 9. How External Connectivity Works
 
 ```mermaid
 flowchart LR
@@ -390,7 +386,7 @@ flowchart LR
     style LO fill:#90EE90,stroke:#228B22
 ```
 
-### IPv4 Path (Pod → 1.1.1.1)
+#### 9.1 IPv4 Path (Pod → 1.1.1.1)
 
 ```
 Pod (192.168.x.x) 
@@ -401,7 +397,7 @@ Pod (192.168.x.x)
     → cEOS Loopback0 (1.1.1.1) ✓
 ```
 
-### IPv6 Path (Pod → 2001:db8::1)
+#### 9.2 IPv6 Path (Pod → 2001:db8::1)
 
 ```
 Pod (fd00:10:244::x)
@@ -412,7 +408,7 @@ Pod (fd00:10:244::x)
     → cEOS Loopback0 (2001:db8::1) ✓
 ```
 
-## Testing Pod-to-Pod IPv6 Connectivity
+### 10. Testing Pod-to-Pod IPv6 Connectivity
 
 Pod-to-pod communication uses VXLAN encapsulation over the node's IPv4 infrastructure:
 
@@ -424,16 +420,16 @@ calicoctl get workloadendpoints -o wide
 kubectl exec -it $(kubectl get pods -l app=multitool -o name | head -1) -- ping6 -c 3 <other-pod-ipv6>
 ```
 
-**Output:**
+Output:
 ```
 PING fd00:10:244:yyyy::a (fd00:10:244:yyyy::a): 56 data bytes
 64 bytes from fd00:10:244:yyyy::a: seq=0 ttl=62 time=0.543 ms
 64 bytes from fd00:10:244:yyyy::a: seq=1 ttl=62 time=0.321 ms
 ```
 
-## Dual-Stack Services
+### 11. Dual-Stack Services
 
-### Check the Services
+#### 11.1 Check the Services
 
 The standard `kubectl get svc` command only shows the primary (IPv4) ClusterIP. To see both IPv4 and IPv6 addresses, use:
 
@@ -441,7 +437,7 @@ The standard `kubectl get svc` command only shows the primary (IPv4) ClusterIP. 
 kubectl get svc -o custom-columns='NAME:.metadata.name,TYPE:.spec.type,CLUSTER-IPs:.spec.clusterIPs,PORTS:.spec.ports[*].port'
 ```
 
-**Output:**
+Output:
 ```
 NAME                   TYPE        CLUSTER-IPs                         PORTS
 kubernetes             ClusterIP   ["10.96.0.1","fd00:10:96::1"]       443
@@ -455,7 +451,7 @@ You can also inspect a specific service to see its IP families:
 kubectl get svc multitool-dual-stack -o yaml | grep -A5 "clusterIPs\|ipFamilies"
 ```
 
-**Output:**
+Output:
 ```yaml
   clusterIPs:
   - 10.96.x.x
@@ -466,7 +462,7 @@ kubectl get svc multitool-dual-stack -o yaml | grep -A5 "clusterIPs\|ipFamilies"
   ipFamilyPolicy: RequireDualStack
 ```
 
-### DNS Resolution
+#### 11.2 DNS Resolution
 
 CoreDNS provides both A (IPv4) and AAAA (IPv6) records:
 
@@ -478,7 +474,7 @@ kubectl exec -it $(kubectl get pods -l app=multitool -o name | head -1) -- dig m
 kubectl exec -it $(kubectl get pods -l app=multitool -o name | head -1) -- dig multitool-dual-stack.default.svc.cluster.local AAAA +short
 ```
 
-### Access Services by Name
+#### 11.3 Access Services by Name
 
 ```bash
 kubectl exec -it $(kubectl get pods -l app=multitool -o name | head -1) -- sh
@@ -495,7 +491,7 @@ curl -6 http://multitool-dual-stack
 curl http://multitool-ipv6-only
 ```
 
-## Key Concepts
+## Additional Notes
 
 ### Dual-Stack Traffic Flows
 
@@ -630,7 +626,7 @@ kubectl exec -it <pod> -- netstat -tlnp
 # Look for :::port entries (IPv6) vs 0.0.0.0:port (IPv4 only)
 ```
 
-## cEOS Switch Configuration
+### cEOS Switch Configuration
 
 The cEOS switch configuration can be found at `startup-configs/ceos01-startup-config.config`.
 
@@ -639,7 +635,7 @@ Key configurations:
 - **Loopback0**: Simulates external destination with both IPv4 and IPv6
 - **Static routes**: Routes pod traffic back to the cluster
 
-### Verify cEOS Configuration
+#### Verify cEOS Configuration
 
 ```bash
 docker exec -it clab-dual-stack-ceos01 Cli

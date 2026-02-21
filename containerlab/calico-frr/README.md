@@ -2,7 +2,9 @@
 
 This lab demonstrates Calico networking with BGP peering using FRRouting (FRR) instead of Arista cEOS. This is a replication of the `calico-lab-1` setup but using FRR as the BGP peer.
 
-## Architecture
+## Overview
+
+### Architecture
 
 The lab consists of:
 - **FRR Router (frr01)**: BGP AS 65001, acts as a BGP peer for Calico nodes
@@ -11,7 +13,7 @@ The lab consists of:
   - Worker 1: `10.10.10.101` 
   - Worker 2: `10.10.10.102`
 
-## Network Details
+### Network Details
 
 - **Management Network**: `10.10.10.0/24`
 - **Pod Network**: `10.0.0.0/16` (Calico managed)
@@ -20,13 +22,13 @@ The lab consists of:
   - FRR Router: AS 65001
   - Calico nodes: AS 65010
 
-## Key Differences from calico-lab-1
+### Key Differences from calico-lab-1
 
 1. **Router Platform**: Uses FRR instead of Arista cEOS
 2. **Configuration**: FRR configuration in `containerlab/r0/frr.conf`
 3. **BGP Peer**: Updated BGP peer configuration to point to FRR router
 
-## Files Structure
+### Files Structure
 
 ```
 calico-overlay/
@@ -46,16 +48,28 @@ calico-overlay/
     └── bgppeer.yaml                   # BGP peer definition
 ```
 
-## Usage
+### BGP Configuration
 
-### Deploy the Lab
+The FRR router is configured to:
+- Listen for BGP connections from the `10.10.10.0/24` subnet
+- Peer with Calico nodes using AS 65010
+- Advertise the management network `10.10.10.0/24`
+
+Calico is configured to:
+- Use AS 65010 for all nodes
+- Disable node-to-node mesh (rely on external BGP peer)
+- Peer with FRR router at `10.10.10.1` (AS 65001)
+
+## Deployment
 
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
 
-### Monitor BGP Status
+## Lab Exercises
+
+### 1. Monitor BGP Status
 
 Check FRR BGP status:
 ```bash
@@ -70,24 +84,9 @@ calicoctl node status
 kubectl get nodes -o wide
 ```
 
-### Destroy the Lab
+## Summary
 
-```bash
-chmod +x destroy.sh  
-./destroy.sh
-```
-
-## BGP Configuration
-
-The FRR router is configured to:
-- Listen for BGP connections from the `10.10.10.0/24` subnet
-- Peer with Calico nodes using AS 65010
-- Advertise the management network `10.10.10.0/24`
-
-Calico is configured to:
-- Use AS 65010 for all nodes
-- Disable node-to-node mesh (rely on external BGP peer)
-- Peer with FRR router at `10.10.10.1` (AS 65001)
+This lab demonstrates Calico networking with BGP peering using FRRouting (FRR) as the external BGP peer, replicating the calico-lab-1 setup with a lighter-weight routing platform.
 
 ## Troubleshooting
 
@@ -95,3 +94,10 @@ Calico is configured to:
 2. **Check Kind cluster**: `kubectl get nodes`
 3. **Check Calico pods**: `kubectl get pods -n calico-system`
 4. **Check BGP sessions**: Use the monitoring commands above
+
+## Lab Cleanup
+
+```bash
+chmod +x destroy.sh  
+./destroy.sh
+```

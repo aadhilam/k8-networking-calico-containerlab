@@ -2,7 +2,7 @@
 
 This lab demonstrates how Kubernetes headless services work and how they differ from regular ClusterIP services. Headless services provide direct DNS-to-Pod IP resolution without a virtual IP (VIP), enabling direct pod-to-pod communication and are essential for stateful applications.
 
-## Why are Headless Services Required
+## Overview
 
 In standard Kubernetes services, a ClusterIP provides load balancing through kube-proxy and a stable VIP. However, some use cases require direct access to individual pods:
 
@@ -56,7 +56,7 @@ chmod +x deploy.sh
 ./deploy.sh
 ```
 
-## Lab
+## Lab Exercises
 
 > [!Note]
 > <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
@@ -69,7 +69,6 @@ After deployment, verify the cluster is ready by checking the ContainerLab topol
 containerlab inspect -t headless-services.clab.yaml
 ```
 
-##### output
 ```
 ╭─────────────────────────────────┬──────────────────────────┬─────────┬───────────────────────╮
 │              Name               │      Kind/Image          │  State  │     IPv4/6 Address    │
@@ -95,7 +94,6 @@ export KUBECONFIG=/home/ubuntu/containerlab/headless-services/headless-services.
 kubectl get pods -o wide
 ```
 
-##### output
 ```
 NAME                                READY   STATUS    RESTARTS   AGE   IP               NODE                              NOMINATED NODE   READINESS GATES
 multitool-2p4xk                     1/1     Running   0          5m    192.168.202.194  headless-services-worker          <none>           <none>
@@ -113,12 +111,10 @@ redis-2                             1/1     Running   0          5m    192.168.1
 - **nginx-deployment-***: Deployment pods with random suffixes
 - **multitool-***: DaemonSet pods for testing on each node
 
-##### command
 ```bash
 kubectl get statefulset
 ```
 
-##### output
 ```
 NAME    READY   AGE
 redis   3/3     5m
@@ -127,12 +123,10 @@ redis   3/3     5m
 - **READY 3/3**: All 3 replicas of the Redis StatefulSet are running
 - The StatefulSet ensures pods are created in order (redis-0 → redis-1 → redis-2) and maintains stable identities
 
-##### command
 ```bash
 kubectl get services
 ```
 
-##### output
 ```
 NAME              TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
 kubernetes        ClusterIP   10.96.0.1      <none>        443/TCP    10m
@@ -153,14 +147,12 @@ Exec into a multitool pod to test DNS resolution:
 kubectl exec -it $(kubectl get pods -l app=multitool -o jsonpath='{.items[0].metadata.name}') -- sh
 ```
 
-#### 3.1 - Regular ClusterIP Service DNS
+#### 3.1 Regular ClusterIP Service DNS
 
-##### command
 ```bash
 dig +search nginx-clusterip
 ```
 
-##### output
 ```
 ;; QUESTION SECTION:
 ;nginx-clusterip.default.svc.cluster.local. IN A
@@ -173,14 +165,12 @@ nginx-clusterip.default.svc.cluster.local. 30 IN A 10.96.204.67
 - kube-proxy handles load balancing to backend pods
 - Client sees only one IP regardless of replica count
 
-#### 3.2 - Headless Service DNS (Deployment)
+#### 3.2 Headless Service DNS (Deployment)
 
-##### command
 ```bash
 dig +search nginx-headless
 ```
 
-##### output
 ```
 ;; QUESTION SECTION:
 ;nginx-headless.default.svc.cluster.local. IN A
@@ -195,14 +185,12 @@ nginx-headless.default.svc.cluster.local. 30 IN A 192.168.202.196
 - Client-side load balancing or selection required
 - No iptables/IPVS rules created for this service
 
-#### 3.3 - Headless Service DNS (Redis StatefulSet)
+#### 3.3 Headless Service DNS (Redis StatefulSet)
 
-##### command
 ```bash
 dig +search redis-headless
 ```
 
-##### output
 ```
 ;; QUESTION SECTION:
 ;redis-headless.default.svc.cluster.local. IN A
@@ -263,13 +251,13 @@ For headless services, CoreDNS reads the EndpointSlice to answer DNS queries dir
 
 **Verify EndpointSlices for Headless Services:**
 
-##### command
 ```bash
 # View the EndpointSlice for the Redis headless service
 kubectl get endpointslice -l kubernetes.io/service-name=redis-headless -o yaml
 ```
 
-##### output (truncated)
+Output (truncated):
+
 ```yaml
 apiVersion: discovery.k8s.io/v1
 kind: EndpointSlice
@@ -314,13 +302,13 @@ ports:
 
 Notice the `hostname` field in each endpoint - this is what CoreDNS uses to create individual pod DNS records like `redis-0.redis-headless`.
 
-##### command
 ```bash
 # Compare with Nginx headless service (Deployment - no hostnames)
 kubectl get endpointslice -l kubernetes.io/service-name=nginx-headless -o yaml
 ```
 
-##### output (truncated)
+Output (truncated):
+
 ```yaml
 apiVersion: discovery.k8s.io/v1
 kind: EndpointSlice
@@ -361,7 +349,7 @@ flowchart LR
     PODS --> |Endpoints Controller<br/>watches & updates| ES[EndpointSlice<br/>IPs + hostnames]
     ES --> |CoreDNS watches| CDNS[CoreDNS]
     CDNS --> |serves| DNS[DNS Records<br/>redis-0.redis-headless → Pod IP<br/>redis-headless → All Pod IPs]
-    
+
     style SS fill:#326ce5,color:#fff
     style PODS fill:#4a9f4a,color:#fff
     style ES fill:#f5a623,color:#000
@@ -379,14 +367,12 @@ flowchart LR
 | **EndpointSlice** | Stores pod addresses, ports, and hostnames for CoreDNS to consume |
 | **CoreDNS** | Watches EndpointSlices and serves DNS queries with pod-specific records |
 
-#### 4.1 - Query Individual Redis Pod DNS
+#### 4.1 Query Individual Redis Pod DNS
 
-##### command
 ```bash
 dig +search redis-0.redis-headless
 ```
 
-##### output
 ```
 ;; QUESTION SECTION:
 ;redis-0.redis-headless.default.svc.cluster.local. IN A
@@ -398,37 +384,31 @@ redis-0.redis-headless.default.svc.cluster.local. 30 IN A 192.168.202.195
 - **redis-0.redis-headless** resolves to `redis-0`'s specific IP
 - Enables direct connection to a specific Redis instance
 
-##### command
 ```bash
 dig +search redis-1.redis-headless
 ```
 
-##### output
 ```
 ;; ANSWER SECTION:
 redis-1.redis-headless.default.svc.cluster.local. 30 IN A 192.168.156.4
 ```
 
-##### command
 ```bash
 dig +search redis-2.redis-headless
 ```
 
-##### output
 ```
 ;; ANSWER SECTION:
 redis-2.redis-headless.default.svc.cluster.local. 30 IN A 192.168.145.10
 ```
 
-#### 4.2 - Test Connectivity to Specific Redis Instance
+#### 4.2 Test Connectivity to Specific Redis Instance
 
-##### command
 ```bash
 # Connect to redis-0 using its DNS name
 redis-cli -h redis-0.redis-headless ping
 ```
 
-##### output
 ```
 PONG
 ```
@@ -440,15 +420,13 @@ PONG
 
 This is the **key demonstration** of how headless services enable peer discovery. The Redis replicas (redis-1, redis-2) automatically discover and connect to the master (redis-0) using the headless service DNS name `redis-0.redis-headless`.
 
-#### 5.1 - Verify Replication Status on Master
+#### 5.1 Verify Replication Status on Master
 
-##### command
 ```bash
 # Check replication info on the master (redis-0)
 redis-cli -h redis-0.redis-headless INFO replication
 ```
 
-##### output
 ```
 # Replication
 role:master
@@ -471,15 +449,13 @@ Key observations:
 - `connected_slaves:2` - Two replicas are connected
 - `slave0` and `slave1` show the connected replica IPs and their sync state
 
-#### 5.2 - Verify Replication Status on Replicas
+#### 5.2 Verify Replication Status on Replicas
 
-##### command
 ```bash
 # Check replication info on replica redis-1
 redis-cli -h redis-1.redis-headless INFO replication
 ```
 
-##### output
 ```
 # Replication
 role:slave
@@ -511,50 +487,42 @@ Key observations:
 - `master_link_status:up` - Successfully connected to master
 - `slave_read_only:1` - Replica is in read-only mode
 
-##### command
 ```bash
 # Check replication on redis-2 as well
 redis-cli -h redis-2.redis-headless INFO replication | grep -E "role|master_host|master_link_status"
 ```
 
-##### output
 ```
 role:slave
 master_host:redis-0.redis-headless.default.svc.cluster.local
 master_link_status:up
 ```
 
-#### 5.3 - Test Data Replication
+#### 5.3 Test Data Replication
 
-##### command
 ```bash
 # Write data to the master
 redis-cli -h redis-0.redis-headless SET mykey "Hello from master"
 ```
 
-##### output
 ```
 OK
 ```
 
-##### command
 ```bash
 # Read data from replica redis-1
 redis-cli -h redis-1.redis-headless GET mykey
 ```
 
-##### output
 ```
 "Hello from master"
 ```
 
-##### command
 ```bash
 # Read data from replica redis-2
 redis-cli -h redis-2.redis-headless GET mykey
 ```
 
-##### output
 ```
 "Hello from master"
 ```
@@ -562,15 +530,13 @@ redis-cli -h redis-2.redis-headless GET mykey
 - Data written to master is automatically replicated to all replicas
 - Replicas discovered master using `redis-0.redis-headless` DNS name
 
-#### 5.4 - Verify Replicas are Read-Only
+#### 5.4 Verify Replicas are Read-Only
 
-##### command
 ```bash
 # Try to write to a replica (should fail)
 redis-cli -h redis-1.redis-headless SET anotherkey "test"
 ```
 
-##### output
 ```
 (error) READONLY You can't write against a read only replica.
 ```
@@ -578,7 +544,7 @@ redis-cli -h redis-1.redis-headless SET anotherkey "test"
 - Replicas are read-only by default
 - All writes must go to the master (redis-0)
 
-#### 5.5 - How Peer Discovery Works
+#### 5.5 How Peer Discovery Works
 
 Let's examine the startup logs to see how replicas discover the master:
 
@@ -587,7 +553,6 @@ exit
 kubectl logs redis-1 | head -20
 ```
 
-##### output
 ```
 This is replica redis-1, waiting for master redis-0...
 Waiting for redis-0.redis-headless to be ready...
@@ -614,14 +579,12 @@ Connect to a worker node:
 docker exec -it headless-services-worker /bin/bash
 ```
 
-#### 6.1 - Check iptables for ClusterIP Service
+#### 6.1 Check iptables for ClusterIP Service
 
-##### command
 ```bash
 iptables -t nat -S KUBE-SERVICES | grep nginx-clusterip
 ```
 
-##### output
 ```
 -A KUBE-SERVICES -d 10.96.204.67/32 -p tcp -m comment --comment "default/nginx-clusterip:http cluster IP" -m tcp --dport 80 -j KUBE-SVC-XXXXXXXX
 ```
@@ -629,14 +592,12 @@ iptables -t nat -S KUBE-SERVICES | grep nginx-clusterip
 - iptables rules exist for ClusterIP service
 - kube-proxy programs DNAT rules for load balancing
 
-#### 6.2 - Check iptables for Headless Services
+#### 6.2 Check iptables for Headless Services
 
-##### command
 ```bash
 iptables -t nat -S KUBE-SERVICES | grep nginx-headless
 ```
 
-##### output
 ```
 (no output)
 ```
@@ -645,12 +606,10 @@ iptables -t nat -S KUBE-SERVICES | grep nginx-headless
 - There's no VIP to NAT traffic to
 - DNS returns pod IPs directly; routing uses normal pod routing
 
-##### command
 ```bash
 iptables -t nat -S KUBE-SERVICES | grep redis-headless
 ```
 
-##### output
 ```
 (no output)
 ```

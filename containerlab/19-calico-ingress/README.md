@@ -1,8 +1,8 @@
 # Calico Ingress Gateway with Canary Deployments
 
-This lab demonstrates Calico's Ingress Gateway feature, which provides Kubernetes Gateway API support for managing ingress traffic. You'll learn how to deploy an Envoy-based ingress gateway, expose services via LoadBalancer, and implement canary deployments with traffic splitting.
+## Overview
 
-## What is Calico Ingress Gateway?
+This lab demonstrates Calico's Ingress Gateway feature, which provides Kubernetes Gateway API support for managing ingress traffic. You'll learn how to deploy an Envoy-based ingress gateway, expose services via LoadBalancer, and implement canary deployments with traffic splitting.
 
 Calico Ingress Gateway integrates the Kubernetes Gateway API with Calico networking to provide a powerful, Envoy-based ingress solution. It enables:
 
@@ -14,7 +14,7 @@ Calico Ingress Gateway integrates the Kubernetes Gateway API with Calico network
 | **Canary Deployments** | Gradually roll out new versions with controlled traffic percentages |
 | **BGP Integration** | Advertise gateway IPs via BGP for external accessibility |
 
-## What is a Canary Deployment?
+### What is a Canary Deployment?
 
 A **canary deployment** is a progressive release strategy where a new version of an application is gradually rolled out to a small subset of users before being fully deployed. This approach allows teams to:
 
@@ -54,7 +54,7 @@ To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/19-calico-ingress`
 
-## Lab
+## Lab Exercises
 
 > [!Note]
 > <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.</mark>

@@ -2,7 +2,7 @@
 
 This lab demonstrates Calico's IP Address Management (IPAM) functionality in a 3-node Kind Kubernetes cluster.
 
-## Why is IPAM Required
+## Overview
 
 In Kubernetes, every pod needs a unique IP address to communicate with other pods and services. IPAM (IP Address Management) is crucial because:
 
@@ -56,18 +56,20 @@ The Calico installation uses a custom Installation resource that defines the pod
 
 The CIDR choice directly impacts cluster scalability and network policy effectiveness. The /16 range allows for approximately 1,024 nodes with /26 blocks, making it suitable for most lab and production environments.
 
-## Post-Deployment Verification
+## Lab Exercises
 
 > [!Note]
 > <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
 
-After deployment, verify the cluster is ready:
+After deployment, verify the cluster is ready.
 
 ### 1. Inspect ContainerLab Topology
+
 ```bash
 containerlab inspect -t calico-ipam.clab.yaml
 ```
-**Output Example:**
+
+Output:
 
 ```
 ╭───────────────────────────┬──────────────────────┬─────────┬───────────────────────╮
@@ -91,14 +93,14 @@ export KUBECONFIG=/home/ubuntu/containerlab/1-calico-ipam/calico-ipam.kubeconfig
 kubectl get tigerastatus
 ```
 
-**Output Example:**
+Output:
+
 ```
 NAME        AVAILABLE   PROGRESSING   DEGRADED   SINCE
 apiserver   True        False         False      2m30s
 calico      True        False         False      2m45s
 ```
 
-**Explanation:**
 - **NAME**: Calico component being monitored
 - **AVAILABLE**: Whether the component is fully operational
 - **PROGRESSING**: Whether the component is still being deployed/updated
@@ -113,7 +115,8 @@ All components should show `AVAILABLE: True` and `DEGRADED: False` for a healthy
 kubectl get nodes
 ```
 
-**Output Example:**
+Output:
+
 ```
 NAME                       STATUS   ROLES           AGE   VERSION
 calico-ipam-control-plane  Ready    control-plane   3m    v1.28.0
@@ -121,7 +124,6 @@ calico-ipam-worker         Ready    <none>          3m    v1.28.0
 calico-ipam-worker2        Ready    <none>          3m    v1.28.0
 ```
 
-**Explanation:**
 - **NAME**: Node name as assigned by Kind
 - **STATUS**: Node readiness state (should be `Ready`)
 - **ROLES**: Node role (`control-plane` for master, `<none>` for workers)
@@ -130,15 +132,14 @@ calico-ipam-worker2        Ready    <none>          3m    v1.28.0
 
 All nodes should show `STATUS: Ready` indicating they are healthy and can schedule pods.
 
-## IPAM Monitoring Commands
-
-### 1. Overall IPAM Status
+### 4. Overall IPAM Status
 
 ```bash
 calicoctl ipam show
 ```
 
-**Output Example:**
+Output:
+
 ```
 +----------+-------------------+------------+------------+-------------------+
 | GROUPING |       CIDR        | IPS TOTAL  | IPS IN USE |    IPS FREE       |
@@ -147,20 +148,21 @@ calicoctl ipam show
 +----------+-------------------+------------+------------+-------------------+
 ```
 
-**Explanation:**
-- Shows the IP pool configuration from your custom-resources.yaml
+This shows the IP pool configuration from your custom-resources.yaml.
+
 - **CIDR**: The overall pod network range (192.168.0.0/16)
 - **IPs TOTAL**: Total available IP addresses in the pool (65,536)
 - **IPs IN USE**: Currently allocated IP addresses to pods
 - **IPs FREE**: Available IP addresses for new pod allocation
 
-### 2. Block Affinities List
+### 5. Block Affinities List
 
 ```bash
 kubectl get blockaffinities
 ```
 
-**Output Example:**
+Output:
+
 ```
 NAME                                         AGE
 ipam-block-affinity-192-168-0-64-26          2m
@@ -168,19 +170,19 @@ ipam-block-affinity-192-168-1-64-26          2m
 ipam-block-affinity-192-168-2-0-26           2m
 ```
 
-**Explanation:**
 - **BlockAffinity** resources represent IPAM block assignments to nodes
 - Each entry shows which IP block is assigned to which node
 - The naming convention is `ipam-block-affinity-<block-cidr-with-dashes>-<prefix-length>`
 - Calico allocates /26 blocks (64 IPs each) to nodes as needed
 
-### 3. Detailed Block Affinities
+### 6. Detailed Block Affinities
 
 ```bash
 kubectl get blockaffinities -o yaml
 ```
 
-**Output Example:**
+Output:
+
 ```yaml
 apiVersion: v1
 items:
@@ -205,7 +207,6 @@ items:
     state: confirmed
 ```
 
-**Explanation:**
 - **spec.cidr**: The specific IP block (e.g., 192.168.0.64/26) assigned to a node
 - **spec.node**: The Kubernetes node that owns this IP block
 - **spec.state**: 
@@ -213,35 +214,30 @@ items:
   - `pending`: Block assignment is in progress
 - **spec.deleted**: Indicates if the block is marked for deletion
 
-### 4. Formatted Block Affinities
+### 7. Formatted Block Affinities
 
 ```bash
 kubectl get blockaffinities -o=jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.node}{"\t"}{.spec.cidr}{"\n"}{end}'
 ```
 
-**Output Example:**
+Output:
+
 ```
 ipam-block-affinity-192-168-0-64-26    calico-ipam-control-plane    192.168.0.64/26
 ipam-block-affinity-192-168-1-64-26    calico-ipam-worker          192.168.1.64/26
 ipam-block-affinity-192-168-2-0-26     calico-ipam-worker2         192.168.2.0/26
 ```
 
-**Explanation:**
-- **Column 1**: BlockAffinity resource name
-- **Column 2**: Node name that owns the IP block
-- **Column 3**: CIDR block assigned to that node
-
 This formatted output provides a clear mapping of which IP blocks are assigned to which nodes, making it easy to understand IP allocation across your cluster.
 
 ![Calico IPAM Architecture](../../images/calico-ipam.png)
 
-## Key IPAM Concepts
+## Summary
 
 - **IP Pools**: Large CIDR ranges (like 192.168.0.0/16) that define the overall address space
 - **IP Blocks**: Smaller subnets (like /26 blocks) carved out from IP pools and assigned to nodes
 - **Block Affinity**: The assignment relationship between IP blocks and nodes
 - **IPAM**: Calico automatically manages IP allocation within assigned blocks when pods are created
-
 
 ## Troubleshooting
 
@@ -253,4 +249,3 @@ If you see issues with IP allocation:
 
 ## Lab Cleanup
 to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**
-

@@ -1,8 +1,8 @@
 # IP Reservations and Static IPs for Pods
 
-This lab demonstrates how to assign static IP addresses to Kubernetes pods using Calico IPAM. You'll learn how to use pod annotations to request specific IP addresses.
+## Overview
 
-## Why Static IPs for Pods?
+This lab demonstrates how to assign static IP addresses to Kubernetes pods using Calico IPAM. You'll learn how to use pod annotations to request specific IP addresses.
 
 By default, Kubernetes pods receive dynamically assigned IP addresses from the CNI. However, some use cases require stable, predictable IP addresses:
 
@@ -11,7 +11,7 @@ By default, Kubernetes pods receive dynamically assigned IP addresses from the C
 - **Debugging and Monitoring**: Easier identification of specific pods in logs
 - **Stateful Workloads**: Applications that need consistent network identity
 
-## How Calico Static IP Assignment Works
+### How Calico Static IP Assignment Works
 
 Calico allows you to specify a static IP for a pod using the annotation:
 
@@ -65,7 +65,7 @@ kubectl get nodes -o wide
 kubectl get ippools -o custom-columns='NAME:.metadata.name,CIDR:.spec.cidr'
 ```
 
-##### Expected output
+Output:
 ```
 NAME                  CIDR
 default-ipv4-ippool   192.168.0.0/16
@@ -75,13 +75,12 @@ default-ipv4-ippool   192.168.0.0/16
 
 The deploy script already created an IP reservation for the `192.168.100.8/29` range (8 IPs: 192.168.100.8-15). This prevents Calico from automatically assigning IPs in this range, reserving them for static assignments.
 
-##### command
 ```bash
 kubectl get ipreservations
 kubectl get ipreservation reserved-ips -o yaml
 ```
 
-##### Expected output
+Output:
 ```yaml
 apiVersion: crd.projectcalico.org/v1
 kind: IPReservation
@@ -98,12 +97,11 @@ spec:
 
 The dynamic pod was deployed during setup. Notice its IP is NOT in the reserved `192.168.100.8/29` range:
 
-##### command
 ```bash
 kubectl get pod dynamic-pod -o wide
 ```
 
-##### Expected output
+Output:
 ```
 NAME          READY   STATUS    RESTARTS   AGE   IP              NODE         
 dynamic-pod   1/1     Running   0          10s   192.168.x.x     k01-worker
@@ -115,7 +113,6 @@ dynamic-pod   1/1     Running   0          10s   192.168.x.x     k01-worker
 
 Now deploy a pod with a specific static IP address using the Calico annotation.
 
-##### command
 ```bash
 kubectl apply -f tools/02-static-pod.yaml
 kubectl wait --for=condition=ready pod/static-pod --timeout=60s
@@ -123,12 +120,11 @@ kubectl wait --for=condition=ready pod/static-pod --timeout=60s
 
 Check the assigned IP:
 
-##### command
 ```bash
 kubectl get pod static-pod -o wide
 ```
 
-##### Expected output
+Output:
 ```
 NAME         READY   STATUS    RESTARTS   AGE   IP               NODE
 static-pod   1/1     Running   0          10s   192.168.100.10   k01-worker
@@ -140,12 +136,11 @@ static-pod   1/1     Running   0          10s   192.168.100.10   k01-worker
 
 Let's examine the pod annotation to confirm it's set correctly:
 
-##### command
 ```bash
 kubectl get pod static-pod -o jsonpath='{.metadata.annotations}' | jq .
 ```
 
-##### Expected output
+Output:
 ```json
 {
   "cni.projectcalico.org/ipAddrs": "[\"192.168.100.10\"]"
@@ -156,12 +151,11 @@ kubectl get pod static-pod -o jsonpath='{.metadata.annotations}' | jq .
 
 Verify that the static IP is reachable from other pods:
 
-##### command
 ```bash
 kubectl exec -it dynamic-pod -- ping -c 3 192.168.100.10
 ```
 
-##### Expected output
+Output:
 ```
 PING 192.168.100.10 (192.168.100.10): 56 data bytes
 64 bytes from 192.168.100.10: seq=0 ttl=63 time=0.123 ms
@@ -176,20 +170,18 @@ PING 192.168.100.10 (192.168.100.10): 56 data bytes
 
 Let's see what happens when we try to create another pod with the same static IP:
 
-##### command
 ```bash
 kubectl apply -f tools/03-duplicate-ip-pod.yaml
 ```
 
 Check the pod status:
 
-##### command
 ```bash
 kubectl get pod duplicate-pod
 kubectl describe pod duplicate-pod | grep -A5 Events
 ```
 
-##### Expected output
+Output:
 ```
 NAME            READY   STATUS              RESTARTS   AGE
 duplicate-pod   0/1     ContainerCreating   0          30s
@@ -197,7 +189,6 @@ duplicate-pod   0/1     ContainerCreating   0          30s
 
 The pod will remain in `ContainerCreating` state because the IP is already in use.
 
-##### command
 ```bash
 kubectl describe pod duplicate-pod | tail -10
 ```
@@ -213,7 +204,6 @@ kubectl delete pod duplicate-pod
 
 Static IPs persist through pod deletion and recreation. Let's verify:
 
-##### command
 ```bash
 # Delete the static pod
 kubectl delete pod static-pod
@@ -227,7 +217,7 @@ kubectl wait --for=condition=ready pod/static-pod --timeout=60s
 kubectl get pod static-pod -o wide
 ```
 
-##### Expected output
+Output:
 ```
 NAME         READY   STATUS    RESTARTS   AGE   IP               NODE
 static-pod   1/1     Running   0          5s    192.168.100.10   k01-worker
@@ -263,4 +253,3 @@ Or run:
 chmod +x destroy.sh
 ./destroy.sh
 ```
-

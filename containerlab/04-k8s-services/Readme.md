@@ -2,7 +2,7 @@
 
 Services provide a stable virtual IP and DNS name in front of pods. They decouple clients from pod lifecycles and provide simple L4 load balancing inside the cluster.
 
-## Why are Kubernetes Services Required
+## Overview
 
 - Pods are ephemeral: IPs change; clients need a stable endpoint.
 - Load balancing: distribute traffic across replicas automatically.
@@ -16,6 +16,25 @@ Services provide a stable virtual IP and DNS name in front of pods. They decoupl
 - LoadBalancer: provisions an external LB (cloud/MetalLB).
 - ExternalName: DNS CNAME to an external hostname; no proxying.
 - Headless (`clusterIP: None`): no VIP; DNS returns pod IPs.
+
+### ClusterIP Service
+
+Kubernetes Services of type ClusterIP provide an in-cluster virtual IP (VIP). kube-proxy on each node programs data-plane rules (iptables, IPVS, or userspace modes) to steer traffic sent to the Service VIP toward matching backend Pods.
+
+### How kube-proxy Programs a ClusterIP Service
+
+High-level flow and components:
+
+![Kube-proxy ClusterIP Service Flow](../../images/kube-proxy.png)
+
+Key steps when you create/update a ClusterIP Service:
+
+- API event: You `kubectl apply` a Service; the apiserver stores it in `etcd` and updates `EndpointSlice` objects based on label selectors matching Pods.
+- kube-proxy watch: Each node's kube-proxy maintains watches on Services and EndpointSlices; it gets incremental updates.
+- Program dataplane: kube-proxy translates the desired state into local dataplane rules:
+  - iptables mode: Installs chains/rules that DNAT traffic destined to the Service VIP to one of the backend Pod IP:Port, with per-connection affinity and probability.
+  - IPVS mode: Programs an in-kernel virtual server for the Service VIP with backend real servers (Pods), offering better scale and metrics.
+- Traffic path: Any Pod on any node sending traffic to the Service ClusterIP hits local kube-proxy rules on its node, then gets load-balanced to a healthy backend Pod (local or remote). Return traffic follows normal routing (no SNAT needed in-cluster).
 
 ## Lab Setup
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
@@ -40,25 +59,7 @@ chmod +x deploy.sh
 ./deploy.sh
 ```
 
-## ClusterIP Service
-Kubernetes Services of type ClusterIP provide an in-cluster virtual IP (VIP). kube-proxy on each node programs data-plane rules (iptables, IPVS, or userspace modes) to steer traffic sent to the Service VIP toward matching backend Pods.
-
-## How kube-proxy Programs a ClusterIP Service
-
-High-level flow and components:
-
-![Kube-proxy ClusterIP Service Flow](../../images/kube-proxy.png)
-
-Key steps when you create/update a ClusterIP Service:
-
-- API event: You `kubectl apply` a Service; the apiserver stores it in `etcd` and updates `EndpointSlice` objects based on label selectors matching Pods.
-- kube-proxy watch: Each node’s kube-proxy maintains watches on Services and EndpointSlices; it gets incremental updates.
-- Program dataplane: kube-proxy translates the desired state into local dataplane rules:
-  - iptables mode: Installs chains/rules that DNAT traffic destined to the Service VIP to one of the backend Pod IP:Port, with per-connection affinity and probability.
-  - IPVS mode: Programs an in-kernel virtual server for the Service VIP with backend real servers (Pods), offering better scale and metrics.
-- Traffic path: Any Pod on any node sending traffic to the Service ClusterIP hits local kube-proxy rules on its node, then gets load-balanced to a healthy backend Pod (local or remote). Return traffic follows normal routing (no SNAT needed in-cluster).
-
-## Lab
+## Lab Exercises
 
 After deployment, verify the cluster is ready by checking the ContainerLab topology status:
 
@@ -78,7 +79,8 @@ export KUBECONFIG=/home/ubuntu/containerlab/4-k8s-services/k8-services.kubeconfi
 kubectl get pods -o wide
 ```
 
-##### output
+Output:
+
 ```
 NAME                                READY   STATUS    RESTARTS   AGE   IP                NODE                        NOMINATED NODE   READINESS GATES
 multitool-1-bgssq                   1/1     Running   0          8h    192.168.202.194   k8-services-worker          <none>           <none>
@@ -91,27 +93,27 @@ nginx-deployment-55d7bb4b86-vg4lt   1/1     Running   0          8h    192.168.1
 nginx-deployment-55d7bb4b86-xqh9d   1/1     Running   0          8h    192.168.202.196   k8-services-worker          <none>           <none>
 ```
  - Pods are healthy ✅ and spread across nodes; this confirms scheduling and readiness across the control plane and workers.
- - The Pod IP column shows routable pod CIDR addresses you’ll later see in EndpointSlices; capture them as expected backends.
+ - The Pod IP column shows routable pod CIDR addresses you'll later see in EndpointSlices; capture them as expected backends.
 
-##### command
 ```
 kubectl get services -n default | grep nginx-service
 ```
 
-##### output
+Output:
+
 ```
 nginx-service         ClusterIP   10.96.204.67   <none>        80/TCP              8h
 ```
 
  - Service VIP 🎯 is `10.96.204.67:80`; this is the stable in-cluster address clients use instead of pod IPs.
- - Type is ClusterIP, so it’s only reachable inside the cluster namespace via VIP or DNS (e.g., `nginx-service`).
+ - Type is ClusterIP, so it's only reachable inside the cluster namespace via VIP or DNS (e.g., `nginx-service`).
 
-##### command
 ```
 kubectl get endpointslice | grep nginx-service
 ```
 
-##### output
+Output:
+
 ```
 nginx-service-6zrf8         IPv4          80          192.168.156.5,192.168.202.196                  8h
 ```
@@ -124,31 +126,30 @@ nginx-service-6zrf8         IPv4          80          192.168.156.5,192.168.202.
 
 Exec into the first multitool-1 pod scheduled in the worker node
 
-##### command
 ```
-kubectl exec -it multitool-1-bgssq  -- sh 
+kubectl exec -it multitool-1-bgssq  -- sh
 ```
  - Opens a shell 🧰 inside the worker-scheduled test pod, letting you run network tools from an application-like vantage point.
 
-##### command
 ```
-telnet nginx-service 80 
+telnet nginx-service 80
 ```
  - Connects via Service DNS to port 80; a successful TCP handshake 🔌 proves name resolution and Service VIP routing are functional.
 
-##### output
+Output:
+
 ```
 Connected to nginx-service
 ```
  - Connection established ✅ through kube-proxy to one of the nginx pods; this validates dataplane rules (iptables/IPVS) on the local node.
 
-##### command
 ```
 get
 ```
  - Sends a minimal HTTP request; although incomplete, it should elicit an HTTP response which is enough to validate L4→L7 reachability.
 
-##### output
+Output:
+
 ```
 HTTP/1.1 400 Bad Request
 Server: nginx/1.28.0
@@ -181,11 +182,13 @@ Traffic to a Service IP first hits KUBE-SERVICES, gets directed to a KUBE-SVC ch
 ![Kube-proxy iptable chains](../../images/kube-proxy-chains.png)
 
 #### 4.1 Locate Service Rule 🔎
-##### command
+
 ```
-iptables -t nat -S KUBE-SERVICES | grep nginx-service
+ iptables -t nat -S KUBE-SERVICES | grep nginx-service
 ```
-##### output
+
+Output:
+
 ```
 -A KUBE-SERVICES -d 10.96.204.67/32 -p tcp -m comment --comment "default/nginx-service:http cluster IP" -m tcp --dport 80 -j KUBE-SVC-6IM33IEVEEV7U3GP
 ```
@@ -197,11 +200,13 @@ iptables -t nat -S KUBE-SERVICES | grep nginx-service
   - `-m comment --comment`: human-readable note. `-j`: jump target.
 
 #### 4.2 Inspect Service Chain ⚙️
-##### command
+
 ```
 iptables -t nat -L KUBE-SVC-6IM33IEVEEV7U3GP -n -v --line-numbers
 ```
-##### output
+
+Output:
+
 ```
 Chain KUBE-SVC-6IM33IEVEEV7U3GP (1 references)
 num   pkts bytes target            prot opt in  out source        destination
@@ -217,11 +222,13 @@ num   pkts bytes target            prot opt in  out source        destination
   - `!CIDR`: negation match. `statistic mode random`: probabilistic branching.
 
 #### 4.3 Examine Endpoint DNAT #1 🎯
-##### command
+
 ```
 iptables -t nat -L KUBE-SEP-M6MI3YLHVX7DA53R -n -v --line-numbers
 ```
-##### output
+
+Output:
+
 ```
 Chain KUBE-SEP-M6MI3YLHVX7DA53R (1 references)
 num   pkts bytes target           prot opt in out source          destination
@@ -234,11 +241,13 @@ num   pkts bytes target           prot opt in out source          destination
   - `DNAT ... to:<podIP>:<port>`: destination NAT to backend Pod.
 
 #### 4.4 Examine Endpoint DNAT #2 🎯
-##### command
+
 ```
 iptables -t nat -L KUBE-SEP-MJ46KNWYZBDUIDMY -n -v --line-numbers
 ```
-##### output
+
+Output:
+
 ```
 Chain KUBE-SEP-MJ46KNWYZBDUIDMY (1 references)
 num   pkts bytes target           prot opt in out source           destination
@@ -275,7 +284,7 @@ Notes and nuances:
 
 - EndpointSlices: kube-proxy prefers EndpointSlices over legacy Endpoints for scalability; both represent the set of Pod IPs and ports selected by the Service.
 - Session affinity: `sessionAffinity: ClientIP` makes kube-proxy pin a client IP to the same backend for a configurable timeout.
-- Health checks: kube-proxy doesn’t probe Pods; it trusts the Endpoints/EndpointSlices populated by the control plane and readiness gates from kubelet.
+- Health checks: kube-proxy doesn't probe Pods; it trusts the Endpoints/EndpointSlices populated by the control plane and readiness gates from kubelet.
 - Node-local optimization: With `externalTrafficPolicy: Local` (for NodePort/LB) traffic may prefer local backends; for ClusterIP, kube-proxy can still choose local Pod IPs when available.
 - Dual-stack: For dual-stack clusters, Services can have both IPv4/IPv6 VIPs; kube-proxy programs rules for each family.
 

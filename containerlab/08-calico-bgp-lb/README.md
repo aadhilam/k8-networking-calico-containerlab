@@ -1,12 +1,15 @@
 # LoadBalancer Type Service and BGP Advertisements
 
+## Overview
+
 This lab demonstrates Calico's BGP (Border Gateway Protocol) functionality. BGP peering with upstream networks can be used to advertise pod as well as service CIDRs.
 
 ## Lab Setup
+
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/08-calico-bgp-lb`
 
-## Lab
+## Lab Exercises
 
 > [!Note]
 > <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
@@ -15,9 +18,8 @@ The lab folder is - `/containerlab/08-calico-bgp-lb`
 
 First, let's inspect the lab topology.
 
-##### command
 ```bash
-containerlab inspect topology.clab.yaml 
+containerlab inspect topology.clab.yaml
 ```
 
 Next, let's inspect the Kubernetes cluster.
@@ -45,25 +47,21 @@ This lab has an Nginx deployment that is currently only accessible through a clu
 
 First, let's review the Nginx pods along with the cluster IP service in the default namespace.
 
-##### command
 ```
-kubectl get pods 
+kubectl get pods
 ```
 
-##### output
-
 ```
-kubectl get pods 
+kubectl get pods
 NAME                                READY   STATUS    RESTARTS   AGE
 nginx-deployment-67d6b95dd8-6flfw   1/1     Running   0          6m12s
 nginx-deployment-67d6b95dd8-rvr5k   1/1     Running   0          6m12s
 ```
 
-##### command
 ```
 kubectl get services
 ```
-##### output
+
 ```
 kubectl get services
 NAME               TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
@@ -101,12 +99,10 @@ kubectl apply -f ./k8s-manifests/lb-ippool.yaml
 
 Once applied, you can verify that the IP pool was configured in the cluster.
 
-##### command
 ```
 kubectl get ippools
 ```
 
-##### output
 ```
 kubectl get ippools
 NAME                   CREATED AT
@@ -140,17 +136,15 @@ spec:
 You can apply this service to the cluster by using:
 
 ```
-kubectl apply -f ./k8s-manifests/lb-nginx-service.yaml 
+kubectl apply -f ./k8s-manifests/lb-nginx-service.yaml
 ```
 
 Next, let's verify that the service was created.
 
-##### command
 ```
 kubectl get services -n default
 ```
 
-##### output
 ```
 kubectl get services -n default
 NAME               TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)        AGE
@@ -159,11 +153,11 @@ lb-nginx-service   LoadBalancer   10.96.87.127   172.16.0.241   80:30881/TCP   3
 nginx-service      ClusterIP      10.96.98.120   <none>         80/TCP         22m
 ```
 
-We can see that the `lb-nginx-service` was successfully created and the service has a cluster IP as well as an external IP of `172.16.0.241`, which is an IP from the previously configured load balancer IP pool. 
+We can see that the `lb-nginx-service` was successfully created and the service has a cluster IP as well as an external IP of `172.16.0.241`, which is an IP from the previously configured load balancer IP pool.
 
 #### 2.3 Advertise the load balancer CIDR to the upstream network.
 
-To advertise the load balancer CIDR to upstream networks, we have to modify the `BGPConfiguration` resource to include the service load balancer IPs in its prefix advertisements. 
+To advertise the load balancer CIDR to upstream networks, we have to modify the `BGPConfiguration` resource to include the service load balancer IPs in its prefix advertisements.
 
 ```yaml
 apiVersion: projectcalico.org/v3
@@ -181,17 +175,14 @@ spec:
 You can apply this manifest by using:
 
 ```
-kubectl apply -f ./calico-cni-config/bgpconfiguration-lb.yaml 
+kubectl apply -f ./calico-cni-config/bgpconfiguration-lb.yaml
 ```
 
 Once applied, let's confirm that the `BGPConfiguration` resource was modified accordingly.
 
-##### command
 ```
 kubectl get bgpconfiguration -o yaml
 ```
-
-##### output
 
 ```yaml
 apiVersion: projectcalico.org/v3
@@ -222,13 +213,10 @@ docker exec -it clab-calico-bgp-lb-ceos01 Cli
 
 Next, let's look at the routing table.
 
-##### command
 ```
 enable
 show ip route
 ```
-
-##### output
 
 ```
 ceos#show ip route
@@ -245,8 +233,6 @@ Gateway of last resort is not set
            directly connected, Management0
 ```
 
-##### Explanation
-
 The routing table shows that the load balancer CIDR `172.16.0.240/28` has been successfully advertised via BGP:
 
 - `B E` indicates this is an External BGP route
@@ -258,12 +244,10 @@ This confirms that the upstream router (CEOS) has learned the load balancer CIDR
 
 It should be noted that the prefix is advertised by all the cluster nodes, that's because all the nodes in this particular cluster are paired with the upstream router. You can confirm this by running the following steps.
 
-##### command
 ```
 show ip bgp summary
 ```
 
-##### output
 ```
 ceos#show ip bgp summary
 BGP summary information for VRF default
@@ -274,7 +258,6 @@ Neighbor Status Codes: m - Under maintenance
   "Calico Kubernetes Nodes 10.10.10.11 4 65010             58        50    0    0 00:38:40 Estab   1      1
   "Calico Kubernetes Nodes 10.10.10.12 4 65010             58        51    0    0 00:38:40 Estab   1      1
 ```
-##### Explanation
 
 The BGP summary shows established peering sessions with all three Kubernetes nodes:
 
@@ -296,12 +279,10 @@ router bgp 65001
 
 This will configure ECMP and add up to four routes for learnt BGP prefixes. Let's confirm this by looking at the routing table again.
 
-##### command
 ```
 show ip route
 ```
 
-##### output
 ```
 show ip route
 VRF: default
@@ -317,7 +298,6 @@ Gateway of last resort is not set
  C        172.20.20.0/24
            directly connected, Management0
 ```
-##### Explanation
 
 After enabling ECMP with `maximum-paths 4`, the routing table now shows multiple next-hops for the load balancer CIDR:
 
@@ -328,7 +308,7 @@ After enabling ECMP with `maximum-paths 4`, the routing table now shows multiple
 This ECMP configuration ensures optimal traffic distribution and resilience for LoadBalancer service traffic from external sources.
 
 
-#### 3.3 Verfiy Connectivity
+#### 3.3 Verify Connectivity
 
 We can now verify connectivity to the nginx service from the cEOS container.
 
@@ -337,12 +317,10 @@ Run the following from the cEOS container.
 > <mark> The LB IP in your lab could be different from the IP shown blow<mark>
 
 
-##### command
 ```
 telnet 172.16.0.241 80
 ```
 
-##### output
 Type "get" once the connection is established.
 ```
 Trying 172.16.0.241...
@@ -366,7 +344,6 @@ Connection: close
 Connection closed by foreign host.
 ```
 
-##### Explanation
 This output confirms that we received a response from the nginx pod in the cluster. The image below provides an overview of what was configured in this lab
 
 ![BGP LB Topology](../../images/bgp-lb.png)
@@ -393,4 +370,5 @@ This lab demonstrated how to integrate Calico BGP with LoadBalancer services to 
 This approach enables production-grade external access to Kubernetes services while leveraging existing network infrastructure and providing built-in redundancy and load balancing capabilities.
 
 ## Lab Cleanup
+
 to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**

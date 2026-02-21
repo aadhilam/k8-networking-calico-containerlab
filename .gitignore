@@ -51,4 +51,6 @@ container-labs.code-workspace
 demo-magic/
 demo/
 
-
+# Archive and restructure notes
+**/readme-archive.md
+containerlab/restructure-instructions.md

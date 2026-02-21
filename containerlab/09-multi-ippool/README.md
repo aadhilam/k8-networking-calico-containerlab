@@ -2,12 +2,18 @@
 
 This lab demonstrates how multiple IP pools can be configured in Calico for advanced network segmentation and IP address management. Multiple IP pools are typically used in scenarios where you want to demarcate workloads in the cluster.
 
+## Overview
+
+In this lab, we will look at how multiple IP pools can be used to allocate IP addresses to pods in the cluster as outlined in the diagram below.
+
+![multi ippool1](../../images/multi-ippool1.png)
+
 ## Lab Setup
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/09-multi-ippool`
 
 
-## Lab
+## Lab Exercises
 
 > [!Note]
 > <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
@@ -16,13 +22,11 @@ The lab folder is - `/containerlab/09-multi-ippool`
 
 First, let's inspect the lab topology.
 
-##### command
 ```bash
-containerlab inspect topology.clab.yaml 
+containerlab inspect topology.clab.yaml
 ```
 
 ```
-##### output
 | Name                   | Kind          | Image                | State   | IPv4 Address | IPv6 Address         |
 |------------------------|---------------|----------------------|---------|--------------|----------------------|
 | k01-control-plane      | ext-container | kindest/node:v1.32.2 | running | 172.18.0.2   | fc00:f853:ccd:e793::2 |
@@ -39,11 +43,9 @@ export KUBECONFIG=/home/ubuntu/containerlab/9-multi-ippool/k01.kubeconfig
 ```
 
 Verify the cluster nodes.
-##### command
 ```
 kubectl get nodes
 ```
-##### output
 ```
 NAME                STATUS   ROLES           AGE   VERSION
 k01-control-plane   Ready    control-plane   18m   v1.32.2
@@ -53,11 +55,6 @@ k01-worker2         Ready    <none>          17m   v1.32.2
 
 > [!Note]
 > We are utilizing the same lab topology as the previous BGP lab that can be found here **[Lab setup](../8-calico-bgp-lb/README.md)**
-
-In this lab, we will look at how multiple IP pools can be used to allocate IP addresses to pods in the cluster as outlined in the diagram below.
-
-![multi ippool1](../../images/multi-ippool1.png)
-
 
 ### 2. Inspect IP Pools
 
@@ -84,35 +81,28 @@ The following IP pools were configured in the installation resource. The install
       disableBGPExport: true
 ```
 
-##### Explanation
-
 In this installation resource, there are two IP pools - default IP pool and a secondary IP pool. The secondary IP pool has a node select of ` "!all()"` which means that this IP pool will not be utilized unless a workload resource has specifically requested IPs from this pool.
 
 Next, let's inspect IP pools.
 
-##### command
 ```
 kubectl get ippools
 ```
 
-##### output
 ```
 default-ipv4-ippool     2025-10-06T20:11:19Z
 loadbalancer-ip-pool    2025-10-06T20:12:45Z
 secondary-ipv4-ippool   2025-10-06T20:11:19Z
 ```
 
-##### Explanation
 Notice that there is a default and a secondary IP pool. You can ignore the load balance IP pool for this lab.
 
 #### 2.2 Verify the IPAM block affinities
 
-##### command
 ```
 kubectl get blockaffinities
 ```
 
-##### output
 ```
 kubectl get blockaffinities
 NAME                                CREATED AT
@@ -122,19 +112,15 @@ k01-worker2-192-168-88-192-26       2025-10-06T20:11:50Z
 load-balancer-172-16-0-240-28       2025-10-06T20:12:45Z
 ```
 
-##### Explanation
 Note that the block affinities are only assigned from the primary IP pool, which means that the secondary IP pool is not considered for IPAM allocation. This also indicates that currently, there are no workloads that have requested IP addresses from the secondary IP pool.
 
 The manifest for the workloads deployed in this lab can be found in this directory - [tools](./tools/)
 
 #### 2.3 Verify workload IPs
 
-##### command
-
 ```
 kubectl get pods -n default -o wide
 ```
-##### output
 ```
 NAME                                READY   STATUS    RESTARTS   AGE   IP               NODE                NOMINATED NODE   READINESS GATES
 multitool-1-2f7vl                   1/1     Running   0          30s   192.168.42.194   k01-worker          <none>           <none>
@@ -146,7 +132,6 @@ multitool-2-m22jw                   1/1     Running   0          29s   192.168.4
 nginx-deployment-67d6b95dd8-648sk   1/1     Running   0          29s   192.168.88.203   k01-worker2         <none>           <none>
 nginx-deployment-67d6b95dd8-rzjt8   1/1     Running   0          29s   192.168.42.197   k01-worker          <none>           <none>
 ```
-##### Explanation
 Notice that all pod IPs are from the default IP pool. This is because the secondary IP pool has a node select of `"!all()"` Which prevents it from being allocated to pods unless specified.
 
 
@@ -158,12 +143,10 @@ Let's modify the multitool-2 daemonset so that it receives IP addresses from the
 
 Apply the following annotation to the multitool-2 daemonset. This instructs Calico to allocate IP addresses to these pods from the secondary IP pool.
 
-##### command
 ```
 kubectl patch daemonset multitool-2 -p '{"spec":{"template":{"metadata":{"annotations":{"cni.projectcalico.org/ipv4pools":"[\"secondary-ipv4-ippool\"]"}}}}}'
 ```
 
-##### output
 ```
 daemonset.apps/multitool-2 patched
 ```
@@ -194,14 +177,12 @@ spec:
 
 Once the change is applied, the multitool-2 pods should restart and now have an IP address from the secondary IP pool. This is shown in the output below.
 
-##### command
 ```
 kubectl get pods -n default -o wide
 ```
 
-##### output
 ```
-kubectl get pods -o wide 
+kubectl get pods -o wide
 NAME                                READY   STATUS    RESTARTS   AGE     IP                NODE                NOMINATED NODE   READINESS GATES
 multitool-1-2f7vl                   1/1     Running   0          6m38s   192.168.42.194    k01-worker          <none>           <none>
 multitool-1-n4669                   1/1     Running   0          6m38s   192.168.69.2      k01-control-plane   <none>           <none>
@@ -214,12 +195,10 @@ nginx-deployment-67d6b95dd8-rzjt8   1/1     Running   0          6m37s   192.168
 ```
 Next, let's also look at the block affinities, specifically, to verify that IPAM blocks from the secondary IP pool have been allocated to the nodes.
 
-##### command
 ```
 kubectl get blockaffinities
 ```
 
-##### output
 ```
  kubectl get blockaffinities
 NAME                                 CREATED AT
@@ -232,8 +211,7 @@ k01-worker2-192-168-88-192-26        2025-10-06T20:11:50Z
 load-balancer-172-16-0-240-28        2025-10-06T20:12:45Z
 ```
 
-##### Explanation
-Given that we have workloads that have requested IP addresses from the secondary IP pool Calico has now assigned IP blocks to the nodes so that these workload can obtain IP addresses. 
+Given that we have workloads that have requested IP addresses from the secondary IP pool Calico has now assigned IP blocks to the nodes so that these workload can obtain IP addresses.
 
 ## Summary
 
@@ -241,7 +219,7 @@ This lab demonstrated how to configure and use multiple IP pools in Calico for a
 
 The following key concepts were covered.
 
-1. Dual IP Pool Configuration: 
+1. Dual IP Pool Configuration:
    - Primary pool: `192.168.0.0/17` (default allocation for all workloads)
    - Secondary pool: `192.168.128.0/17` (on-demand allocation only)
 

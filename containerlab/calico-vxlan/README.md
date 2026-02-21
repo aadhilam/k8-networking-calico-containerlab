@@ -1,8 +1,10 @@
 # Exploring ContainerLab Setup
 
-This package replicates the simple exploration topology from the VirtualizeStuff article **“Exploring ContainerLab.”**
+This package replicates the simple exploration topology from the VirtualizeStuff article **"Exploring ContainerLab."**
 
-## Components
+## Overview
+
+### Components
 
 | File | Purpose |
 |------|---------|
@@ -11,7 +13,7 @@ This package replicates the simple exploration topology from the VirtualizeStuff
 | `deploy.sh` | Convenience script to stand the lab up |
 | `destroy.sh` | Convenience script to tear the lab down |
 
-## Quick start
+## Deployment
 
 ```bash
 # install containerlab first
@@ -29,10 +31,17 @@ cd containerlab_exploring_setup
 
 # verify
 containerlab inspect -t topology.yaml
-
-# when finished
-./destroy.sh
 ```
 
-> **Tip**  The three `linux` nodes ship with the standard “kind” base image.  
+> **Tip**  The three `linux` nodes ship with the standard "kind" base image.  
 > You can `kind create cluster --name demo --image kindest/node:v1.30.0 --config kind.yaml` and then join the nodes to r0 to test CNI behaviour exactly as shown in the blog post.
+
+## Summary
+
+This lab provides a minimal ContainerLab topology with one FRR router and three Linux nodes for exploring basic container networking concepts.
+
+## Lab Cleanup
+
+```bash
+./destroy.sh
+```

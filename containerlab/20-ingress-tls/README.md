@@ -2,7 +2,9 @@
 
 This lab demonstrates automated TLS certificate lifecycle management using cert-manager with a local Certificate Authority (CA). You'll learn how to install cert-manager, configure ClusterIssuers with local CAs, and implement both wildcard and dedicated certificates for different services.
 
-## What is cert-manager?
+## Overview
+
+### What is cert-manager?
 
 cert-manager is a powerful Kubernetes add-on that automates the management and issuance of TLS certificates. It supports various certificate authorities including internal CAs, HashiCorp Vault PKI, self-signed certificates, and public CAs like Let's Encrypt.
 
@@ -14,17 +16,17 @@ cert-manager is a powerful Kubernetes add-on that automates the management and i
 | **ClusterIssuers** | Cluster-wide certificate authority configuration |
 | **Gateway API Integration** | Native support for Gateway API TLS |
 
-## Certificate Strategies
+### Certificate Strategies
 
 This lab demonstrates two common certificate strategies:
 
-### 1. Wildcard Certificate (*.demo.lab)
+**1. Wildcard Certificate (*.demo.lab)**
 - **Used by**: store.demo.lab, blog.demo.lab
 - **Pros**: Single certificate for multiple subdomains, easier management
 - **Cons**: Broader scope if private key is compromised
 - **Use case**: Multiple apps under the same domain
 
-### 2. Dedicated Certificate (api.demo.lab)
+**2. Dedicated Certificate (api.demo.lab)**
 - **Used by**: api.demo.lab
 - **Pros**: Better isolation, independent lifecycle, can rotate without affecting others
 - **Cons**: More certificates to manage
@@ -34,24 +36,23 @@ This lab demonstrates two common certificate strategies:
 
 ![TLS Ingress Architecture](../../images/tls-ingress.png)
 
-## Prerequisites
-
+**Prerequisites:**
 - ContainerLab installed
 - Docker installed
 - kubectl configured
-
-## Lab Setup
 
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/20-ingress-tls`
 
-## Lab
+## Lab Exercises
 
 > [!Note]
 > <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.</mark>
 
-### 1. Deploy the Lab Infrastructure
+### 1. Deploy and Verify the Lab
+
+#### 1.1 Deploy the Lab Infrastructure
 
 ```bash
 cd containerlab/20-ingress-tls
@@ -67,7 +68,7 @@ The deploy script will:
 > [!Note]
 > cert-manager, demo applications, certificates, and Gateway resources are **not** pre-configured. You will install and create them manually in this lab to understand how they work together.
 
-### 2. Set Up Environment
+#### 1.2 Set Up Environment
 
 Set the kubeconfig for this lab:
 
@@ -90,7 +91,7 @@ k01-worker3         Ready    <none>          9m    v1.32.2   10.10.10.13    ...
 k01-worker4         Ready    <none>          9m    v1.32.2   10.10.10.14    ...
 ```
 
-### 3. Verify GatewayClass
+#### 1.3 Verify GatewayClass
 
 Confirm the GatewayClass is available:
 
@@ -103,13 +104,11 @@ NAME                   CONTROLLER                                      ACCEPTED 
 tigera-gateway-class   gateway.envoyproxy.io/gatewayclass-controller   True       5m
 ```
 
----
-
-## Phase 1: Install cert-manager
+### 2. Install cert-manager
 
 In this phase, you'll install cert-manager to manage TLS certificates in your cluster.
 
-### 4. Understand cert-manager Components
+#### 2.1 Understand cert-manager Components
 
 cert-manager consists of several components:
 
@@ -119,7 +118,7 @@ cert-manager consists of several components:
 | **Webhook** | Validates and mutates cert-manager resources |
 | **CA Injector** | Injects CA bundles into webhooks and API services |
 
-### 5. Install cert-manager
+#### 2.2 Install cert-manager
 
 Install cert-manager using the official manifest:
 
@@ -141,7 +140,7 @@ deployment.apps/cert-manager-cainjector created
 deployment.apps/cert-manager-webhook created
 ```
 
-### 6. Wait for cert-manager to be Ready
+#### 2.3 Wait for cert-manager to be Ready
 
 Wait for all cert-manager deployments to be available:
 
@@ -157,7 +156,7 @@ deployment.apps/cert-manager-webhook condition met
 deployment.apps/cert-manager-cainjector condition met
 ```
 
-### 7. Verify cert-manager Installation
+#### 2.4 Verify cert-manager Installation
 
 Check that cert-manager pods are running:
 
@@ -195,7 +194,7 @@ issuers.cert-manager.io                   2024-01-15T12:00:00Z
 orders.acme.cert-manager.io               2024-01-15T12:00:00Z
 ```
 
-### 8. Test cert-manager with a Self-Signed Certificate
+#### 2.5 Test cert-manager with a Self-Signed Certificate
 
 Before proceeding, let's verify cert-manager is working correctly by creating a test certificate. This smoke test validates that:
 
@@ -248,7 +247,7 @@ NAME              READY   SECRET                AGE
 selfsigned-cert   True    selfsigned-cert-tls   10s
 ```
 
-**What happened?** When the Certificate resource was created:
+When the Certificate resource was created:
 1. cert-manager generated a private key
 2. Created a Certificate Signing Request (CSR)
 3. Signed the certificate using the self-signed issuer
@@ -281,13 +280,11 @@ Clean up the test resources:
 kubectl delete namespace cert-manager-test
 ```
 
----
-
-## Phase 2: Deploy Demo Applications
+### 3. Deploy Demo Applications
 
 In this phase, you'll deploy three demo applications that will be exposed via the TLS Gateway.
 
-### 9. Create the Demo Namespace
+#### 3.1 Create the Demo Namespace
 
 ```bash
 kubectl create namespace cert-manager-demo
@@ -297,7 +294,7 @@ kubectl create namespace cert-manager-demo
 namespace/cert-manager-demo created
 ```
 
-### 10. Examine the Store Application
+#### 3.2 Examine the Store Application
 
 First, examine the Store application manifest:
 
@@ -311,7 +308,7 @@ Key points:
 - Uses the `cert-manager-demo` namespace
 - Pods are scheduled on non-BGP worker nodes (worker3, worker4)
 
-### 11. Deploy the Store Application
+#### 3.3 Deploy the Store Application
 
 ```bash
 kubectl apply -f k8s-manifests/app-store.yaml
@@ -323,7 +320,7 @@ deployment.apps/store created
 service/store created
 ```
 
-### 12. Deploy the Blog Application
+#### 3.4 Deploy the Blog Application
 
 Examine and deploy the Blog application:
 
@@ -341,7 +338,7 @@ deployment.apps/blog created
 service/blog created
 ```
 
-### 13. Deploy the API Application
+#### 3.5 Deploy the API Application
 
 Examine and deploy the API application:
 
@@ -359,7 +356,7 @@ deployment.apps/api created
 service/api created
 ```
 
-### 14. Verify Application Deployments
+#### 3.6 Verify Application Deployments
 
 Check that all pods are running:
 
@@ -390,15 +387,13 @@ blog    ClusterIP   10.96.x.x       <none>        80/TCP    1m
 api     ClusterIP   10.96.x.x       <none>        80/TCP    1m
 ```
 
----
-
-## Phase 3: Create Certificate Issuers
+### 4. Create Certificate Issuers
 
 In this phase, you'll create ClusterIssuers that define how certificates are obtained. Since this is a lab environment, we use **local Certificate Authorities** instead of public CAs like Let's Encrypt.
 
 ![Cert Issuers](../../images/cert-issuers.png)
 
-### 15. Understand ClusterIssuers
+#### 4.1 Understand ClusterIssuers
 
 Examine the ClusterIssuer manifest:
 
@@ -443,7 +438,7 @@ spec:
 > - You can trust the CA once and all issued certs are trusted
 > - This mirrors how enterprise PKI and public CAs work
 
-### 16. Create the ClusterIssuers
+#### 4.2 Create the ClusterIssuers
 
 ```bash
 kubectl apply -f tls-config/cluster-issuers.yaml
@@ -454,7 +449,7 @@ clusterissuer.cert-manager.io/selfsigned-issuer created
 clusterissuer.cert-manager.io/lab-ca-issuer created
 ```
 
-### 17. Verify ClusterIssuers
+#### 4.3 Verify ClusterIssuers
 
 Check that all issuers are ready:
 
@@ -471,15 +466,13 @@ lab-ca-issuer       False   Error initializing issuer: secret not found         
 > [!Note]
 > The `lab-ca-issuer` shows an error because we haven't created the CA certificate yet. This is expected - we'll create it in the next phase when we apply the certificates.
 
----
-
-## Phase 4: Issue Certificates
+### 5. Issue Certificates
 
 Now you'll create Certificate resources that request certificates from our Lab CA.
 
 ![Issue Certs](../../images/issue-certs.png)
 
-### 18. Understand the Certificate Resources
+#### 5.1 Understand the Certificate Resources
 
 Examine the certificates manifest:
 
@@ -633,8 +626,7 @@ flowchart TB
 
 ![Cert Process](../../images/cert-process.png)
 
-
-### 19. Create the Certificates
+#### 5.2 Create the Certificates
 
 ```bash
 kubectl apply -f tls-config/certificates.yaml
@@ -646,7 +638,7 @@ certificate.cert-manager.io/wildcard-demo-lab created
 certificate.cert-manager.io/api-demo-lab created
 ```
 
-### 20. Watch Certificate Issuance
+#### 5.3 Watch Certificate Issuance
 
 Watch cert-manager issue the certificates:
 
@@ -666,7 +658,7 @@ cert-manager-demo   api-demo-lab        True    api-demo-lab-tls         3s
 
 Press `Ctrl+C` to exit the watch.
 
-### 21. Verify All Certificates Are Ready
+#### 5.4 Verify All Certificates Are Ready
 
 ```bash
 kubectl get certificates -A
@@ -679,7 +671,7 @@ cert-manager-demo   wildcard-demo-lab   True    wildcard-demo-lab-tls    1m
 cert-manager-demo   api-demo-lab        True    api-demo-lab-tls         1m
 ```
 
-### 22. Verify ClusterIssuers Again
+#### 5.5 Verify ClusterIssuers Again
 
 Now check the lab-ca-issuer:
 
@@ -694,7 +686,7 @@ lab-ca-issuer   True    Signing CA verified     2m
 
 The issuer is now ready because the Lab CA certificate has been created.
 
-### 23. Examine Certificate Details
+#### 5.6 Examine Certificate Details
 
 View the wildcard certificate details:
 
@@ -732,7 +724,7 @@ Status:
   Renewal Time:            2024-03-16T12:00:00Z
 ```
 
-### 24. Verify TLS Secrets
+#### 5.7 Verify TLS Secrets
 
 Check that the TLS secrets have been created:
 
@@ -771,13 +763,11 @@ Certificate:
 > [!Note]
 > Notice the **Issuer** field shows "Demo Lab Certificate Authority" - this proves the certificate was signed by our Lab CA, not self-signed.
 
----
+### 6. Configure TLS Gateway and Routes
 
-## Phase 5: Configure TLS Gateway & Routes
+In this final configuration phase, you'll create the Gateway with TLS listeners and HTTPRoutes for each application.
 
-In this final phase, you'll create the Gateway with TLS listeners and HTTPRoutes for each application.
-
-### 25. Understand the TLS Gateway
+#### 6.1 Understand the TLS Gateway
 
 Examine the Gateway manifest:
 
@@ -833,7 +823,7 @@ spec:
 - Store and Blog share the wildcard certificate
 - API has its own dedicated certificate
 
-### 26. Create the TLS Gateway
+#### 6.2 Create the TLS Gateway
 
 ```bash
 kubectl apply -f k8s-manifests/gateway.yaml
@@ -843,7 +833,7 @@ kubectl apply -f k8s-manifests/gateway.yaml
 gateway.gateway.networking.k8s.io/tls-gateway created
 ```
 
-### 27. Verify Gateway Status
+#### 6.3 Verify Gateway Status
 
 Check that the Gateway is programmed:
 
@@ -858,7 +848,7 @@ tls-gateway   tigera-gateway-class   10.100.1.100   True         30s
 
 Note the external IP address - you'll use this to access the services.
 
-### 28. Check Gateway Details
+#### 6.4 Check Gateway Details
 
 View detailed Gateway status:
 
@@ -868,7 +858,7 @@ kubectl describe gateway tls-gateway | grep secret
 
 Look for the listener statuses - all should show `Attached: True` and `ResolvedRefs: True`.
 
-### 29. Create the ReferenceGrant
+#### 6.5 Create the ReferenceGrant
 
 The Gateway needs permission to reference secrets in the `cert-manager-demo` namespace. Examine and create the ReferenceGrant:
 
@@ -884,7 +874,7 @@ kubectl apply -f k8s-manifests/reference-grant.yaml
 referencegrant.gateway.networking.k8s.io/allow-gateway-secrets created
 ```
 
-### 30. Understand HTTPRoutes
+#### 6.6 Understand HTTPRoutes
 
 Examine the HTTPRoutes manifest:
 
@@ -898,7 +888,7 @@ Each HTTPRoute:
 - Routes traffic to the appropriate backend service
 - Includes HTTP to HTTPS redirect rules
 
-### 31. Create the HTTPRoutes
+#### 6.7 Create the HTTPRoutes
 
 ```bash
 kubectl apply -f k8s-manifests/httproutes.yaml
@@ -911,7 +901,7 @@ httproute.gateway.networking.k8s.io/api-route created
 httproute.gateway.networking.k8s.io/http-redirect created
 ```
 
-### 32. Verify HTTPRoutes
+#### 6.8 Verify HTTPRoutes
 
 Check the HTTPRoutes status:
 
@@ -927,20 +917,18 @@ api-route       ["api.demo.lab"]       30s
 http-redirect                          30s
 ```
 
----
-
-## Phase 6: Test the Setup
+### 7. Test the Setup
 
 Now let's test the complete TLS setup from the user container.
 
-### 33. Get the Gateway IP
+#### 7.1 Get the Gateway IP
 
 ```bash
 GATEWAY_IP=$(kubectl get gateway tls-gateway -o jsonpath='{.status.addresses[0].value}')
 echo "Gateway IP: $GATEWAY_IP"
 ```
 
-### 34. Add DNS Entries to User Container
+#### 7.2 Add DNS Entries to User Container
 
 Add the hostnames to the user container's /etc/hosts:
 
@@ -954,7 +942,7 @@ Verify the entries were added:
 sudo docker exec clab-ingress-tls-user cat /etc/hosts
 ```
 
-### 35. Add Lab CA as Trusted Certificate
+#### 7.3 Add Lab CA as Trusted Certificate
 
 Extract the Lab CA certificate and copy it to the user container:
 
@@ -978,9 +966,9 @@ MIIBqDCCAU... (Lab CA certificate content)
 -----END CERTIFICATE-----
 ```
 
-### 36. Test HTTPS Access with Certificate Verification
+#### 7.4 Test HTTPS Access with Certificate Verification
 
-Now test HTTPS access using the `--cacert` flag to verify the certificate against our Lab CA:
+Now test HTTPS access using the `--cacert` flag to verify the certificate against our Lab CA.
 
 Test the Store application from the user container:
 
@@ -1024,7 +1012,7 @@ sudo docker exec clab-ingress-tls-user curl -v --cacert /tmp/lab-ca.crt https://
 > [!Note]
 > Notice the `SSL certificate verify ok` message - this confirms the Lab CA is properly trusted and the certificate chain is valid. The `--cacert` flag tells curl to use our Lab CA certificate for verification.
 
-### 37. Test HTTP to HTTPS Redirect
+#### 7.5 Test HTTP to HTTPS Redirect
 
 Test that HTTP requests are redirected to HTTPS:
 
@@ -1037,7 +1025,7 @@ sudo docker exec clab-ingress-tls-user curl -v http://store.demo.lab/ 2>&1 | gre
 < Location: https://store.demo.lab/
 ```
 
-### 38. Verify Certificate Chain
+#### 7.6 Verify Certificate Chain
 
 Examine the full certificate chain for the wildcard cert:
 
@@ -1045,7 +1033,7 @@ Examine the full certificate chain for the wildcard cert:
 sudo docker exec clab-ingress-tls-user sh -c "echo | openssl s_client -connect store.demo.lab:443 -servername store.demo.lab 2>/dev/null | openssl x509 -text -noout | grep -A2 'Subject:'"
 ```
 
-### 39. Test Certificate Renewal Simulation
+#### 7.7 Test Certificate Renewal Simulation
 
 ```mermaid
 sequenceDiagram
@@ -1232,107 +1220,35 @@ Look for entries related to Secret reconciliation:
 "msg":"updating xDS snapshot","gateway":"default/tls-gateway"
 ```
 
----
+## Summary
 
-## Advanced Topics
+This lab demonstrated automated TLS certificate management with cert-manager:
 
-### Switching Between Issuers
+| Phase | What You Learned |
+|-------|------------------|
+| **Phase 1** | Install cert-manager and verify its components |
+| **Phase 2** | Deploy demo applications that need TLS |
+| **Phase 3** | Create ClusterIssuers for different CAs |
+| **Phase 4** | Issue wildcard and dedicated certificates |
+| **Phase 5** | Configure TLS Gateway with certificate references |
+| **Phase 6** | Test and verify HTTPS connectivity |
 
-You can change a certificate's issuer without recreating it:
+**Certificate Strategy Summary:**
 
-1. Update the certificate to use a different issuer:
+| App | Hostname | Certificate | Type |
+|-----|----------|-------------|------|
+| Store | store.demo.lab | *.demo.lab | Wildcard (shared) |
+| Blog | blog.demo.lab | *.demo.lab | Wildcard (shared) |
+| API | api.demo.lab | api.demo.lab | Dedicated |
 
-```bash
-# Example: Switch from lab-ca-issuer to selfsigned-issuer
-kubectl patch certificate api-demo-lab -n cert-manager-demo --type='json' -p='[
-  {"op": "replace", "path": "/spec/issuerRef/name", "value": "selfsigned-issuer"}
-]'
-```
+**Key Takeaways:**
 
-2. Delete the existing secret to trigger re-issuance:
-
-```bash
-kubectl delete secret api-demo-lab-tls -n cert-manager-demo
-```
-
-3. Watch the certificate be re-issued:
-
-```bash
-kubectl get certificate api-demo-lab -n cert-manager-demo -w
-```
-
-### Certificate Rotation Best Practices
-
-| Setting | Recommended Value | Reason |
-|---------|-------------------|--------|
-| Duration | 90 days | Industry standard, balances security & ops |
-| Renew Before | 30 days | Allows time to fix issues |
-| Private Key Algorithm | ECDSA P-256 | Modern, efficient, strong security |
-| Key Rotation | Enabled | Fresh key on each renewal |
-
----
-
-## Architecture Deep Dive
-
-### cert-manager Components
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        CERT-MANAGER ARCHITECTURE                        │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐   │
-│  │   Controller     │    │    CA Injector   │    │     Webhook      │   │
-│  │                  │    │                  │    │                  │   │
-│  │ • Watches CRs    │    │ • Injects CA     │    │ • Validates CRs  │   │
-│  │ • Issues certs   │    │   bundles        │    │ • Mutates CRs    │   │
-│  │ • Multiple       │    │ • Updates        │    │ • Converts       │   │
-│  │   issuer types   │    │   annotations    │    │   versions       │   │
-│  └────────┬─────────┘    └──────────────────┘    └──────────────────┘   │
-│           │                                                             │
-│           ▼                                                             │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                      Custom Resources                           │    │
-│  │  ┌───────────┐  ┌────────────┐  ┌───────────┐  ┌────────────┐   │    │
-│  │  │ClusterIss.│  │Certificate │  │CertReq    │  │Order       │   │    │
-│  │  └───────────┘  └────────────┘  └───────────┘  └────────────┘   │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### Certificate Issuance Flow
-
-```
-1. Certificate CR Created
-         │
-         ▼
-2. cert-manager Controller detects Certificate
-         │
-         ▼
-3. CertificateRequest CR created
-         │
-         ▼
-4. Issuer processes request
-         │
-         ├── Self-signed: Generates immediately (signs with own key)
-         │
-         └── CA: Signs with CA private key (used in this lab)
-         │
-         ▼
-5. TLS Secret created with certificate + key
-         │
-         ▼
-6. Gateway picks up secret for TLS termination
-         │
-         ▼
-7. HTTPS endpoint ready
-```
-
-> [!Note]
-> In production with public CAs like Let's Encrypt, step 4 would include ACME challenges (HTTP-01 or DNS-01) to verify domain ownership. Our local CA skips this since we control both the CA and the domains.
-
----
+1. **cert-manager** automates the entire certificate lifecycle - issuance, renewal, and rotation
+2. **ClusterIssuers** provide cluster-wide certificate authority configuration
+3. **Local CAs** demonstrate the same concepts as production PKI without external dependencies
+4. **Wildcard certificates** reduce management overhead for multiple subdomains
+5. **Dedicated certificates** provide better security isolation for critical services
+6. **Gateway API** provides native TLS termination with certificate references
 
 ## Troubleshooting
 
@@ -1396,39 +1312,99 @@ kubectl describe gateway tls-gateway
 kubectl logs -n tigera-gateway -l gateway.envoyproxy.io/owning-gateway-name=tls-gateway
 ```
 
----
+## Additional Notes
 
-## Summary
+### Switching Between Issuers
 
-This lab demonstrated automated TLS certificate management with cert-manager:
+You can change a certificate's issuer without recreating it:
 
-| Phase | What You Learned |
-|-------|------------------|
-| **Phase 1** | Install cert-manager and verify its components |
-| **Phase 2** | Deploy demo applications that need TLS |
-| **Phase 3** | Create ClusterIssuers for different CAs |
-| **Phase 4** | Issue wildcard and dedicated certificates |
-| **Phase 5** | Configure TLS Gateway with certificate references |
-| **Phase 6** | Test and verify HTTPS connectivity |
+1. Update the certificate to use a different issuer:
 
-**Certificate Strategy Summary:**
+```bash
+# Example: Switch from lab-ca-issuer to selfsigned-issuer
+kubectl patch certificate api-demo-lab -n cert-manager-demo --type='json' -p='[
+  {"op": "replace", "path": "/spec/issuerRef/name", "value": "selfsigned-issuer"}
+]'
+```
 
-| App | Hostname | Certificate | Type |
-|-----|----------|-------------|------|
-| Store | store.demo.lab | *.demo.lab | Wildcard (shared) |
-| Blog | blog.demo.lab | *.demo.lab | Wildcard (shared) |
-| API | api.demo.lab | api.demo.lab | Dedicated |
+2. Delete the existing secret to trigger re-issuance:
 
-**Key Takeaways:**
+```bash
+kubectl delete secret api-demo-lab-tls -n cert-manager-demo
+```
 
-1. **cert-manager** automates the entire certificate lifecycle - issuance, renewal, and rotation
-2. **ClusterIssuers** provide cluster-wide certificate authority configuration
-3. **Local CAs** demonstrate the same concepts as production PKI without external dependencies
-4. **Wildcard certificates** reduce management overhead for multiple subdomains
-5. **Dedicated certificates** provide better security isolation for critical services
-6. **Gateway API** provides native TLS termination with certificate references
+3. Watch the certificate be re-issued:
 
----
+```bash
+kubectl get certificate api-demo-lab -n cert-manager-demo -w
+```
+
+### Certificate Rotation Best Practices
+
+| Setting | Recommended Value | Reason |
+|---------|-------------------|--------|
+| Duration | 90 days | Industry standard, balances security & ops |
+| Renew Before | 30 days | Allows time to fix issues |
+| Private Key Algorithm | ECDSA P-256 | Modern, efficient, strong security |
+| Key Rotation | Enabled | Fresh key on each renewal |
+
+### cert-manager Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        CERT-MANAGER ARCHITECTURE                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐   │
+│  │   Controller     │    │    CA Injector   │    │     Webhook      │   │
+│  │                  │    │                  │    │                  │   │
+│  │ • Watches CRs    │    │ • Injects CA     │    │ • Validates CRs  │   │
+│  │ • Issues certs   │    │   bundles        │    │ • Mutates CRs    │   │
+│  │ • Multiple       │    │ • Updates        │    │ • Converts       │   │
+│  │   issuer types   │    │   annotations    │    │   versions       │   │
+│  └────────┬─────────┘    └──────────────────┘    └──────────────────┘   │
+│           │                                                             │
+│           ▼                                                             │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │                      Custom Resources                           │    │
+│  │  ┌───────────┐  ┌────────────┐  ┌───────────┐  ┌────────────┐   │    │
+│  │  │ClusterIss.│  │Certificate │  │CertReq    │  │Order       │   │    │
+│  │  └───────────┘  └────────────┘  └───────────┘  └────────────┘   │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Certificate Issuance Flow
+
+```
+1. Certificate CR Created
+         │
+         ▼
+2. cert-manager Controller detects Certificate
+         │
+         ▼
+3. CertificateRequest CR created
+         │
+         ▼
+4. Issuer processes request
+         │
+         ├── Self-signed: Generates immediately (signs with own key)
+         │
+         └── CA: Signs with CA private key (used in this lab)
+         │
+         ▼
+5. TLS Secret created with certificate + key
+         │
+         ▼
+6. Gateway picks up secret for TLS termination
+         │
+         ▼
+7. HTTPS endpoint ready
+```
+
+> [!Note]
+> In production with public CAs like Let's Encrypt, step 4 would include ACME challenges (HTTP-01 or DNS-01) to verify domain ownership. Our local CA skips this since we control both the CA and the domains.
 
 ## Lab Cleanup
 

@@ -2,7 +2,7 @@
 
 This lab demonstrates how NodeLocal DNSCache improves DNS performance in Kubernetes by running a DNS caching agent on each node. You'll deploy NodeLocal DNSCache manually and learn how the transparent proxy method works.
 
-## Why NodeLocal DNSCache?
+## Overview
 
 In standard Kubernetes DNS architecture, all DNS queries from pods are sent to the CoreDNS service (kube-dns). NodeLocal DNSCache addresses several challenges with this architecture:
 
@@ -49,7 +49,7 @@ Negative caching (NXDOMAIN responses) can be enabled, reducing the number of que
 
 > **💡 Note:** High DNS QPS usually isn't caused by "bad apps," but by concurrency, scale, retries, and startup synchronization—NodeLocal DNSCache exists because Kubernetes amplifies all of these at once.
 
-## How NodeLocal DNSCache Works (iptables Mode)
+### How NodeLocal DNSCache Works (iptables Mode)
 
 When kube-proxy runs in **iptables mode**, NodeLocal DNSCache uses the transparent proxy method:
 
@@ -75,7 +75,7 @@ When kube-proxy runs in **iptables mode**, NodeLocal DNSCache uses the transpare
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### How Transparent Interception Works
+#### How Transparent Interception Works
 
 1. **Virtual Interface Creation**: NodeLocal DNSCache creates a dummy network interface (`nodelocaldns`) on each node
 
@@ -123,7 +123,8 @@ kubectl get nodes -o wide
 kubectl get pods -n kube-system -l k8s-app=kube-dns -o wide
 ```
 
-##### Expected output
+Expected output:
+
 ```
 NAME                STATUS   ROLES           AGE   VERSION
 k01-control-plane   Ready    control-plane   10m   v1.32.2
@@ -135,12 +136,12 @@ k01-worker2         Ready    <none>          10m   v1.32.2
 
 Check the kube-dns service:
 
-##### command
 ```bash
 kubectl get svc kube-dns -n kube-system
 ```
 
-##### Expected output
+Expected output:
+
 ```
 NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                  AGE
 kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP,9153/TCP   10m
@@ -148,12 +149,12 @@ kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP,9153/TCP   10m
 
 Check how pods resolve DNS:
 
-##### command
 ```bash
 kubectl exec dns-test -- cat /etc/resolv.conf
 ```
 
-##### Expected output
+Expected output:
+
 ```
 search default.svc.cluster.local svc.cluster.local cluster.local
 nameserver 10.96.0.10
@@ -162,17 +163,12 @@ options ndots:5
 
 Currently, all DNS queries go to `10.96.0.10`, which is handled by CoreDNS pods via kube-proxy.
 
----
-
-## Part 2: Deploy NodeLocal DNSCache
+### 3. Copy the NodeLocal DNSCache Manifest
 
 Now you'll deploy NodeLocal DNSCache following the [official Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/).
 
-### 3. Copy the NodeLocal DNSCache Manifest
-
 The manifest is provided in the `nodelocal-dnscache/` folder. Copy it to your working directory:
 
-##### command
 ```bash
 cp nodelocal-dnscache/nodelocaldns.yaml .
 ```
@@ -192,7 +188,6 @@ The manifest contains placeholder variables. Some need manual replacement, other
 | `__PILLAR__CLUSTER__DNS__` | **Pod (auto)** | Upstream DNS for cluster.local queries |
 | `__PILLAR__UPSTREAM__SERVERS__` | **Pod (auto)** | Upstream DNS for external queries |
 
-##### command
 ```bash
 # Get the kube-dns ClusterIP
 kubedns=$(kubectl get svc kube-dns -n kube-system -o jsonpath={.spec.clusterIP})
@@ -209,12 +204,9 @@ localdns="169.254.20.10"
 
 Since Kind uses kube-proxy in **iptables mode**, we configure NodeLocal DNSCache to bind both the link-local IP AND the kube-dns ClusterIP:
 
-##### command
 ```bash
 sed -i "s/__PILLAR__LOCAL__DNS__/$localdns/g; s/__PILLAR__DNS__DOMAIN__/$domain/g; s/__PILLAR__DNS__SERVER__/$kubedns/g" nodelocaldns.yaml
 ```
-
-##### Explanation
 
 According to the [Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/):
 
@@ -222,7 +214,7 @@ According to the [Kubernetes documentation](https://kubernetes.io/docs/tasks/adm
 
 **Auto-populated variables**: The `__PILLAR__CLUSTER__DNS__` and `__PILLAR__UPSTREAM__SERVERS__` placeholders are **automatically populated by the node-local-dns pods** at startup. You do NOT need to replace these manually - they will remain as placeholders in the YAML file and the pod will substitute them when it starts.
 
-### Understanding the Cache Configuration
+### 6. Understanding the Cache Configuration
 
 Before deploying, let's examine the cache settings in the Corefile:
 
@@ -242,7 +234,7 @@ cluster.local:53 {
 }
 ```
 
-#### Cache Settings Explained
+#### 6.1 Cache Settings Explained
 
 | Zone | Setting | Value | Meaning |
 |------|---------|-------|---------|
@@ -250,20 +242,20 @@ cluster.local:53 {
 | `cluster.local` | `denial 9984 5` | 9984 entries, 5s TTL | Cache up to 9984 NXDOMAIN responses for 5 seconds |
 | `.` (external) | `cache 30` | default entries, 30s TTL | Cache external DNS responses for 30 seconds |
 
-#### Why Different TTLs?
+#### 6.2 Why Different TTLs?
 
 | Response Type | TTL | Reason |
 |---------------|-----|--------|
 | **Success (30s)** | Longer | Stable responses can be cached longer |
 | **Denial/NXDOMAIN (5s)** | Shorter | Failed lookups might succeed soon (new service created) |
 
-#### Cache Size (9984 entries)
+#### 6.3 Cache Size (9984 entries)
 
 - Each cache can hold up to **9984 entries**
 - Default CoreDNS cache uses ~30MB when full
 - Separate limits for `success` and `denial` responses
 
-#### Memory Impact
+#### 6.4 Memory Impact
 
 From the [Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/):
 
@@ -278,7 +270,7 @@ cache {
 }
 ```
 
-### Understanding DNS Forwarding (Cluster vs External)
+### 7. Understanding DNS Forwarding (Cluster vs External)
 
 NodeLocal DNSCache handles cluster and external DNS queries differently. You can see this in the pod logs:
 
@@ -296,7 +288,7 @@ cluster.local:53 {
 }
 ```
 
-#### Forwarding Rules
+#### 7.1 Forwarding Rules
 
 | Zone | Forward To | Protocol | Description |
 |------|------------|----------|-------------|
@@ -305,14 +297,14 @@ cluster.local:53 {
 | `ip6.arpa` | `kube-dns-upstream` | **TCP** | Reverse DNS for IPv6 |
 | `.` (external) | `/etc/resolv.conf` | UDP/TCP | External domains → Node's DNS |
 
-#### Why TCP for Cluster Queries?
+#### 7.2 Why TCP for Cluster Queries?
 
 Cluster queries use `force_tcp` because:
 - **TCP conntrack entries are removed on connection close**
 - UDP entries must timeout (default 30 seconds)
 - Reduces conntrack table pressure
 
-#### External DNS Flow
+#### 7.3 External DNS Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -329,7 +321,7 @@ Cluster queries use `force_tcp` because:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Cluster DNS Flow
+#### 7.4 Cluster DNS Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -346,14 +338,14 @@ Cluster queries use `force_tcp` because:
 
 ![NodeLocal DNSCache Setup](../../images/nodelocal-dnscache-setup.png)
 
-### 6. Deploy NodeLocal DNSCache
+### 8. Deploy NodeLocal DNSCache
 
-##### command
 ```bash
 kubectl create -f nodelocaldns.yaml
 ```
 
-##### Expected output
+Expected output:
+
 ```
 serviceaccount/node-local-dns created
 service/kube-dns-upstream created
@@ -361,16 +353,16 @@ configmap/node-local-dns created
 daemonset.apps/node-local-dns created
 ```
 
-### 7. Wait for NodeLocal DNSCache Pods to be Ready
+### 9. Wait for NodeLocal DNSCache Pods to be Ready
 
-##### command
 ```bash
 kubectl get pods -n kube-system -l k8s-app=node-local-dns -o wide -w
 ```
 
 Wait until all pods show `Running` status (press Ctrl+C to exit watch):
 
-##### Expected output
+Expected output:
+
 ```
 NAME                   READY   STATUS    RESTARTS   AGE   IP            NODE
 node-local-dns-xxxxx   1/1     Running   0          30s   192.168.1.2   k01-control-plane
@@ -380,20 +372,16 @@ node-local-dns-xxxxx   1/1     Running   0          30s   192.168.1.4   k01-work
 
 A NodeLocal DNSCache pod runs on **every node** in the cluster.
 
----
-
-## Part 3: Verify NodeLocal DNSCache
-
-### 8. Verify the kube-dns-upstream Service
+### 10. Verify the kube-dns-upstream Service
 
 NodeLocal DNSCache creates a new service for reaching CoreDNS on cache misses:
 
-##### command
 ```bash
 kubectl get svc -n kube-system | grep dns
 ```
 
-##### Expected output
+Expected output:
+
 ```
 kube-dns            ClusterIP   10.96.0.10    <none>        53/UDP,53/TCP,9153/TCP   15m
 kube-dns-upstream   ClusterIP   10.96.x.x     <none>        53/UDP,53/TCP            2m
@@ -404,13 +392,12 @@ kube-dns-upstream   ClusterIP   10.96.x.x     <none>        53/UDP,53/TCP       
 | `kube-dns` | Original DNS service (ClusterIP now bound locally on each node) |
 | `kube-dns-upstream` | Used by NodeLocal DNSCache to reach CoreDNS for cache misses |
 
-### 9. Verify the Local Interface Binding
+### 11. Verify the Local Interface Binding
 
 This is the key to transparent interception - check that the kube-dns ClusterIP is bound to a local interface.
 
 First, identify which node the dns-test pod is running on (we'll use this node for all verification):
 
-##### command
 ```bash
 # Find which node the dns-test pod is on
 NODE=$(kubectl get pod dns-test -o jsonpath='{.spec.nodeName}')
@@ -420,7 +407,8 @@ echo "dns-test pod is running on node: $NODE"
 docker exec $NODE ip addr show nodelocaldns
 ```
 
-##### Expected output
+Expected output:
+
 ```
 X: nodelocaldns: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default 
     link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff
@@ -430,22 +418,20 @@ X: nodelocaldns: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default
        valid_lft forever preferred_lft forever
 ```
 
-##### Explanation
-
 **This is the magic!** The `nodelocaldns` interface has **both IPs bound**:
 - `169.254.20.10/32` - Link-local IP 
 - `10.96.0.10/32` - **The kube-dns ClusterIP!**
 
 When a pod queries `10.96.0.10`, the kernel finds this IP on a local interface and routes it locally to NodeLocal DNSCache.
 
-### 10. Verify Pod DNS Still Works (Transparently!)
+### 12. Verify Pod DNS Still Works (Transparently!)
 
-##### command
 ```bash
 kubectl exec dns-test -- cat /etc/resolv.conf
 ```
 
-##### Expected output
+Expected output:
+
 ```
 search default.svc.cluster.local svc.cluster.local cluster.local
 nameserver 10.96.0.10
@@ -454,12 +440,12 @@ options ndots:5
 
 The pod configuration is **unchanged** - it still uses `10.96.0.10`. The difference is that queries are now handled locally!
 
-##### command
 ```bash
 kubectl exec dns-test -- nslookup kubernetes.default
 ```
 
-##### Expected output
+Expected output:
+
 ```
 Server:         10.96.0.10
 Address:        10.96.0.10#53
@@ -468,13 +454,9 @@ Name:   kubernetes.default.svc.cluster.local
 Address: 10.96.0.1
 ```
 
----
-
-## Part 4: Understanding the Packet Flow (Order of Operations)
+### 13. The Order of Operations
 
 This section explains exactly how DNS queries are intercepted by NodeLocal DNSCache. Understanding this flow is critical to understanding how NodeLocal DNSCache works.
-
-### The Order of Operations
 
 When a pod sends a DNS query to the kube-dns ClusterIP, here's what happens:
 
@@ -530,16 +512,16 @@ The diagram below is a good way to visualize packets traversing through the diff
 
 *Image source: [Understanding the policy enforcement options with Calico](https://www.tigera.io/blog/understanding-the-policy-enforcement-options-with-calico/)*
 
-### 11. Validate Step 2: raw Table NOTRACK Rules
+### 14. Validate Step 2: raw Table NOTRACK Rules
 
 The `raw` table is processed **first** before any other table. NodeLocal DNSCache adds NOTRACK rules here:
 
-##### command
 ```bash
 docker exec $NODE iptables -t raw -S | grep -E "169.254.20.10|10.96.0.10"
 ```
 
-##### Expected output
+Expected output:
+
 ```
 -A PREROUTING -d 169.254.20.10/32 -p udp -m udp --dport 53 -j NOTRACK
 -A PREROUTING -d 169.254.20.10/32 -p tcp -m tcp --dport 53 -j NOTRACK
@@ -551,7 +533,7 @@ docker exec $NODE iptables -t raw -S | grep -E "169.254.20.10|10.96.0.10"
 -A OUTPUT -d 10.96.0.10/32 -p tcp -m tcp --dport 53 -j NOTRACK
 ```
 
-##### Why NOTRACK is Critical
+#### 14.1 Why NOTRACK is Critical
 
 | Effect | Explanation |
 |--------|-------------|
@@ -560,35 +542,33 @@ docker exec $NODE iptables -t raw -S | grep -E "169.254.20.10|10.96.0.10"
 | **Destination stays unchanged** | Packet keeps original destination (10.96.0.10) |
 | **Prevents conntrack races** | Eliminates UDP DNS failures from conntrack table races |
 
-### 12. Validate Step 3: Kube-proxy DNAT Rules Still Exist
+### 15. Validate Step 3: Kube-proxy DNAT Rules Still Exist
 
 Kube-proxy's DNAT rules for kube-dns are still present, but they won't affect UNTRACKED packets:
 
-##### command
 ```bash
 docker exec $NODE iptables -t nat -S | grep "kube-dns:dns cluster IP" | head -2
 ```
 
-##### Expected output
+Expected output:
+
 ```
 -A KUBE-SERVICES -d 10.96.0.10/32 -p udp -m comment --comment "kube-system/kube-dns:dns cluster IP" -m udp --dport 53 -j KUBE-SVC-TCOU7JCQXEZGVUNU
 -A KUBE-SERVICES -d 10.96.0.10/32 -p tcp -m comment --comment "kube-system/kube-dns:dns-tcp cluster IP" -m tcp --dport 53 -j KUBE-SVC-ERIFXISQEP7F7OF4
 ```
 
-##### Explanation
-
 These DNAT rules would normally redirect traffic from `10.96.0.10` to CoreDNS pod IPs. However, because the DNS packets are marked UNTRACKED in the raw table, the DNAT target cannot function (it requires conntrack to track the address translation). The packet passes through with its destination unchanged.
 
-### 13. Validate Step 4: Local Route for kube-dns IP
+### 16. Validate Step 4: Local Route for kube-dns IP
 
 Verify that the kube-dns ClusterIP is bound to the local `nodelocaldns` interface:
 
-##### command
 ```bash
 docker exec $NODE ip addr show nodelocaldns
 ```
 
-##### Expected output
+Expected output:
+
 ```
 X: nodelocaldns: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default 
     link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff
@@ -600,12 +580,12 @@ X: nodelocaldns: <BROADCAST,NOARP> mtu 1500 qdisc noop state DOWN group default
 
 Verify the kernel considers this IP local:
 
-##### command
 ```bash
 docker exec $NODE ip route get 10.96.0.10
 ```
 
-##### Expected output
+Expected output:
+
 ```
 local 10.96.0.10 dev lo src 10.96.0.10 uid 0
     cache <local>
@@ -613,16 +593,16 @@ local 10.96.0.10 dev lo src 10.96.0.10 uid 0
 
 The `local` keyword confirms the kernel routes packets destined for `10.96.0.10` to the local host.
 
-### 14. Validate Step 5: Filter INPUT Rules
+### 17. Validate Step 5: Filter INPUT Rules
 
 The filter table INPUT chain allows DNS traffic to the local cache:
 
-##### command
 ```bash
 docker exec $NODE iptables -S INPUT | grep -E "169.254.20.10|10.96.0.10"
 ```
 
-##### Expected output
+Expected output:
+
 ```
 -A INPUT -d 169.254.20.10/32 -p udp -m udp --dport 53 -j ACCEPT
 -A INPUT -d 169.254.20.10/32 -p tcp -m tcp --dport 53 -j ACCEPT
@@ -632,18 +612,14 @@ docker exec $NODE iptables -S INPUT | grep -E "169.254.20.10|10.96.0.10"
 
 These ACCEPT rules ensure DNS traffic reaches the NodeLocal DNSCache process.
 
----
+### 18. Test DNS Resolution
 
-## Part 5: Verify the Complete Flow
-
-### 15. Test DNS Resolution
-
-##### command
 ```bash
 kubectl exec dns-test -- nslookup kubernetes.default
 ```
 
-##### Expected output
+Expected output:
+
 ```
 Server:         10.96.0.10
 Address:        10.96.0.10#53
@@ -654,13 +630,12 @@ Address: 10.96.0.1
 
 The pod queries `10.96.0.10`, which is now handled locally by NodeLocal DNSCache!
 
-### 17. Verify Cache Metrics
+### 19. Verify Cache Metrics
 
 Check the cache statistics to confirm NodeLocal DNSCache is working.
 
 First, identify which node the dns-test pod is running on, then find the node-local-dns pod on the **same node**:
 
-##### command
 ```bash
 # Find which node the dns-test pod is on
 TEST_NODE=$(kubectl get pod dns-test -o jsonpath='{.spec.nodeName}')
@@ -675,14 +650,14 @@ kubectl port-forward -n kube-system $NODELOCAL_POD 9253:9253 &
 sleep 2
 ```
 
-##### View All Cache Metrics
+**View All Cache Metrics**
 
-##### command
 ```bash
 curl -s http://127.0.0.1:9253/metrics | grep -E "coredns_cache_(hits|misses|requests).*10.96.0.10.*cluster.local"
 ```
 
-##### Expected output
+Expected output:
+
 ```
 coredns_cache_hits_total{server="dns://10.96.0.10:53",type="denial",view="",zones="cluster.local."} 12
 coredns_cache_hits_total{server="dns://10.96.0.10:53",type="success",view="",zones="cluster.local."} 9
@@ -692,11 +667,10 @@ coredns_cache_requests_total{server="dns://10.96.0.10:53",view="",zones="cluster
 
 Seeing requests to `10.96.0.10:53` confirms the transparent interception is working!
 
-### 18. Test Cache Hits in Action
+### 20. Test Cache Hits in Action
 
 To see cache hits increasing, make repeated DNS queries:
 
-##### command
 ```bash
 # Check current cache hits
 curl -s http://127.0.0.1:9253/metrics | grep "coredns_cache_hits_total.*success.*cluster.local"
@@ -709,16 +683,16 @@ curl -s http://127.0.0.1:9253/metrics | grep "coredns_cache_hits_total.*success.
 ```
 The more you query the same domain, the more cache hits you'll see!
 
-### 19. View Current Cache Entries
+### 21. View Current Cache Entries
 
 See how many DNS responses are currently cached:
 
-##### command
 ```bash
 curl -s http://127.0.0.1:9253/metrics | grep "coredns_cache_entries.*10.96.0.10"
 ```
 
-##### Expected output
+Expected output:
+
 ```
 coredns_cache_entries{server="dns://10.96.0.10:53",type="denial",view="",zones="cluster.local."} 3
 coredns_cache_entries{server="dns://10.96.0.10:53",type="success",view="",zones="cluster.local."} 1
@@ -734,17 +708,12 @@ kill %1
 
 > **Note**: CoreDNS does not expose individual cached domain names - only aggregate statistics.
 
----
-
-## Part 6: Enable DNS Query Logging
+### 22. Enable Logging in the ConfigMap
 
 You can enable logging in NodeLocal DNSCache to see individual DNS queries. This is useful for debugging but should be disabled in production due to log volume.
 
-### 20. Enable Logging in the ConfigMap
-
 Edit the node-local-dns ConfigMap to add the `log` directive:
 
-##### command
 ```bash
 kubectl edit configmap node-local-dns -n kube-system
 ```
@@ -811,21 +780,19 @@ data:
 
 Save and exit the editor (`:wq` in vim).
 
-### 21. Restart NodeLocal DNS Pods
+### 23. Restart NodeLocal DNS Pods
 
 The pods need to be restarted to pick up the ConfigMap changes:
 
-##### command
 ```bash
 kubectl rollout restart daemonset node-local-dns -n kube-system
 kubectl rollout status daemonset node-local-dns -n kube-system
 ```
 
-### 22. View DNS Query Logs
+### 24. View DNS Query Logs
 
 Now make some DNS queries and watch the logs:
 
-##### command
 ```bash
 # Get the node-local-dns pod on the same node as dns-test
 TEST_NODE=$(kubectl get pod dns-test -o jsonpath='{.spec.nodeName}')
@@ -839,13 +806,14 @@ kubectl exec dns-test -- nslookup kubernetes.default
 kubectl exec dns-test -- nslookup google.com
 ```
 
-##### Expected log output
+Expected output:
+
 ```
 [INFO] 192.168.82.65:54312 - 42953 "A IN kubernetes.default.svc.cluster.local. udp 54 false 512" NOERROR qr,aa,rd 106 0.000232824s
 [INFO] 192.168.82.65:38291 - 18276 "A IN google.com. udp 28 false 512" NOERROR qr,rd,ra 54 0.023451s
 ```
 
-##### Understanding the Log Format
+#### 24.1 Understanding the Log Format
 
 | Field | Example | Meaning |
 |-------|---------|---------|
@@ -861,11 +829,10 @@ Stop watching logs:
 kill %1
 ```
 
-### 23. Disable Logging (Recommended for Production)
+### 25. Disable Logging (Recommended for Production)
 
 To disable logging, edit the ConfigMap and remove the `log` lines:
 
-##### command
 ```bash
 kubectl edit configmap node-local-dns -n kube-system
 ```
@@ -877,8 +844,6 @@ kubectl rollout restart daemonset node-local-dns -n kube-system
 ```
 
 > **Warning**: Keep logging disabled in production - it generates significant log volume and can impact performance.
-
----
 
 ## Summary
 

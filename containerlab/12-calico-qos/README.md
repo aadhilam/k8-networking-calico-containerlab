@@ -4,7 +4,7 @@
 
 This lab demonstrates Calico's Quality of Service (QoS) controls for bandwidth limiting using iperf3. You'll see how Calico can enforce bandwidth limits on pods using simple annotations.
 
-## Why QoS Bandwidth Limiting?
+## Overview
 
 In multi-tenant Kubernetes environments, a single pod can consume excessive network bandwidth and starve other workloads. QoS bandwidth limiting helps:
 
@@ -13,7 +13,7 @@ In multi-tenant Kubernetes environments, a single pod can consume excessive netw
 - **Performance Isolation**: Ensure critical services get their required bandwidth
 - **SLA Enforcement**: Enforce bandwidth limits per tenant or application tier
 
-## How Calico QoS Works
+### How Calico QoS Works
 
 Calico uses pod annotations to apply bandwidth limits:
 
@@ -75,7 +75,8 @@ kubectl get nodes -o wide
 kubectl get pods -o wide
 ```
 
-##### Expected output
+Output:
+
 ```
 NAME           READY   STATUS    RESTARTS   AGE   IP               NODE                NOMINATED NODE   READINESS GATES
 iperf-client   1/1     Running   0          30s   192.168.146.66   calico-qos-worker   <none>           <none>
@@ -86,12 +87,12 @@ iperf-server   1/1     Running   0          35s   192.168.146.65   calico-qos-wo
 
 First, run an iperf3 bandwidth test without any QoS limits to establish a baseline.
 
-##### command
 ```bash
 kubectl exec -it iperf-client -- iperf3 -c iperf-server -t 5
 ```
 
-##### Expected output (approximate)
+Output:
+
 ```
 Connecting to host iperf-server, port 5201
 [  5] local 192.168.146.66 port 45678 connected to 192.168.146.65 port 5201
@@ -108,7 +109,6 @@ iperf Done.
 
 Now deploy new iperf pods with Calico QoS annotations that limit bandwidth to **10 Mbps**.
 
-##### command
 ```bash
 kubectl apply -f tools/03-iperf-server-qos.yaml
 kubectl apply -f tools/04-iperf-client-qos.yaml
@@ -124,12 +124,12 @@ kubectl wait --for=condition=ready pod/iperf-client-qos --timeout=60s
 
 Check that the QoS annotations are applied:
 
-##### command
 ```bash
 kubectl get pod iperf-server-qos -o jsonpath='{.metadata.annotations}' | jq .
 ```
 
-##### Expected output
+Output:
+
 ```json
 {
   "qos.projectcalico.org/egressBandwidth": "10M",
@@ -141,21 +141,21 @@ kubectl get pod iperf-server-qos -o jsonpath='{.metadata.annotations}' | jq .
 
 Run the iperf3 test using the QoS-limited client:
 
-##### command
 ```bash
 kubectl exec -it iperf-client-qos -- iperf3 -c iperf-server-qos -t 5
 ```
 
-##### Expected output (approximate)
+Output:
+
 ```
 Connecting to host iperf-server-qos, port 5201
 [  5] local 192.168.183.69 port 58048 connected to 10.96.25.245 port 5201
 [ ID] Interval           Transfer     Bitrate         Retr  Cwnd
-[  5]   0.00-1.00   sec  35.6 MBytes   299 Mbits/sec   46    754 KBytes       
-[  5]   1.00-2.00   sec  1.25 MBytes  10.5 Mbits/sec    0    754 KBytes       
-[  5]   2.00-3.00   sec  1.25 MBytes  10.5 Mbits/sec    0    754 KBytes       
-[  5]   3.00-4.00   sec  1.25 MBytes  10.5 Mbits/sec    0    754 KBytes       
-[  5]   4.00-5.00   sec  1.25 MBytes  10.5 Mbits/sec    0    754 KBytes       
+[  5]   0.00-1.00   sec  35.6 MBytes   299 Mbits/sec   46    754 KBytes
+[  5]   1.00-2.00   sec  1.25 MBytes  10.5 Mbits/sec    0    754 KBytes
+[  5]   2.00-3.00   sec  1.25 MBytes  10.5 Mbits/sec    0    754 KBytes
+[  5]   3.00-4.00   sec  1.25 MBytes  10.5 Mbits/sec    0    754 KBytes
+[  5]   4.00-5.00   sec  1.25 MBytes  10.5 Mbits/sec    0    754 KBytes
 - - - - - - - - - - - - - - - - - - - - - - - - -
 [ ID] Interval           Transfer     Bitrate         Retr
 [  5]   0.00-5.00   sec  39.4 MBytes  66.0 Mbits/sec   46             sender
@@ -164,7 +164,7 @@ Connecting to host iperf-server-qos, port 5201
 iperf Done.
 ```
 
-### Understanding the Output (Important!)
+#### 5.1 Understanding the Output
 
 You may notice that the **first second shows high bandwidth (~299 Mbps)** before settling to ~10 Mbps. This is **expected behavior** due to how Token Bucket Filter (TBF) works:
 
@@ -201,8 +201,8 @@ The sustained bandwidth reduction is **~1000x** when QoS is applied!
 Bandwidth
     ^
 300 |  ████                        Without QoS: Constant high bandwidth
-    |  ████   
- 50 |  
+    |  ████
+ 50 |
  10 |       ████ ████ ████ ████   With QoS: Limited after burst
   0 |______________________________> Time
        0s   1s   2s   3s   4s   5s
@@ -216,14 +216,14 @@ Now let's remove the QoS annotations and verify that bandwidth returns to unrest
 
 > **Note:** QoS annotations are applied when the pod starts. To remove QoS limits, we need to delete and recreate the pods without the annotations.
 
-##### command
 ```bash
 # Delete the QoS-limited pods
 kubectl delete pod iperf-server-qos iperf-client-qos
 kubectl delete service iperf-server-qos
 ```
 
-##### Expected output
+Output:
+
 ```
 pod "iperf-server-qos" deleted
 pod "iperf-client-qos" deleted
@@ -232,12 +232,12 @@ service "iperf-server-qos" deleted
 
 Now test again using the original pods (without QoS annotations):
 
-##### command
 ```bash
 kubectl exec -it iperf-client -- iperf3 -c iperf-server -t 5
 ```
 
-##### Expected output (approximate)
+Output:
+
 ```
 Connecting to host iperf-server, port 5201
 [  5] local 192.168.146.66 port 45678 connected to 192.168.146.65 port 5201

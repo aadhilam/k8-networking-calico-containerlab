@@ -2,12 +2,30 @@
 
 This lab demonstrates how to configure Calico and Multus CNI plugins in a Kubernetes cluster where nodes connect to an Arista cEOS switch via trunk ports carrying multiple VLANs.
 
-## Lab Architecture
+## Overview
+
+### Lab Architecture
 
 - **VLAN 10**: Used by Calico for pod-to-pod routing. Each node has a bridge (`br-vlan10`) with an IP address assigned.
 - **VLAN 20**: Available for Multus CNI. Each node has a bridge (`br-vlan20`) without an IP address, ready for Multus network attachments.
 
-## Topology
+### Network Configuration
+
+#### Switch Configuration
+- All switch ports are configured as **trunk ports** carrying VLAN 10 and VLAN 20
+- Native VLAN is set to VLAN 10
+- VLAN 10 L3 interface: `10.10.10.1/24`
+- VLAN 20 L3 interface: `10.10.20.1/24`
+
+#### Node Configuration
+Each Kubernetes node has:
+- **br-vlan10**: Bridge for VLAN 10 with IP address (used by Calico)
+  - Control Plane: `10.10.10.10/24`
+  - Worker 1: `10.10.10.11/24`
+  - Worker 2: `10.10.10.12/24`
+- **br-vlan20**: Bridge for VLAN 20 without IP address (for Multus)
+
+## Lab Topology
 
 ```
                     Arista cEOS Switch
@@ -19,22 +37,6 @@ This lab demonstrates how to configure Calico and Multus CNI plugins in a Kubern
    (VLAN 10 & 20)      (VLAN 10 & 20)  (VLAN 10 & 20)
 ```
 
-## Network Configuration
-
-### Switch Configuration
-- All switch ports are configured as **trunk ports** carrying VLAN 10 and VLAN 20
-- Native VLAN is set to VLAN 10
-- VLAN 10 L3 interface: `10.10.10.1/24`
-- VLAN 20 L3 interface: `10.10.20.1/24`
-
-### Node Configuration
-Each Kubernetes node has:
-- **br-vlan10**: Bridge for VLAN 10 with IP address (used by Calico)
-  - Control Plane: `10.10.10.10/24`
-  - Worker 1: `10.10.10.11/24`
-  - Worker 2: `10.10.10.12/24`
-- **br-vlan20**: Bridge for VLAN 20 without IP address (for Multus)
-
 ## Lab Setup
 
 ### Prerequisites
@@ -42,7 +44,7 @@ Each Kubernetes node has:
 - Docker installed
 - Arista cEOS image (`ceos:4.34.0F`) available
 
-### Deploy the Lab
+## Deployment
 
 1. Navigate to the lab directory:
    ```bash
@@ -67,42 +69,44 @@ Each Kubernetes node has:
    export KUBECONFIG=$(pwd)/k01.kubeconfig
    ```
 
-### Verify the Setup
+## Lab Exercises
 
-1. **Check Kubernetes nodes:**
-   ```bash
-   kubectl get nodes -o wide
-   ```
+### 1. Verify the Setup
 
-2. **Verify bridge and VLAN configuration on nodes:**
-   ```bash
-   # Check control plane node
-   docker exec -it k01-control-plane ip addr show
-   docker exec -it k01-control-plane ip link show br-vlan10
-   docker exec -it k01-control-plane ip link show br-vlan20
-   
-   # Check worker nodes
-   docker exec -it k01-worker ip addr show
-   docker exec -it k01-worker2 ip addr show
-   ```
+#### 1.1 Check Kubernetes nodes
+```bash
+kubectl get nodes -o wide
+```
 
-3. **Verify Calico is using VLAN 10 interface:**
-   ```bash
-   kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
-   ```
+#### 1.2 Verify bridge and VLAN configuration on nodes
+```bash
+# Check control plane node
+docker exec -it k01-control-plane ip addr show
+docker exec -it k01-control-plane ip link show br-vlan10
+docker exec -it k01-control-plane ip link show br-vlan20
 
-4. **Check Calico node status:**
-   ```bash
-   kubectl get caliconodes
-   calicoctl node status
-   ```
+# Check worker nodes
+docker exec -it k01-worker ip addr show
+docker exec -it k01-worker2 ip addr show
+```
 
-5. **Verify Multus installation:**
-   ```bash
-   kubectl get pods -n kube-system | grep multus
-   ```
+#### 1.3 Verify Calico is using VLAN 10 interface
+```bash
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
+```
 
-## Using Multus with VLAN 20
+#### 1.4 Check Calico node status
+```bash
+kubectl get caliconodes
+calicoctl node status
+```
+
+#### 1.5 Verify Multus installation
+```bash
+kubectl get pods -n kube-system | grep multus
+```
+
+### 2. Using Multus with VLAN 20
 
 To use Multus with VLAN 20, you'll need to create NetworkAttachmentDefinition resources. Here's an example:
 
@@ -148,13 +152,9 @@ spec:
     command: ["sleep", "3600"]
 ```
 
-## Destroy the Lab
+## Summary
 
-To tear down the lab:
-
-```bash
-./destroy.sh
-```
+This lab demonstrates how to configure a dual-CNI setup with Calico and Multus in a Kubernetes cluster using VLAN trunking on an Arista cEOS switch, with VLAN 10 dedicated to Calico pod networking and VLAN 20 available for additional Multus network attachments.
 
 ## Troubleshooting
 
@@ -185,15 +185,16 @@ docker exec -it k01-control-plane bash
 # Then run the bridge/VLAN configuration commands manually
 ```
 
-## Notes
+## Additional Notes
 
 - The topology uses `ext-container` nodes to configure bridges and VLANs before the Kubernetes cluster starts
 - Calico is configured to use `br-vlan10` interfaces for pod routing
 - Multus can use `br-vlan20` interfaces for additional network attachments
 - BGP is configured on the switch for route advertisement (optional, can be extended)
 
+### Egress Gateway Configuration
 
-
+```bash
 kubectl apply -f - <<EOF
 apiVersion: projectcalico.org/v3
 kind: IPPool
@@ -204,8 +205,9 @@ spec:
   blockSize: 31
   nodeSelector: "!all()"
 EOF
+```
 
-
+```bash
 kubectl apply -f - <<EOF
 apiVersion: operator.tigera.io/v1
 kind: EgressGateway
@@ -226,12 +228,18 @@ spec:
         kubernetes.io/os: linux
       terminationGracePeriodSeconds: 0
 EOF
+```
 
+```bash
 kubectl patch felixconfiguration default --type='merge' -p \
     '{"spec":{"egressIPSupport":"EnabledPerNamespaceOrPerPod"}}'
+```
 
+```bash
 kubectl annotate deploy egress-gateway unsupported.operator.tigera.io/ignore="true"
+```
 
+```bash
 kubectl patch deployment egress-gateway -p '
 {
   "spec": {
@@ -244,9 +252,11 @@ kubectl patch deployment egress-gateway -p '
     }
   }
 }'
+```
 
+### Test DaemonSet with Egress
 
-kubectl apply -f - <<EOF
+```yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -268,4 +278,10 @@ spec:
       - name: netshoot
         image: nicolaka/netshoot
         command: ["sleep", "infinity"]
-EOF
+```
+
+## Lab Cleanup
+
+```bash
+./destroy.sh
+```

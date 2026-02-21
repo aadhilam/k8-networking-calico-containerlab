@@ -1,15 +1,15 @@
 # Calico Advertise IPPool Using BGP
 
+## Overview
+
 This lab demonstrates how to advertise Calico IP pools to external networks using BGP. You will learn how to configure BGP peering between Calico nodes and an upstream router to make pod IP addresses routable outside the Kubernetes cluster.
 
 ## Lab Setup
+
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/10-calico-bgp-ippool`
 
-
-
-
-## Lab
+## Lab Exercises
 
 > [!Note]
 > <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
@@ -18,10 +18,10 @@ The lab folder is - `/containerlab/10-calico-bgp-ippool`
 
 First, let's inspect the lab topology.
 
-##### command
 ```bash
-containerlab inspect topology.clab.yaml 
+containerlab inspect topology.clab.yaml
 ```
+
 ```
 16:05:41 INFO Parsing & checking topology file=topology.clab.yaml
 ╭───────────────────────────┬──────────────────┬─────────┬───────────────────────╮
@@ -62,11 +62,11 @@ Next, let's inspect the lab topology: First, export the kube.config file.
  export KUBECONFIG=/home/ubuntu/containerlab/10-calico-bgp-ippool/k01.kubeconfig
  ```
 Verify the cluster nodes.
-##### command
+
 ```
 kubectl get nodes
 ```
-##### output
+
 ```
 kubectl get nodes
 NAME                STATUS   ROLES           AGE   VERSION
@@ -81,7 +81,6 @@ k01-worker3         Ready    <none>          12m   v1.32.2
 
 
 ### 2. Inspect IP Pools
-
 
 #### 2.1 Verify the multiple IP pools configured in the `installation` resource
 
@@ -102,8 +101,6 @@ The following IP pools were configured in the installation resource. The install
         - 10.10.0.0/16
 ```
 
-##### Explanation
-
 - **name**: Identifier for the IP pool (`default-ipv4-ippool`)
 - **blockSize**: Size of IP blocks allocated per node (26 = 64 IPs per block)
 - **cidr**: IP address range for pod networking (`192.168.0.0/17`)
@@ -115,32 +112,26 @@ The following IP pools were configured in the installation resource. The install
 
 Next, let's inspect IP pools.
 
-##### command
 ```
 kubectl get ippools
 ```
 
-##### output
-
 ```
-kubectl get ippools 
+kubectl get ippools
 NAME                   CREATED AT
 default-ipv4-ippool    2025-11-28T15:57:03Z
 loadbalancer-ip-pool   2025-11-28T15:58:36Z
 ```
 
-##### Explanation
 Notice that there is a default IP pool configured by the operator based on the IPPool that was specified in the installation resource. You can ignore the load balance IP pool for this lab.
 
 
 #### 2.2 Verify the IPAM block affinities
 
-##### command
 ```
 kubectl get blockaffinities
 ```
 
-##### output
 ```
 kubectl get blockaffinities
 NAME                                CREATED AT
@@ -162,12 +153,9 @@ The topology diagram for this cluster setup is as follows:
 
 The BGP configuration resource can be found in [calico-cni-config/bgp-configuration.yaml](./calico-cni-config/bgp-configuration.yaml).
 
-##### command
 ```bash
 kubectl get bgpconfiguration default -o yaml
 ```
-
-##### output
 
 ```yaml
 apiVersion: crd.projectcalico.org/v1
@@ -185,8 +173,6 @@ spec:
     communities:
     - 65010:100
 ```
-
-##### expalanation
 
 This BGP configuration defines how Calico handles Border Gateway Protocol routing.
 
@@ -216,12 +202,10 @@ The BGP peer resources are used to create BGP peerings from the Kubernetes clust
 
 The reason that there are two BGP peers is because the top of rack switch or the BGP peer IP is different for the two VLANs that we have in this topology.
 
-##### command
 ```bash
 kubectl get bgppeers
 ```
 
-##### output
 ```
 NAME              CREATED AT
 bgppeer-vlan-10    2025-11-28T15:58:00Z
@@ -230,12 +214,10 @@ bgppeer-vlan-20    2025-11-28T15:58:00Z
 
 Now let's inspect the detailed configuration for each BGP peer:
 
-##### command
 ```bash
 kubectl get bgppeer bgppeer-vlan-10 -o yaml
 ```
 
-##### output
 ```yaml
 apiVersion: crd.projectcalico.org/v1
 kind: BGPPeer
@@ -244,21 +226,17 @@ metadata:
 spec:
   peerIP: 10.10.10.1           # IP address of your Arista switch
   asNumber: 65010             # AS number of the Arista switch
-  nodeSelector: vlan == '10'  
+  nodeSelector: vlan == '10'
 ```
-
-##### Explanation
 
 - `peerIP`: `10.10.10.1` - The IP address of the BGP peer (router/switch in VLAN 10)
 - `asNumber`: `65010` - The Autonomous System Number of the peer (iBGP peering since it matches local AS)
 - `nodeSelector`: `vlan == '10'` - Applies this BGP peering only to nodes with the label `vlan=10` (control-plane, worker, worker2)
 
-##### command
 ```bash
 kubectl get bgppeer bgppeer-vlan-20 -o yaml
 ```
 
-##### output
 ```yaml
 apiVersion: crd.projectcalico.org/v1
 kind: BGPPeer
@@ -270,28 +248,20 @@ spec:
   nodeSelector: vlan == '20'
 ```
 
-##### Explanation
-
 - `peerIP`: `10.10.20.1` - The IP address of the BGP peer (router/switch in VLAN 20)
 - `asNumber`: `65010` - The Autonomous System Number of the peer (iBGP peering)
 - `nodeSelector`: `vlan == '20'` - Applies this BGP peering only to nodes with the label `vlan=20` (worker3)
 
-
-
-
-
-#### 3.3 Verify BGP configuration in the ToR. 
+#### 3.3 Verify BGP configuration in the ToR
 
 The BGP configuration on the Arista cEOS router can be found in the startup configuration file: [ceos01-startup-config.cfg](./startup-config/ceos01-startup-config.cfg)
 
-##### command
 ```bash
 docker exec -it clab-calico-bgp-lb-ceos01 Cli
 enable
 show running-config | s bgp
 ```
 
-##### output
 ```bash
 router bgp 65010
   router-id 10.10.10.1
@@ -308,8 +278,6 @@ router bgp 65010
     network 10.10.20.0/24
 ```
 
-##### Explanation
-
 This BGP router configuration on the Arista cEOS device establishes it as a BGP route reflector for the Calico cluster:
 
 - `router bgp 65010` - Configures BGP with AS number 65010 (matching the Calico ASN)
@@ -323,22 +291,18 @@ This BGP router configuration on the Arista cEOS device establishes it as a BGP 
 - `address-family ipv4` - Activates IPv4 BGP for the peer group and advertises node subnets
 
 
-#### 3.4 Verfiy BGP Status in the ToR
+#### 3.4 Verify BGP Status in the ToR
 
 This section demonstrates how to verify that BGP sessions between the Calico nodes and the ToR (Top of Rack) router are established and working correctly. Using CLI commands on the cEOS router (ToR), you'll confirm that all Kubernetes nodes are peered via BGP, and that the expected routing information is being exchanged. This validation step ensures that pod IPs from the Calico IPPools are being advertised to the external network as intended.
 
-Let's first look at the established BGB peers in the ToR. 
-
-##### command
+Let's first look at the established BGB peers in the ToR.
 
 ```bash
-show ip bgp summary 
+show ip bgp summary
 ```
 
-##### output
-
 ```bash
-ceos#show ip bgp summary 
+ceos#show ip bgp summary
 BGP summary information for VRF default
 Router identifier 10.10.10.1, local AS number 65010
 Neighbor Status Codes: m - Under maintenance
@@ -348,8 +312,6 @@ Neighbor Status Codes: m - Under maintenance
   "Calico Kubernetes Nodes 10.10.10.12 4 65010             16        13    0    0 00:05:20 Estab   2      2
   "Calico Kubernetes Nodes 10.10.20.20 4 65010             15        13    0    0 00:05:20 Estab   2      2
 ```
-
-##### Explanation
 
 The BGP summary shows four established peering sessions with Calico nodes:
 
@@ -363,22 +325,22 @@ Each peer has received 2 prefixes (PfxRcd) from the route reflector clients.
 ```mermaid
 graph TB
   RR[Route Reflector<br/>cEOS ToR]
-  
+
   subgraph VLAN10["VLAN 10"]
     CP[k01-control-plane<br/>10.10.10.10<br/>RR Client]
     W1[k01-worker<br/>10.10.10.11<br/>RR Client]
     W2[k01-worker2<br/>10.10.10.12<br/>RR Client]
   end
-  
+
   subgraph VLAN20["VLAN 20"]
     W3[k01-worker3<br/>10.10.20.20<br/>RR Client]
   end
-  
+
   RR <-.->|iBGP<br/>VLAN 10| CP
   RR <-.->|iBGP<br/>VLAN 10| W1
   RR <-.->|iBGP<br/>VLAN 10| W2
   RR <-.->|iBGP<br/>VLAN 20| W3
-    
+
   style RR fill:#f96,stroke:#333,stroke-width:3px,rx:10,ry:10
   style CP fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
   style W1 fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
@@ -386,20 +348,17 @@ graph TB
   style W3 fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
 ```
 
-Next, let's look at the routing table of the ToR. 
+Next, let's look at the routing table of the ToR.
 
-##### command
 ```
 show ip route
 ```
-
-##### output
 
 ```bash
 ceos#show ip route
 
 VRF: default
-## truncated response. 
+## truncated response.
 
 Gateway of last resort is not set
 
@@ -421,8 +380,6 @@ Gateway of last resort is not set
        via 10.10.10.12, Vlan10
 ```
 
-##### Explanation
-
 The routing table shows that the ToR has learned the following pod routes via BGP:
 
 - `192.168.42.192/26` - Pod CIDR block for k01-worker (10.10.10.11)
@@ -442,37 +399,37 @@ k01-worker3-192-168-46-128-26       2025-11-28T23:32:11Z
 ```mermaid
 graph TB
   TOR[cEOS ToR Router<br/>BGP Route Reflector<br/>AS 65010]
-  
+
   subgraph BGP_Routes["BGP Routes in ToR"]
     R1[192.168.69.0/26]
     R2[192.168.42.192/26]
     R3[192.168.88.192/26]
     R4[192.168.46.128/26]
   end
-  
+
   subgraph VLAN10["VLAN 10 (10.10.10.0/24)"]
     CP[k01-control-plane<br/>10.10.10.10]
     W1[k01-worker<br/>10.10.10.11]
     W2[k01-worker2<br/>10.10.10.12]
   end
-  
+
   subgraph VLAN20["VLAN 20 (10.10.20.0/24)"]
     W3[k01-worker3<br/>10.10.20.20]
   end
-  
+
   subgraph IPAM["IPAM Block Affinities"]
     B1[k01-control-plane<br/>192-168-69-0-26]
     B2[k01-worker<br/>192-168-42-192-26]
     B3[k01-worker2<br/>192-168-88-192-26]
     B4[k01-worker3<br/>192-168-46-128-26]
   end
-  
+
 
   TOR .-|advertised to|R1
   TOR .-|advertised to| R2
   TOR .-|advertised to| R3
   TOR .-|advertised to| R4
-     
+
     R1 ---|advertised by| CP
     R2 ---|advertised by| W1
     R3 ---|advertised by| W2
@@ -482,7 +439,7 @@ graph TB
     W1 -.maps to.-> B2
     W2 -.maps to.-> B3
     W3 -.maps to.-> B4
-  
+
   style TOR fill:#f96,stroke:#333,stroke-width:3px,rx:10,ry:10
   style CP fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
   style W1 fill:#9cf,stroke:#333,stroke-width:2px,rx:10,ry:10
@@ -496,7 +453,7 @@ graph TB
 
 Each Kubernetes node advertises its allocated IPAM block to the ToR router via BGP, making pod IPs routable from the external network.
 
-#### 3.5 Verfiy BGP Status for a Node
+#### 3.5 Verify BGP Status for a Node
 
 Apply the following manifest
 
@@ -516,13 +473,10 @@ spec:
 EOF
 ```
 
-##### command
-
 ```bash
 kubectl get caliconodestatus k01-control-plane -o json | jq '.status.routes.routesV4[] | select(.learnedFrom.sourceType == "BGPPeer" and .type == "FIB")'
 ```
 
-##### output
 ```yaml
 {
   "destination": "192.168.88.192/26",
@@ -555,52 +509,45 @@ kubectl get caliconodestatus k01-control-plane -o json | jq '.status.routes.rout
   "type": "FIB"
 ```
 
-##### explanation
 The output above shows the IPv4 routes that the Calico node `k01-control-plane` has learned via BGP from the peer at `10.10.10.1` (the ToR router). Each object details a route including the destination prefix (e.g., `192.168.88.192/26`), the gateway IP, and the interface used to reach the gateway. The `learnedFrom.sourceType` is `"BGPPeer"`, indicating these routes were received via a BGP peering session, and `type` is `"FIB"`, meaning these routes are programmed into the node's Forwarding Information Base (FIB) and are being used for actual packet forwarding.
 
 This output confirms that the node is successfully receiving external routes, and that BGP-based pod network advertisement is functioning as expected.
 
-You can also confirm this by looking at the nodes routing table. 
+You can also confirm this by looking at the nodes routing table.
 
-First, `exec` into the control plane node. 
+First, `exec` into the control plane node.
 ```bash
-docker exec -it  k01-control-plane /bin/bash 
+docker exec -it  k01-control-plane /bin/bash
 ```
 
-Next, let's grep for routes learned through BGP. 
+Next, let's grep for routes learned through BGP.
 
 ```bash
 root@k01-control-plane:/# ip route | grep bird
-192.168.42.192/26 via 10.10.10.1 dev eth1 proto bird 
-192.168.46.128/26 via 10.10.10.1 dev eth1 proto bird 
-blackhole 192.168.69.0/26 proto bird 
-192.168.88.192/26 via 10.10.10.1 dev eth1 proto bird 
+192.168.42.192/26 via 10.10.10.1 dev eth1 proto bird
+192.168.46.128/26 via 10.10.10.1 dev eth1 proto bird
+blackhole 192.168.69.0/26 proto bird
+192.168.88.192/26 via 10.10.10.1 dev eth1 proto bird
 ```
 
+### 4. Testing Connectivity
 
+Next, let's perform some connectivity testing. First retrieve the IP address of the `multitool-1` pod in `k01-worker3`.
 
-
-### Testing Connectivity
-
-Next, let's perform some connectivity testing. First retrieve the IP address of the `multitool-1` pod in `k01-worker3`. 
-
-
-##### command
 ```bash
 kubectl get pod -o json --field-selector spec.nodeName=k01-worker3 | jq -r '.items[] | select(.metadata.name | test("multitool-1")) | .status.podIP'
 ```
-##### output
+
 ```
 192.168.46.129
 ```
 
 Let's also retrieve the IP address of the `multitool-1` pod in `k01-worker`
 
-##### command
 ```bash
 kubectl get pod -o json --field-selector spec.nodeName=k01-worker | jq -r '.items[] | select(.metadata.name | test("multitool-1")) | .status.podIP'
 ```
-##### output
+
 ```
 192.168.42.193
 ```
@@ -608,13 +555,12 @@ kubectl get pod -o json --field-selector spec.nodeName=k01-worker | jq -r '.item
 
 Next, let's `exec` into the `multitool-1` pod in node k01-worker
 
-##### command
 ```bash
 kubectl exec -it $(kubectl get pods -o wide --field-selector spec.nodeName=k01-worker | awk '/multitool-1/ {print $1}') -- /bin/sh
 
 ping 192.168.46.129
 ```
-##### output
+
 ```
 PING 192.168.46.129 (192.168.46.129) 56(84) bytes of data.
 64 bytes from 192.168.46.129: icmp_seq=1 ttl=61 time=1.97 ms
@@ -626,8 +572,6 @@ PING 192.168.46.129 (192.168.46.129) 56(84) bytes of data.
 64 bytes from 192.168.46.129: icmp_seq=7 ttl=61 time=1.77 ms
 64 bytes from 192.168.46.129: icmp_seq=8 ttl=61 time=1.79 ms
 ```
-
-##### explanation
 
 The output above demonstrates successful connectivity between two pods (`multitool-1`) running on separate Kubernetes nodes (`k01-worker` and `k01-worker3`), each located in different subnets. The first command retrieves the pod IP address on `k01-worker3`, and the second command execs into the pod on `k01-worker` to ping that IP.
 
@@ -669,7 +613,7 @@ flowchart TD
   style RR fill:#ffcc80,stroke:#333,stroke-width:2px
 ```
 
-#### Packet Flow: Life of a Ping
+#### 4.1 Packet Flow: Life of a Ping
 
 The following diagram illustrates the step-by-step journey of an ICMP packet from the source pod on `k01-worker` (VLAN 10) to the destination pod on `k01-worker3` (VLAN 20):
 
@@ -710,16 +654,13 @@ sequenceDiagram
 
 The diagram above illustrates the cross-subnet pod-to-pod connectivity path. Traffic from the `multitool-1` pod on `k01-worker` (VLAN 10) is routed through the ToR (acting as a BGP route reflector), which forwards it to `k01-worker3` (VLAN 20) based on the BGP-learned routes. The reply follows the reverse path, demonstrating successful native IP routing without overlay encapsulation.
 
-Next, let's `exec` into the ToR and ping the two `multitool-1` pod IPs 
+Next, let's `exec` into the ToR and ping the two `multitool-1` pod IPs
 
-##### command
 ```bash
 docker exec -it clab-calico-bgp-lb-ceos01 Cli
 ping 192.168.42.193
 
 ```
-
-##### output
 
 ```bash
 ceos>ping 192.168.42.193
@@ -735,8 +676,6 @@ PING 192.168.42.193 (192.168.42.193) 72(100) bytes of data.
 rtt min/avg/max/mdev = 0.711/1.917/4.020/1.421 ms, ipg/ewma 3.783/2.884 ms
 ```
 
-##### output
-
 ```bash
 ping 192.168.46.129
 PING 192.168.46.129 (192.168.46.129) 72(100) bytes of data.
@@ -751,9 +690,7 @@ PING 192.168.46.129 (192.168.46.129) 72(100) bytes of data.
 rtt min/avg/max/mdev = 0.480/0.713/1.064/0.218 ms, ipg/ewma 1.034/0.888 ms
 ```
 
-##### explanation
-
-The outputs above confirm that the pod IPs are now reachable by the external network as well. 
+The outputs above confirm that the pod IPs are now reachable by the external network as well.
 
 ## Summary
 
@@ -764,4 +701,5 @@ Here's a quick recap of what you just accomplished in this lab:
 - You proved the BGP sessions and learned routes on both the nodes and the ToR, so pods can talk across subnets and from outside the cluster.
 
 ## Lab Cleanup
+
 to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**

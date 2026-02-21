@@ -2,7 +2,7 @@
 
 This lab demonstrates Calico's WireGuard encryption feature for securing pod-to-pod traffic between nodes. You'll see the clear difference between unencrypted and encrypted traffic using packet captures.
 
-## Why WireGuard Encryption?
+## Overview
 
 In Kubernetes environments, pod-to-pod traffic between nodes traverses the physical network infrastructure. Without encryption, this traffic is vulnerable to:
 
@@ -19,7 +19,7 @@ Calico's WireGuard integration provides:
 | **Simple Configuration** | Enable with a single command |
 | **Automatic Key Management** | Wireguard handles key rotation |
 
-## How WireGuard Works with Calico
+### How WireGuard Works with Calico
 
 When WireGuard is enabled:
 
@@ -40,11 +40,11 @@ Pod A (Node 1) → [Encrypted WireGuard packet] → Physical Network → [Encryp
                      ↑ Encrypted - unreadable without keys
 ```
 
-## WireGuard Key Exchange and Cryptography
+### WireGuard Key Exchange and Cryptography
 
 WireGuard uses modern cryptographic primitives and a simple key exchange mechanism. Understanding this helps explain how encryption and decryption work between nodes.
 
-### Key Types
+#### Key Types
 
 Each node has a **public/private key pair**:
 
@@ -70,7 +70,7 @@ Each node has a **public/private key pair**:
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### How Key Exchange Works
+#### How Key Exchange Works
 
 WireGuard uses the **Noise Protocol Framework** (specifically Noise_IKpsk2) for key exchange:
 
@@ -84,7 +84,7 @@ flowchart LR
         PK1[Public Key A']
         SK1[Private Key A]
     end
-    
+
     subgraph Handshake["Key Exchange"]
         direction TB
         H1[1. Initiator sends<br/>encrypted handshake<br/>with ephemeral key]
@@ -93,21 +93,21 @@ flowchart LR
         H1 --> H2
         H2 --> H3
     end
-    
+
     subgraph Node2["wireguard-worker2"]
         PK2[Public Key B']
         SK2[Private Key B]
     end
-    
+
     Node1 --> Handshake
     Handshake --> Node2
-    
+
     style H1 fill:#FF9800,color:white
     style H2 fill:#FF9800,color:white
     style H3 fill:#4CAF50,color:white
 ```
 
-### Encryption and Decryption Flow
+#### Encryption and Decryption Flow
 
 | Direction | Encryption Key Used | Decryption Key Used |
 |-----------|---------------------|---------------------|
@@ -152,7 +152,7 @@ flowchart LR
 ╚═════════════════════════════════════════════════════════════════════════════╝
 ```
 
-### Cryptographic Primitives
+#### Cryptographic Primitives
 
 WireGuard uses a fixed set of modern, high-performance cryptographic algorithms:
 
@@ -245,7 +245,7 @@ WireGuard uses a fixed set of modern, high-performance cryptographic algorithms:
 
 
 
-### Viewing Keys in the Lab
+#### Viewing Keys in the Lab
 
 You can view the public keys for each node:
 
@@ -257,7 +257,7 @@ docker exec -it wireguard-worker wg show wireguard.cali public-key
 docker exec -it wireguard-worker wg show wireguard.cali
 ```
 
-## Lab Architecture
+### Lab Architecture
 
 This lab deploys a realistic microservices scenario:
 
@@ -335,7 +335,8 @@ export KUBECONFIG=$(pwd)/wireguard.kubeconfig
 kubectl get nodes -o wide
 ```
 
-##### Expected output
+Output:
+
 ```
 NAME                    STATUS   ROLES           AGE   VERSION
 wireguard-control-plane Ready    control-plane   5m    v1.28.0
@@ -343,13 +344,13 @@ wireguard-worker        Ready    <none>          5m    v1.28.0
 wireguard-worker2       Ready    <none>          5m    v1.28.0
 ```
 
-##### command
 ```bash
 # Check pods - ensure they're on different nodes
 kubectl get pods -o wide
 ```
 
-##### Expected output
+Output:
+
 ```
 NAME              READY   STATUS    RESTARTS   AGE     IP               NODE                NOMINATED NODE   READINESS GATES
 backend-api       1/1     Running   0          7h57m   192.168.58.200   wireguard-worker2   <none>           <none>
@@ -363,23 +364,23 @@ frontend-client   1/1     Running   0          7h57m   192.168.128.66   wireguar
 
 First, let's confirm that WireGuard is NOT enabled:
 
-##### command
 ```bash
 kubectl get felixconfiguration default -o yaml | grep -i wireguard
 ```
 
-##### Expected output
+Output:
+
 ```
 (no output - WireGuard not configured)
 ```
 
-##### command
 ```bash
 # Check if wireguard interface exists on a node (it shouldn't)
 docker exec -it wireguard-worker ip link show type wireguard
 ```
 
-##### Expected output
+Output:
+
 ```
 (no output or error - no WireGuard interface)
 ```
@@ -388,16 +389,16 @@ docker exec -it wireguard-worker ip link show type wireguard
 
 Now let's demonstrate that without WireGuard, we can see the pod traffic in plain text. The frontend is **continuously sending requests**, so you just need to capture!
 
-#### 3.1 - Capture Traffic with Sensitive Data
+#### 3.1 Capture Traffic with Sensitive Data
 
 Run this command to see passwords, API keys, and tokens flowing in plain text:
 
-##### command
 ```bash
 docker exec -it wireguard-worker2 tcpdump -Z root -i eth0 -A 2>/dev/null | grep -E --color=always 'password|secret|Bearer|API-Key|aws_|stripe_'
 ```
 
-##### Expected output (sensitive data visible!)
+Output (sensitive data visible!):
+
 ```
 "password": "xxx"
 Authorization: Bearer eyJxxx.xxx.xxx
@@ -415,11 +416,10 @@ X-API-Key: sk_live_xxx
 
 Press `Ctrl+C` to stop the capture.
 
-#### 3.2 - View Full HTTP Requests and Responses
+#### 3.2 View Full HTTP Requests and Responses
 
 To see more context around the sensitive data:
 
-##### command
 ```bash
 docker exec -it wireguard-worker2 timeout 10 tcpdump -Z root -i eth0 -A 2>/dev/null | head -150
 ```
@@ -430,55 +430,55 @@ You'll see full HTTP requests with headers like `Authorization: Bearer ...` and 
 
 Now let's enable WireGuard to encrypt all inter-node pod traffic.
 
-#### 4.1 - Enable WireGuard via FelixConfiguration
+#### 4.1 Enable WireGuard via FelixConfiguration
 
-##### command
 ```bash
 kubectl patch felixconfiguration default --type='merge' -p '{"spec":{"wireguardEnabled":true}}'
 ```
 
-##### Expected output
+Output:
+
 ```
 felixconfiguration.crd.projectcalico.org/default patched
 ```
 
-#### 4.2 - Verify WireGuard is Enabled
+#### 4.2 Verify WireGuard is Enabled
 
-##### command
 ```bash
 kubectl get felixconfiguration default -o yaml | grep -i wireguard
 ```
 
-##### Expected output
+Output:
+
 ```
   wireguardEnabled: true
 ```
 
-#### 4.3 - Wait for WireGuard Interface to be Created
+#### 4.3 Wait for WireGuard Interface to be Created
 
 It takes a few seconds for Calico to create the WireGuard interfaces on each node.
 
-##### command
 ```bash
 # Check for wireguard interface on worker node
 docker exec -it wireguard-worker ip link show type wireguard
 ```
 
-##### Expected output
+Output:
+
 ```
 10: wireguard.cali: <POINTOPOINT,NOARP,UP,LOWER_UP> mtu 1440 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
     link/none
 ```
 
-#### 4.4 - View WireGuard Configuration
+#### 4.4 View WireGuard Configuration
 
-##### command
 ```bash
 # Show WireGuard peers and configuration
 docker exec -it wireguard-worker wg show
 ```
 
-##### Expected output
+Output:
+
 ```
 interface: wireguard.cali
   public key: eD2VBB3lnJqVkkYVk4BIhkfmw/BIVChjFA88CH6MREs=
@@ -506,19 +506,19 @@ peer: /ANe/52zDtjZyaiDpHOYsM7KeyHwbvO0NagdNZzWi3M=
 - **Allowed IPs** include pod CIDRs and node IPs.
   > **Note on Configuration:** Calico's **Felix** agent automatically configures these Allowed IPs. It calculates them to include the remote node's Pod CIDR (e.g., `192.168.140.64/26`) and the node's internal IP (e.g., `172.18.0.3/32`), ensuring traffic destined for those networks is routed through the tunnel. You do not need to manually configure peers or routes.
 
-#### 4.5 - View WireGuard Interface IP Address
+#### 4.5 View WireGuard Interface IP Address
 
 The WireGuard interface also has its own IP address assigned by Calico.
 
-##### command
 ```bash
 docker exec -it wireguard-worker ip addr show wireguard.cali
 ```
 
-##### Expected output
+Output:
+
 ```
 10: wireguard.cali: <POINTOPOINT,NOARP,UP,LOWER_UP> mtu 1440 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/none 
+    link/none
     inet 192.168.128.67/32 scope global wireguard.cali
        valid_lft forever preferred_lft forever
 ```
@@ -530,30 +530,30 @@ docker exec -it wireguard-worker ip addr show wireguard.cali
 
 Now let's see the difference with WireGuard enabled!
 
-#### 5.1 - Try to Capture Sensitive Data (It's Encrypted!)
+#### 5.1 Try to Capture Sensitive Data (It's Encrypted!)
 
 Run the same tcpdump grep command as before:
 
-##### command
 ```bash
 docker exec -it wireguard-worker2 timeout 15 tcpdump -Z root -i eth0 -A 2>/dev/null | grep -E 'password|secret|Bearer|API-Key|aws_|stripe_'
 ```
 
-##### Expected output
+Output:
+
 ```
 (no output - the sensitive data is encrypted!)
 ```
 
 **The passwords, API keys, and tokens are no longer visible!**
 
-#### 5.2 - View the Encrypted WireGuard Packets
+#### 5.2 View the Encrypted WireGuard Packets
 
-##### command
 ```bash
 docker exec -it wireguard-worker2 tcpdump -Z root -i eth0 -c 10 'udp port 51820' 2>/dev/null
 ```
 
-##### Expected output (just encrypted UDP packets)
+Output (just encrypted UDP packets):
+
 ```
 tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
 listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
@@ -569,16 +569,16 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 21:17:40.239262 IP wireguard-worker2.51820 > wireguard-worker.kind.51820: UDP, length 224
 ```
 
-#### 5.3 - View Source and Destination IP Addresses
+#### 5.3 View Source and Destination IP Addresses
 
 Use the `-n` flag to see numeric IP addresses in the outer IP headers:
 
-##### command
 ```bash
 docker exec -it wireguard-worker2 tcpdump -Z root -i eth0 -n -c 10 'udp port 51820' 2>/dev/null
 ```
 
-##### Expected output
+Output:
+
 ```
 tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
 listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
@@ -592,14 +592,14 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 **Key Observation:** The outer IP headers show **node IPs** (`172.18.0.3` ↔ `172.18.0.4`), not pod IPs. The original pod-to-pod traffic (e.g., `192.168.128.66` → `192.168.58.200`) is encrypted inside the UDP payload. This is how WireGuard hides the true source and destination of the inner traffic.
 
 
-#### 5.4 - Try to Read the Payload (It's Unreadable!)
+#### 5.4 Try to Read the Payload (It's Unreadable!)
 
-##### command
 ```bash
 docker exec -it wireguard-worker2 timeout 5 tcpdump -Z root -i eth0 -A 'udp port 51820' 2>/dev/null | head -30
 ```
 
-##### Expected output (encrypted binary garbage)
+Output (encrypted binary garbage):
+
 ```
 E....."@.@........#...........
 .J..z..K.n..Q.x.*.......m..H.W..
@@ -663,8 +663,7 @@ WireGuard Packet Structure (detailed):
 
 WireGuard changes how traffic is routed between nodes. When enabled, Calico creates a `wireguard.cali` interface and updates the routing table so that traffic destined for pods on other nodes goes through the encrypted WireGuard tunnel.
 
-
-**7.1 How WireGuard Routing Works (Policy Routing):**
+#### 7.1 How WireGuard Routing Works (Policy Routing)
 
 WireGuard changes how traffic is routed between nodes. When enabled, Calico creates a `wireguard.cali` interface and updates the routing table so that traffic destined for pods on other nodes goes through the encrypted WireGuard tunnel.
 
@@ -680,7 +679,6 @@ WireGuard changes how traffic is routed between nodes. When enabled, Calico crea
 6. **Network transit** - Main table routes the UDP packet via `eth0` to the destination node.
 7. **Reception & Decryption** - Destination node receives UDP packet, decrypts it, and delivers it to the target pod.
 
-##### command
 ```bash
 # 1. View Policy Rules (Directs unencrypted traffic to Table 1)
 docker exec -it wireguard-worker ip rule
@@ -689,7 +687,8 @@ docker exec -it wireguard-worker ip rule
 docker exec -it wireguard-worker ip route show table 1
 ```
 
-##### Expected output
+Output:
+
 ```bash
 # ip rule output:
 0:      from all lookup local
@@ -752,12 +751,10 @@ This is why `allowed ips` is critical - it determines both **which peer to send 
 
 To disable WireGuard and return to unencrypted traffic:
 
-##### command
 ```bash
 kubectl patch felixconfiguration default --type='merge' -p '{"spec":{"wireguardEnabled":false}}'
 ```
 
-##### Verify
 ```bash
 # WireGuard interface should disappear after a few seconds
 docker exec -it wireguard-worker ip link show type wireguard
