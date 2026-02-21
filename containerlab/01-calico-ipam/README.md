@@ -16,7 +16,7 @@ In Kubernetes, every pod needs a unique IP address to communicate with other pod
 
 Calico's IPAM provides efficient IP allocation by pre-allocating IP blocks to nodes, allowing for fast pod startup times while maintaining proper IP address management across the entire cluster.
 
-![Calico IPAM Architecture](../../images/calico-pod-ip.png)
+![Calico IPAM Architecture](../../images/calico-pod-ip-a.png)
 
 ## Lab Setup
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
