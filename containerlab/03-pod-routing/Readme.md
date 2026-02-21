@@ -57,7 +57,7 @@ chmod +x deploy.sh
 ## Lab Exercises
 
 > [!Note]
-> <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
+> The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.
 
 ### 1. Verify Cluster Setup
 
@@ -242,7 +242,7 @@ exit
 
 #### 3.6 Exec into the multitool-2 pod in the pod-routing-worker node
 
-Now we'll access the second pod (multitool-2) on the same <mark>**worker node**</mark> to examine its network configuration and compare it with the first pod.
+Now we'll access the second pod (multitool-2) on the same **worker node** to examine its network configuration and compare it with the first pod.
 
 ```bash
 kubectl exec -it multitool-2-mf8vt   -- sh

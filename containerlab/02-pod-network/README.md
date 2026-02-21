@@ -17,7 +17,7 @@ In Kubernetes, every pod needs a unique IP address and proper network connectivi
 
 **4. Container-to-Container Communication**: Multiple containers within the same pod need to communicate via localhost, requiring proper network namespace sharing and interface management.
 
-<mark>Calico provides comprehensive pod networking by creating virtual network interfaces, managing IP address allocation, establishing routing tables, and enabling secure pod-to-pod communication across the entire cluster infrastructure.</mark>
+Calico provides comprehensive pod networking by creating virtual network interfaces, managing IP address allocation, establishing routing tables, and enabling secure pod-to-pod communication across the entire cluster infrastructure.
 
 ### How the Pod Network is Created
 
@@ -80,7 +80,7 @@ chmod +x deploy.sh
 ## Lab Exercises
 
 > [!Note]
-> <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
+> The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.
 
 ### 1. Verify Cluster Setup
 

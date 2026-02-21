@@ -25,7 +25,7 @@ The lab folder is - `/containerlab/06-calico-overlay`
 ## Lab Exercises
 
 > [!Note]
-> <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
+> The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.
 
 After deployment, verify the cluster is ready by checking the ContainerLab topology status:
 
@@ -201,7 +201,7 @@ Calico supports the following encapsulation types.
 ### 3. Verify Pod Routing
 
 > [!NOTE]
-> The outputs in this section will be different in your lab. When running the commands given here, replace IP addresses and MAC addresses with values from your environment — especially <mark>swap in the IP and MAC addresses from your own setup</mark>.
+> The outputs in this section will be different in your lab. When running the commands given here, replace IP addresses and MAC addresses with values from your environment — especially swap in the IP and MAC addresses from your own setup.
 
 #### 3.1 Verify Pod Routing for Nodes in the Same Subnet
 
@@ -213,7 +213,7 @@ docker exec -it  k01-worker /bin/bash
 
 Retrieve routes for prefixes which are /26 mask.
 > [!TIP]
-> Filter with the `/26` mask so the output lines up with the IPAM block affinities; using <mark>the `/26` filter keeps the output aligned with the IPAM block affinities</mark>.
+> Filter with the `/26` mask so the output lines up with the IPAM block affinities; using the `/26` filter keeps the output aligned with the IPAM block affinities.
 
 ```
 ip route | grep /26

@@ -12,7 +12,7 @@ The lab folder is - `/containerlab/08-calico-bgp-lb`
 ## Lab Exercises
 
 > [!Note]
-> <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
+> The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.
 
 ### 1. Inspect ContainerLab Topology
 
@@ -314,7 +314,7 @@ We can now verify connectivity to the nginx service from the cEOS container.
 
 Run the following from the cEOS container.
 > [!Note]
-> <mark> The LB IP in your lab could be different from the IP shown blow<mark>
+> The LB IP in your lab could be different from the IP shown below
 
 
 ```

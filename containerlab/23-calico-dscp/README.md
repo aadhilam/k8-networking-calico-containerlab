@@ -93,7 +93,7 @@ chmod +x deploy.sh
 ## Lab Exercises
 
 > [!Note]
-> <mark>The outputs in this section will be different in your lab. Replace IP addresses and values as per your lab.</mark>
+> The outputs in this section will be different in your lab. Replace IP addresses and values as per your lab.
 
 ### 1. Set Up Environment
 

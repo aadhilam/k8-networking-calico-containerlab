@@ -14,7 +14,7 @@ In Kubernetes, every pod needs a unique IP address to communicate with other pod
 
 **4. Cross-Node Communication**: Pods on different nodes need routable IP addresses within the cluster to communicate directly without NAT, which IPAM facilitates through proper subnet allocation.
 
-<mark> Calico's IPAM provides efficient IP allocation by pre-allocating IP blocks to nodes, allowing for fast pod startup times while maintaining proper IP address management across the entire cluster. </mark>
+Calico's IPAM provides efficient IP allocation by pre-allocating IP blocks to nodes, allowing for fast pod startup times while maintaining proper IP address management across the entire cluster.
 
 ![Calico IPAM Architecture](../../images/calico-pod-ip.png)
 
@@ -59,7 +59,7 @@ The CIDR choice directly impacts cluster scalability and network policy effectiv
 ## Lab Exercises
 
 > [!Note]
-> <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.<mark>
+> The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.
 
 After deployment, verify the cluster is ready.
 

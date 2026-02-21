@@ -18,7 +18,7 @@ Dual-stack networking means that network entities (nodes, pods, services) have b
 - Communicate over IPv6 with modern infrastructure
 - Gradually transition from IPv4 to IPv6 without breaking compatibility
 
-<mark>In this lab, pods can reach both an IPv4 destination (1.1.1.1) and an IPv6 destination (2001:db8::1) on an upstream router, demonstrating true dual-stack external connectivity.</mark>
+In this lab, pods can reach both an IPv4 destination (1.1.1.1) and an IPv6 destination (2001:db8::1) on an upstream router, demonstrating true dual-stack external connectivity.
 
 ### Kind Cluster Configuration for Dual-Stack
 
@@ -70,7 +70,7 @@ The `node-ip` parameter is a comma-separated list of the node's IPv4 and IPv6 ad
 2. **Comma-separated subnets** - The order matters: IPv4 first, then IPv6
 3. **`node-ip` on each node** - Ensures kubelet registers both addresses; without this, nodes may only advertise one address family
 
-<mark>⚠️ **Important:** Dual-stack must be configured at cluster creation time. You cannot convert a single-stack cluster to dual-stack after it's created.</mark>
+⚠️ **Important:** Dual-stack must be configured at cluster creation time. You cannot convert a single-stack cluster to dual-stack after it's created.
 
 ### Calico IP Pools Configuration
 
@@ -217,7 +217,7 @@ The script deploys:
 ## Lab Exercises
 
 > [!Note]
-> <mark>The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.</mark>
+> The outputs in this section will be different in your lab. When running the commands given in this section, make sure you replace IP addresses, interface names, and node names as per your lab.
 
 ### 1. Set the kubeconfig
 
@@ -356,7 +356,7 @@ PING 2001:db8::1 (2001:db8::1): 56 data bytes
 64 bytes from 2001:db8::1: seq=2 ttl=63 time=0.689 ms
 ```
 
-<mark>🎉 **Success!** The pod can reach both IPv4 (1.1.1.1) and IPv6 (2001:db8::1) external destinations, demonstrating true dual-stack connectivity.</mark>
+🎉 **Success!** The pod can reach both IPv4 (1.1.1.1) and IPv6 (2001:db8::1) external destinations, demonstrating true dual-stack connectivity.
 
 ### 9. How External Connectivity Works
 
@@ -618,7 +618,7 @@ External destinations (like the cEOS loopback) require native IPv6 routing becau
 
 ### Application IPv6 Support
 
-<mark>⚠️ **Important:** For IPv6 services to work, your application must listen on IPv6 addresses! Many applications default to IPv4 only (`0.0.0.0`). If your IPv6 service isn't working, check that the application is bound to `[::]` (all IPv6 addresses).</mark>
+⚠️ **Important:** For IPv6 services to work, your application must listen on IPv6 addresses! Many applications default to IPv4 only (`0.0.0.0`). If your IPv6 service isn't working, check that the application is bound to `[::]` (all IPv6 addresses).
 
 ```bash
 # Check if your app is listening on IPv6
