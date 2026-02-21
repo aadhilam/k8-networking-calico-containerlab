@@ -230,7 +230,7 @@ ipam-block-affinity-192-168-2-0-26     calico-ipam-worker2         192.168.2.0/2
 
 This formatted output provides a clear mapping of which IP blocks are assigned to which nodes, making it easy to understand IP allocation across your cluster.
 
-![Calico IPAM Architecture](../../images/calico-ipam.png)
+![Calico IPAM Architecture](../../images/calico-ipam-a.png)
 
 ## Summary
 
