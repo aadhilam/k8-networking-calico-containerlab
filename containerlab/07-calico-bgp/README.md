@@ -95,9 +95,9 @@ spec:
 ```
 
 This BGP Configuration sets up Calico's global BGP behavior for the cluster:
-- **`asNumber: 65010`**: Assigns AS number 65010 to all Calico nodes in the cluster
-- **`nodeToNodeMeshEnabled: false`**: Disables the default full mesh BGP peering between all Calico nodes
-- **`logSeverityScreen: Info`**: Sets BGP logging level to Info for troubleshooting
+- `asNumber: 65010`: Assigns AS number 65010 to all Calico nodes in the cluster
+- `nodeToNodeMeshEnabled: false`: Disables the default full mesh BGP peering between all Calico nodes
+- `logSeverityScreen: Info`: Sets BGP logging level to Info for troubleshooting
 - With mesh disabled, nodes will only peer with explicitly configured external BGP neighbors
 
 #### 2.2 BGP Peer
@@ -116,9 +116,9 @@ spec:
 ```
 
 This BGP Peer configuration establishes external BGP peering with network infrastructure:
-- **`peerIP: 10.10.10.1`**: IP address of the Arista switch to establish BGP session with
-- **`asNumber: 65001`**: AS number of the external BGP peer (Arista switch)
-- **`nodeSelector: all()`**: Applies this peering configuration to all Calico nodes in the cluster
+- `peerIP: 10.10.10.1`: IP address of the Arista switch to establish BGP session with
+- `asNumber: 65001`: AS number of the external BGP peer (Arista switch)
+- `nodeSelector: all()`: Applies this peering configuration to all Calico nodes in the cluster
 - Once established, Calico will advertise pod subnet routes to the switch and receive external routes
 
 ### 3. cEOS BGP Configuration
@@ -139,13 +139,13 @@ router bgp 65001
 ```
 
 This cEOS BGP configuration establishes peering with Calico nodes:
-- **`router bgp 65001`**: Configures BGP with AS number 65001 for the switch
-- **`router-id 10.10.10.1`**: Sets the BGP router ID to the switch's IP address
-- **`bgp listen range 10.10.10.0/24 peer-group CALICO-K8S remote-as 65010`**: Enables dynamic peering for any host in the subnet with AS 65010
-- **`neighbor CALICO-K8S peer group`**: Creates a peer group template for Calico nodes
-- **`neighbor CALICO-K8S remote-as 65010`**: Specifies the AS number for Calico peers
-- **`neighbor CALICO-K8S activate`**: Activates the peer group for IPv4 address family
-- **`network 10.10.10.0/24`**: Advertises the local subnet to BGP peers
+- `router bgp 65001`: Configures BGP with AS number 65001 for the switch
+- `router-id 10.10.10.1`: Sets the BGP router ID to the switch's IP address
+- `bgp listen range 10.10.10.0/24 peer-group CALICO-K8S remote-as 65010`: Enables dynamic peering for any host in the subnet with AS 65010
+- `neighbor CALICO-K8S peer group`: Creates a peer group template for Calico nodes
+- `neighbor CALICO-K8S remote-as 65010`: Specifies the AS number for Calico peers
+- `neighbor CALICO-K8S activate`: Activates the peer group for IPv4 address family
+- `network 10.10.10.0/24`: Advertises the local subnet to BGP peers
 - This allows the switch to automatically accept BGP connections from any Calico node in the 10.10.10.0/24 range
 
 ### 4. Validate BGP Peering
@@ -166,10 +166,10 @@ bgppeer-arista   10.10.10.1   all()   65001
 ```
 
 This output shows the configured BGP peers in the Calico cluster:
-- **`NAME`**: The name of the BGP peer resource (`bgppeer-arista`)
-- **`PEERIP`**: The IP address of the external BGP neighbor (`10.10.10.1`)
-- **`NODE`**: Node selector indicating which Calico nodes will peer (`all()` means all nodes)
-- **`ASN`**: The AS number of the external peer (`65001`)
+- `NAME`: The name of the BGP peer resource (`bgppeer-arista`)
+- `PEERIP`: The IP address of the external BGP neighbor (`10.10.10.1`)
+- `NODE`: Node selector indicating which Calico nodes will peer (`all()` means all nodes)
+- `ASN`: The AS number of the external peer (`65001`)
 - This confirms the BGP peer configuration is active and all Calico nodes are configured to establish BGP sessions with the Arista switch
 
 #### 4.2 Validate BGP Peering in cEOS
@@ -199,14 +199,14 @@ Neighbor Status Codes: m - Under maintenance
   ```
 
 This BGP summary output from the cEOS switch shows successful peering with Calico nodes:
-- **`Router identifier 10.10.10.1`**: The switch's BGP router ID
-- **`local AS number 65001`**: Confirms the switch is using AS 65001
-- **`Neighbor`**: Shows the IP addresses of connected Calico nodes (10.10.10.10, 10.10.10.11, 10.10.10.12)
-- **`V AS`**: BGP version (4) and remote AS number (65010) for each peer
-- **`MsgRcvd/MsgSent`**: Number of BGP messages exchanged, indicating active communication
-- **`State`**: All peers show `Estab` (Established), confirming successful BGP sessions
-- **`Up/Down`**: Duration that BGP sessions have been established
-- **`PfxRcd/PfxAcc`**: Number of prefixes received and accepted from each peer
+- `Router identifier 10.10.10.1`: The switch's BGP router ID
+- `local AS number 65001`: Confirms the switch is using AS 65001
+- `Neighbor`: Shows the IP addresses of connected Calico nodes (10.10.10.10, 10.10.10.11, 10.10.10.12)
+- `V AS`: BGP version (4) and remote AS number (65010) for each peer
+- `MsgRcvd/MsgSent`: Number of BGP messages exchanged, indicating active communication
+- `State`: All peers show `Estab` (Established), confirming successful BGP sessions
+- `Up/Down`: Duration that BGP sessions have been established
+- `PfxRcd/PfxAcc`: Number of prefixes received and accepted from each peer
 - This confirms that the cEOS switch has successfully established BGP peering with all three Calico nodes
 
 ![BGP Config](../../images/bgp-config.png)

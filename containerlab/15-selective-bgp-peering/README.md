@@ -114,9 +114,9 @@ spec:
   nodeSelector: bgp-peer == "true"
 ```
 
-- **`nodeSelector: bgp-peer == "true"`**: This selector ensures that only nodes with the label `bgp-peer=true` will establish BGP peering with the ToR switch
-- **`peerIP: 10.10.10.1`**: The IP address of the upstream Arista switch
-- **`asNumber: 65001`**: The AS number of the upstream switch
+- `nodeSelector: bgp-peer == "true"`: This selector ensures that only nodes with the label `bgp-peer=true` will establish BGP peering with the ToR switch
+- `peerIP: 10.10.10.1`: The IP address of the upstream Arista switch
+- `asNumber: 65001`: The AS number of the upstream switch
 
 Without this selector, all nodes would attempt to peer with the ToR, which is what we want to avoid in large clusters.
 

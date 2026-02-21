@@ -317,8 +317,8 @@ drwxr-xr-x 2 root root 4096 Jan 16 22:23 multus.d
 #### 5.5 Kubelet CNI Configuration
 
 Kubelet uses default paths when not explicitly configured:
-- **`cniConfDir`**: `/etc/cni/net.d`
-- **`cniBinDir`**: `/opt/cni/bin`
+- `cniConfDir`: `/etc/cni/net.d`
+- `cniBinDir`: `/opt/cni/bin`
 
 You can verify kubelet's configuration:
 
@@ -386,10 +386,10 @@ spec:
 | `ipam.gateway` | VLAN 20 gateway (switch interface) |
 
 **Macvlan Modes**:
-- **`bridge`**: Same-host macvlan interfaces communicate (via switch when parent is physical)
-- **`vepa`**: All traffic sent to external switch
-- **`passthru`**: Single container gets full interface access
-- **`private`**: No communication between same-host macvlan interfaces
+- `bridge`: Same-host macvlan interfaces communicate (via switch when parent is physical)
+- `vepa`: All traffic sent to external switch
+- `passthru`: Single container gets full interface access
+- `private`: No communication between same-host macvlan interfaces
 
 Apply the NetworkAttachmentDefinition:
 
@@ -454,8 +454,8 @@ Output:
 ```
 
 The pod has two interfaces:
-- **`eth0`**: Primary interface from Calico (192.168.0.1/32)
-- **`net1`**: Secondary interface from macvlan (10.10.20.100/24)
+- `eth0`: Primary interface from Calico (192.168.0.1/32)
+- `net1`: Secondary interface from macvlan (10.10.20.100/24)
 
 **Key**: The macvlan interface has its own **unique MAC address** - this is a defining characteristic of macvlan.
 

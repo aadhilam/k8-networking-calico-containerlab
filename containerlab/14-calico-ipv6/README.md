@@ -66,7 +66,7 @@ The `node-ip` parameter is a comma-separated list of the node's IPv4 and IPv6 ad
 
 #### Why These Settings Matter
 
-1. **`ipFamily: dual`** - Without this, Kubernetes defaults to single-stack (IPv4 only)
+1. `ipFamily: dual` - Without this, Kubernetes defaults to single-stack (IPv4 only)
 2. **Comma-separated subnets** - The order matters: IPv4 first, then IPv6
 3. **`node-ip` on each node** - Ensures kubelet registers both addresses; without this, nodes may only advertise one address family
 

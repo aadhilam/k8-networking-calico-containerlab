@@ -261,8 +261,8 @@ Neighbor Status Codes: m - Under maintenance
 
 The BGP summary shows established peering sessions with all three Kubernetes nodes:
 
-- **`PfxRcd (Prefixes Received)`**: Number of route prefixes received from each BGP neighbor (1 prefix from each node)
-- **`PfxAcc (Prefixes Accepted)`**: Number of received prefixes that passed route filtering and were accepted into the routing table (1 prefix accepted from each node)
+- `PfxRcd (Prefixes Received)`: Number of route prefixes received from each BGP neighbor (1 prefix from each node)
+- `PfxAcc (Prefixes Accepted)`: Number of received prefixes that passed route filtering and were accepted into the routing table (1 prefix accepted from each node)
 
 Each Kubernetes node is advertising the same load balancer CIDR `172.16.0.240/28`, confirming that all nodes can serve as next-hops for LoadBalancer service traffic. The `State: Estab` indicates healthy BGP sessions with proper route exchange.
 

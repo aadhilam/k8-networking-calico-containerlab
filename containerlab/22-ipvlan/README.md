@@ -235,12 +235,12 @@ Output:
 
 This is the **actual CNI configuration file** that kubelet reads and Multus uses. Key points:
 
-- **`type: multus`**: Identifies this as the Multus meta-plugin
-- **`delegates`**: Lists the CNI plugins Multus will invoke. The first delegate contains:
-  - **`type: calico`**: The primary CNI plugin (Calico), which creates the `eth0` interface
-  - **`type: portmap`**: Port mapping plugin for port forwarding
-- **`kubeconfig`**: Path to Multus's kubeconfig for accessing the Kubernetes API
-- **`cniConf`**: Directory where Multus looks for NetworkAttachmentDefinition configurations
+- `type: multus`: Identifies this as the Multus meta-plugin
+- `delegates`: Lists the CNI plugins Multus will invoke. The first delegate contains:
+  - `type: calico`: The primary CNI plugin (Calico), which creates the `eth0` interface
+  - `type: portmap`: Port mapping plugin for port forwarding
+- `kubeconfig`: Path to Multus's kubeconfig for accessing the Kubernetes API
+- `cniConf`: Directory where Multus looks for NetworkAttachmentDefinition configurations
 
 **Key Point**: Multus delegates to other CNI plugins. The first delegate in the list becomes the **primary CNI** (Calico), which creates the `eth0` interface. Additional networks (like IPvlan) are attached via NetworkAttachmentDefinitions based on pod annotations.
 
@@ -262,10 +262,10 @@ drwxr-xr-x 1 root root 4096 Feb 14  2025 ..
 drwxr-xr-x 2 root root 4096 Jan 16 22:23 multus.d
 ```
 
-- **`00-multus.conf`**: The main Multus configuration (read first by kubelet due to numeric prefix)
-- **`10-calico.conflist`**: Calico's CNI configuration
-- **`calico-kubeconfig`**: Calico's kubeconfig for Kubernetes API access
-- **`multus.d/`**: Directory containing Multus-specific configurations
+- `00-multus.conf`: The main Multus configuration (read first by kubelet due to numeric prefix)
+- `10-calico.conflist`: Calico's CNI configuration
+- `calico-kubeconfig`: Calico's kubeconfig for Kubernetes API access
+- `multus.d/`: Directory containing Multus-specific configurations
 
 **Important Question**: Why doesn't the Multus configuration show IPvlan-specific settings?
 
@@ -421,14 +421,14 @@ spec:
 ```
 
 IPvlan L2 mode:
-- **`type: ipvlan`**: Uses IPvlan CNI plugin
-- **`master: eth2`**: The parent physical interface
-- **`mode: l2`**: Layer 2 mode - operates at Layer 2, similar to MACVLAN but shares MAC address
-- **`ipam`**: Whereabouts IPAM coordinates IP allocation across all nodes
-  - **`type: whereabouts`**: Uses whereabouts IPAM for cluster-wide IP coordination
-  - **`range: "10.10.30.100-10.10.30.150/24"`**: IP range for allocation (cluster-wide, no conflicts)
-  - **`exclude: ["10.10.30.1/32"]`**: Excludes gateway IP from allocation
-  - **`gateway: 10.10.30.1`**: Gateway IP for VLAN 30
+- `type: ipvlan`: Uses IPvlan CNI plugin
+- `master: eth2`: The parent physical interface
+- `mode: l2`: Layer 2 mode - operates at Layer 2, similar to MACVLAN but shares MAC address
+- `ipam`: Whereabouts IPAM coordinates IP allocation across all nodes
+  - `type: whereabouts`: Uses whereabouts IPAM for cluster-wide IP coordination
+  - `range: "10.10.30.100-10.10.30.150/24"`: IP range for allocation (cluster-wide, no conflicts)
+  - `exclude: ["10.10.30.1/32"]`: Excludes gateway IP from allocation
+  - `gateway: 10.10.30.1`: Gateway IP for VLAN 30
 
 **Why Whereabouts IPAM?**
 - **Cluster-wide coordination**: Ensures each IP is allocated only once across the entire cluster
@@ -471,12 +471,12 @@ spec:
 ```
 
 IPvlan L3 mode:
-- **`mode: l3`**: Layer 3 mode - routes packets at Layer 3 without going through the switch
-- **`ipam`**: Whereabouts IPAM coordinates IP allocation across all nodes
-  - **`type: whereabouts`**: Uses whereabouts IPAM for cluster-wide IP coordination
-  - **`range: "10.10.30.151-10.10.30.200/24"`**: IP range for allocation (cluster-wide, no conflicts)
-  - **`exclude: ["10.10.30.1/32"]`**: Excludes gateway IP from allocation
-  - **`gateway: 10.10.30.1`**: Gateway IP for VLAN 30
+- `mode: l3`: Layer 3 mode - routes packets at Layer 3 without going through the switch
+- `ipam`: Whereabouts IPAM coordinates IP allocation across all nodes
+  - `type: whereabouts`: Uses whereabouts IPAM for cluster-wide IP coordination
+  - `range: "10.10.30.151-10.10.30.200/24"`: IP range for allocation (cluster-wide, no conflicts)
+  - `exclude: ["10.10.30.1/32"]`: Excludes gateway IP from allocation
+  - `gateway: 10.10.30.1`: Gateway IP for VLAN 30
 - Packets between pods on the same host are routed directly without switch traversal
 
 **Why Whereabouts IPAM?**
