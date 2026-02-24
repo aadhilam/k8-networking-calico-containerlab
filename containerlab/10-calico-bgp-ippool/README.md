@@ -6,7 +6,7 @@ This lab demonstrates how to advertise Calico IP pools to external networks usin
 
 ## Lab Setup
 
-To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
+To setup the lab for this module [Lab setup](../readme.md#lab-setup)
 The lab folder is - `/containerlab/10-calico-bgp-ippool`
 
 ## Lab Exercises
@@ -77,7 +77,7 @@ k01-worker3         Ready    <none>          12m   v1.32.2
 ```
 
 > [!Note]
-> We are utilizing the same lab topology as the previous BGP lab that can be found here **[Lab setup](../8-calico-bgp-lb/README.md)**
+> We are utilizing the same lab topology as the previous BGP lab that can be found here [Lab setup](../8-calico-bgp-lb/README.md)
 
 
 ### 2. Inspect IP Pools
@@ -101,14 +101,14 @@ The following IP pools were configured in the installation resource. The install
         - 10.10.0.0/16
 ```
 
-- **name**: Identifier for the IP pool (`default-ipv4-ippool`)
-- **blockSize**: Size of IP blocks allocated per node (26 = 64 IPs per block)
-- **cidr**: IP address range for pod networking (`192.168.0.0/17`)
-- **encapsulation**: Tunneling mode (`None` means no overlay, using native routing)
-- **natOutgoing**: Controls NAT for traffic leaving the cluster (`Disabled` means no NAT)
-- **nodeSelector**: Which nodes use this pool (`all()` applies to all nodes)
-- **disableBGPExport**: Whether to advertise this pool via BGP (`false` means routes are advertised)
-- **nodeAddressAutodetectionV4**: CIDR ranges used to detect node IP addresses (`10.10.0.0/16`)
+- `name`: Identifier for the IP pool (`default-ipv4-ippool`)
+- `blockSize`: Size of IP blocks allocated per node (26 = 64 IPs per block)
+- `cidr`: IP address range for pod networking (`192.168.0.0/17`)
+- `encapsulation`: Tunneling mode (`None` means no overlay, using native routing)
+- `natOutgoing`: Controls NAT for traffic leaving the cluster (`Disabled` means no NAT)
+- `nodeSelector`: Which nodes use this pool (`all()` applies to all nodes)
+- `disableBGPExport`: Whether to advertise this pool via BGP (`false` means routes are advertised)
+- `nodeAddressAutodetectionV4`: CIDR ranges used to detect node IP addresses (`10.10.0.0/16`)
 
 Next, let's inspect IP pools.
 
@@ -127,6 +127,8 @@ Notice that there is a default IP pool configured by the operator based on the I
 
 
 #### 2.2 Verify the IPAM block affinities
+
+Block affinities represent the binding between a node and a CIDR block carved from the IP pool. Each node is assigned its own /26 block by default, ensuring that pod IP allocations are local to the node and enabling efficient route aggregation.
 
 ```
 kubectl get blockaffinities
@@ -181,7 +183,6 @@ This BGP configuration defines how Calico handles Border Gateway Protocol routin
 - `serviceLoadBalancerIPs`: Defines IP ranges for LoadBalancer services that should be advertised
   - `cidr: 172.16.0.240/28` - A /28 subnet providing 16 IP addresses for LoadBalancer services
 
-
 The `prefixAdvertisements` section controls which network prefixes are advertised via BGP to external peers:
 
 - `cidr`: `192.168.0.0/17` - The network prefix to be advertised (a /17 subnet containing 32,768 IP addresses from 192.168.0.0 to 192.168.127.255)
@@ -197,8 +198,8 @@ The BGP peer resources are used to create BGP peerings from the Kubernetes clust
 
 The BGP peer resources are used to create BGP peerings from the Kubernetes cluster to the upstream network. Let's verify the BGP peers for this lab.
 
-- [BGP peers for control, worker1 and worker2 which are in subnet or VLAN 10](./calico-cni-config/bgppeer-vlan-10.yaml)
-- [BGP peer for worker3 which is in VLAN 20](./calico-cni-config/bgppeer-vlan-20.yaml)
+- [BGP peers for control, worker1 and worker2 which are in subnet or VLAN 10](containerlab/10-calico-bgp-ippool/calico-cni-config/bgppeer-vlan-10.yaml)
+- [BGP peer for worker3 which is in VLAN 20](containerlab/10-calico-bgp-ippool/calico-cni-config/bgppeer-vlan-20.yaml)
 
 The reason that there are two BGP peers is because the top of rack switch or the BGP peer IP is different for the two VLANs that we have in this topology.
 
@@ -645,12 +646,12 @@ sequenceDiagram
     W1-->>POD1: Deliver reply to pod via veth
 ```
 
-**Key observations:**
+`Key observations:`
 
-1. **No overlay/encapsulation**: Packets are routed using native IP routing, not tunneled
-2. **BGP-learned routes**: Each node learns routes to other pod CIDRs via the ToR route reflector
-3. **ToR as transit**: The ToR router forwards traffic between VLANs using BGP-learned routes
-4. **TTL=61**: The ping output shows TTL=61, indicating 3 hops (64-3=61): Worker → ToR → Worker3 → Pod
+1. `No overlay/encapsulation`: Packets are routed using native IP routing, not tunneled
+2. `BGP-learned routes`: Each node learns routes to other pod CIDRs via the ToR route reflector
+3. `ToR as transit`: The ToR router forwards traffic between VLANs using BGP-learned routes
+4. `TTL=61`: The ping output shows TTL=61, indicating 3 hops (64-3=61): Worker → ToR → Worker3 → Pod
 
 The diagram above illustrates the cross-subnet pod-to-pod connectivity path. Traffic from the `multitool-1` pod on `k01-worker` (VLAN 10) is routed through the ToR (acting as a BGP route reflector), which forwards it to `k01-worker3` (VLAN 20) based on the BGP-learned routes. The reply follows the reverse path, demonstrating successful native IP routing without overlay encapsulation.
 
@@ -702,4 +703,4 @@ Here's a quick recap of what you just accomplished in this lab:
 
 ## Lab Cleanup
 
-to cleanup the lab follow steps in **[Lab cleanup](../readme.md#lab-cleanup)**
+to cleanup the lab follow steps in [Lab cleanup](../readme.md#lab-cleanup)

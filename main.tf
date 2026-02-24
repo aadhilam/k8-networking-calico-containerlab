@@ -19,12 +19,28 @@
 # Outputs: Public IP address saved to ec2_ip.txt for easy SSH access
 
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-2"
 }
 
 # Get available availability zones
 data "aws_availability_zones" "available" {
   state = "available"
+}
+
+# Look up latest Ubuntu 22.04 LTS AMI (works in any region)
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
 }
 
 # Create VPC
@@ -113,7 +129,7 @@ resource "aws_key_pair" "key" {
 }
 
 resource "aws_instance" "clab" {
-  ami                    = "ami-0fc5d935ebf8bc3bc" # Ubuntu 22.04 LTS
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t3.2xlarge"
   key_name               = aws_key_pair.key.key_name
   subnet_id              = aws_subnet.public.id
