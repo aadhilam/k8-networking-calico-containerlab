@@ -8,32 +8,32 @@ In standard Kubernetes DNS architecture, all DNS queries from pods are sent to t
 
 ![Standard Kubernetes DNS Architecture](../../images/dns.png)
 
-### Latency Improvement
+**Latency Improvement**
 
 With the current DNS architecture, pods with the highest DNS QPS may have to reach out to a **different node** if there is no local kube-dns instance. Having a local cache helps improve latency in such scenarios by serving responses from the same node.
 
 
-### Conntrack Race Conditions
+**Conntrack Race Conditions**
 
 Skipping iptables DNAT and connection tracking helps **reduce conntrack races** and avoids UDP DNS entries filling up the conntrack table. This is a common cause of intermittent DNS failures in busy clusters.
 
-### TCP Connection Handling
+**TCP Connection Handling**
 
 Connections from the local caching agent to kube-dns are upgraded to **TCP**. TCP conntrack entries are removed on connection close, in contrast with UDP entries that have to timeout (default `nf_conntrack_udp_timeout` is 30 seconds). This reduces conntrack table pressure.
 
-### Reduced Tail Latency
+**Reduced Tail Latency**
 
 Upgrading DNS queries from UDP to TCP reduces tail latency attributed to dropped UDP packets and DNS timeouts. Without NodeLocal DNSCache, timeouts can be up to **30 seconds** (3 retries + 10s timeout). Since the nodelocal cache listens for UDP DNS queries, **applications don't need to be changed**.
 
-### Node-Level Metrics
+**Node-Level Metrics**
 
 NodeLocal DNSCache provides **metrics and visibility** into DNS requests at a node level, making it easier to debug DNS issues and monitor performance per node.
 
-### Negative Caching
+**Negative Caching**
 
 Negative caching (NXDOMAIN responses) can be enabled, reducing the number of queries to kube-dns for non-existent domains.
 
-### Summary
+**Summary**
 
 | Benefit | Description |
 |---------|-------------|
@@ -75,7 +75,7 @@ When kube-proxy runs in **iptables mode**, NodeLocal DNSCache uses the transpare
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### How Transparent Interception Works
+**How Transparent Interception Works**
 
 1. **Virtual Interface Creation**: NodeLocal DNSCache creates a dummy network interface (`nodelocaldns`) on each node
 
@@ -234,7 +234,7 @@ cluster.local:53 {
 }
 ```
 
-#### 6.1 Cache Settings Explained
+**6.1 Cache Settings Explained**
 
 | Zone | Setting | Value | Meaning |
 |------|---------|-------|---------|
@@ -242,20 +242,20 @@ cluster.local:53 {
 | `cluster.local` | `denial 9984 5` | 9984 entries, 5s TTL | Cache up to 9984 NXDOMAIN responses for 5 seconds |
 | `.` (external) | `cache 30` | default entries, 30s TTL | Cache external DNS responses for 30 seconds |
 
-#### 6.2 Why Different TTLs?
+**6.2 Why Different TTLs?**
 
 | Response Type | TTL | Reason |
 |---------------|-----|--------|
 | **Success (30s)** | Longer | Stable responses can be cached longer |
 | **Denial/NXDOMAIN (5s)** | Shorter | Failed lookups might succeed soon (new service created) |
 
-#### 6.3 Cache Size (9984 entries)
+**6.3 Cache Size (9984 entries)**
 
 - Each cache can hold up to **9984 entries**
 - Default CoreDNS cache uses ~30MB when full
 - Separate limits for `success` and `denial` responses
 
-#### 6.4 Memory Impact
+**6.4 Memory Impact**
 
 From the [Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/):
 
@@ -288,7 +288,7 @@ cluster.local:53 {
 }
 ```
 
-#### 7.1 Forwarding Rules
+**7.1 Forwarding Rules**
 
 | Zone | Forward To | Protocol | Description |
 |------|------------|----------|-------------|
@@ -297,14 +297,14 @@ cluster.local:53 {
 | `ip6.arpa` | `kube-dns-upstream` | **TCP** | Reverse DNS for IPv6 |
 | `.` (external) | `/etc/resolv.conf` | UDP/TCP | External domains → Node's DNS |
 
-#### 7.2 Why TCP for Cluster Queries?
+**7.2 Why TCP for Cluster Queries?**
 
 Cluster queries use `force_tcp` because:
 - **TCP conntrack entries are removed on connection close**
 - UDP entries must timeout (default 30 seconds)
 - Reduces conntrack table pressure
 
-#### 7.3 External DNS Flow
+**7.3 External DNS Flow**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -321,7 +321,7 @@ Cluster queries use `force_tcp` because:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### 7.4 Cluster DNS Flow
+**7.4 Cluster DNS Flow**
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -353,7 +353,7 @@ configmap/node-local-dns created
 daemonset.apps/node-local-dns created
 ```
 
-### 9. Wait for NodeLocal DNSCache Pods to be Ready
+**9. Wait for NodeLocal DNSCache Pods to be Ready**
 
 ```bash
 kubectl get pods -n kube-system -l k8s-app=node-local-dns -o wide -w
@@ -512,7 +512,7 @@ The diagram below is a good way to visualize packets traversing through the diff
 
 *Image source: [Understanding the policy enforcement options with Calico](https://www.tigera.io/blog/understanding-the-policy-enforcement-options-with-calico/)*
 
-### 14. Validate Step 2: raw Table NOTRACK Rules
+**14. Validate Step 2: raw Table NOTRACK Rules**
 
 The `raw` table is processed **first** before any other table. NodeLocal DNSCache adds NOTRACK rules here:
 
@@ -533,7 +533,7 @@ Expected output:
 -A OUTPUT -d 10.96.0.10/32 -p tcp -m tcp --dport 53 -j NOTRACK
 ```
 
-#### 14.1 Why NOTRACK is Critical
+**14.1 Why NOTRACK is Critical**
 
 | Effect | Explanation |
 |--------|-------------|
@@ -542,7 +542,7 @@ Expected output:
 | **Destination stays unchanged** | Packet keeps original destination (10.96.0.10) |
 | **Prevents conntrack races** | Eliminates UDP DNS failures from conntrack table races |
 
-### 15. Validate Step 3: Kube-proxy DNAT Rules Still Exist
+**15. Validate Step 3: Kube-proxy DNAT Rules Still Exist**
 
 Kube-proxy's DNAT rules for kube-dns are still present, but they won't affect UNTRACKED packets:
 
@@ -559,7 +559,7 @@ Expected output:
 
 These DNAT rules would normally redirect traffic from `10.96.0.10` to CoreDNS pod IPs. However, because the DNS packets are marked UNTRACKED in the raw table, the DNAT target cannot function (it requires conntrack to track the address translation). The packet passes through with its destination unchanged.
 
-### 16. Validate Step 4: Local Route for kube-dns IP
+**16. Validate Step 4: Local Route for kube-dns IP**
 
 Verify that the kube-dns ClusterIP is bound to the local `nodelocaldns` interface:
 
@@ -593,7 +593,7 @@ local 10.96.0.10 dev lo src 10.96.0.10 uid 0
 
 The `local` keyword confirms the kernel routes packets destined for `10.96.0.10` to the local host.
 
-### 17. Validate Step 5: Filter INPUT Rules
+**17. Validate Step 5: Filter INPUT Rules**
 
 The filter table INPUT chain allows DNS traffic to the local cache:
 
@@ -667,7 +667,7 @@ coredns_cache_requests_total{server="dns://10.96.0.10:53",view="",zones="cluster
 
 Seeing requests to `10.96.0.10:53` confirms the transparent interception is working!
 
-### 20. Test Cache Hits in Action
+**20. Test Cache Hits in Action**
 
 To see cache hits increasing, make repeated DNS queries:
 
@@ -683,7 +683,7 @@ curl -s http://127.0.0.1:9253/metrics | grep "coredns_cache_hits_total.*success.
 ```
 The more you query the same domain, the more cache hits you'll see!
 
-### 21. View Current Cache Entries
+**21. View Current Cache Entries**
 
 See how many DNS responses are currently cached:
 
@@ -780,7 +780,7 @@ data:
 
 Save and exit the editor (`:wq` in vim).
 
-### 23. Restart NodeLocal DNS Pods
+**23. Restart NodeLocal DNS Pods**
 
 The pods need to be restarted to pick up the ConfigMap changes:
 
@@ -813,7 +813,7 @@ Expected output:
 [INFO] 192.168.82.65:38291 - 18276 "A IN google.com. udp 28 false 512" NOERROR qr,rd,ra 54 0.023451s
 ```
 
-#### 24.1 Understanding the Log Format
+**24.1 Understanding the Log Format**
 
 | Field | Example | Meaning |
 |-------|---------|---------|
@@ -829,7 +829,7 @@ Stop watching logs:
 kill %1
 ```
 
-### 25. Disable Logging (Recommended for Production)
+**25. Disable Logging (Recommended for Production)**
 
 To disable logging, edit the ConfigMap and remove the `log` lines:
 
@@ -847,7 +847,7 @@ kubectl rollout restart daemonset node-local-dns -n kube-system
 
 ## Summary
 
-### Order of Operations Recap
+**Order of Operations Recap**
 
 | Step | What Happens | Validation Command |
 |------|--------------|-------------------|
@@ -857,7 +857,7 @@ kubectl rollout restart daemonset node-local-dns -n kube-system
 | 4. Routing | Kernel sees 10.96.0.10 is local | `ip route get 10.96.0.10` |
 | 5. Delivery | Packet delivered to local cache | `ip addr show nodelocaldns` |
 
-### What You Learned
+**What You Learned**
 
 In this lab, you:
 
@@ -866,7 +866,7 @@ In this lab, you:
 3. **Understood the packet flow** - how NOTRACK + local IP binding intercepts DNS
 4. **Explored iptables rules** - raw table NOTRACK and filter table ACCEPT rules
 
-### Key Takeaways
+**Key Takeaways**
 
 | Concept | Explanation |
 |---------|-------------|
@@ -876,7 +876,7 @@ In this lab, you:
 | **Transparent to pods** | No pod configuration changes needed |
 | **kube-dns-upstream** | Service for cache misses to reach CoreDNS |
 
-### Why NOTRACK is Essential
+**Why NOTRACK is Essential**
 
 Without NOTRACK, kube-proxy's DNAT rules would redirect DNS queries to CoreDNS pods. The NOTRACK target in the raw table:
 
@@ -887,7 +887,7 @@ Without NOTRACK, kube-proxy's DNAT rules would redirect DNS queries to CoreDNS p
 
 This allows the routing decision to see `10.96.0.10` (bound locally) rather than a CoreDNS pod IP.
 
-### iptables Mode vs IPVS Mode
+**iptables Mode vs IPVS Mode**
 
 | Aspect | iptables Mode (this lab) | IPVS Mode |
 |--------|--------------------------|-----------|

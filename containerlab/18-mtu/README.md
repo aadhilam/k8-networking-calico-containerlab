@@ -198,25 +198,25 @@ ping: local error: message too long, mtu=1450
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     POD INTERFACE MTU LIMITATION                             │
+│                     POD INTERFACE MTU LIMITATION                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
+│                                                                             │
 │  You want to send: 8900 bytes                                               │
-│                                                                              │
+│                                                                             │
 │  ┌──────────────────┐                                                       │
 │  │  netshoot-client │                                                       │
 │  │                  │                                                       │
 │  │  eth0 MTU: 1450  │ ◄── Calico default, not configured!                   │
 │  └────────┬─────────┘                                                       │
-│           │                                                                  │
+│           │                                                                 │
 │           │  8900 bytes > 1450 MTU                                          │
-│           │                                                                  │
-│           ▼                                                                  │
-│     ❌ BLOCKED!                                                             │
+│           │                                                                 │
+│           ▼                                                                 │
+│     ❌ BLOCKED!                                                              
 │     "message too long, mtu=1450"                                            │
-│                                                                              │
+│                                                                             │
 │  The packet never even leaves the pod!                                      │
-│                                                                              │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -405,27 +405,27 @@ ok
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     VLAN SVI MTU MISMATCH                                    │
+│                     VLAN SVI MTU MISMATCH                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
+│                                                                             │
 │  SAME VLAN (worker → API server):                                           │
 │  ┌────────────┐      L2 Switch      ┌────────────┐                          │
 │  │   worker   │ ──────────────────► │    API     │                          │
 │  │ VLAN 10    │    (no routing)     │   server   │                          │
 │  └────────────┘                     └────────────┘                          │
 │        ✅ Works - SVI MTU not involved                                      │
-│                                                                              │
+│                                                                             │
 │  DIFFERENT VLAN (worker3 → API server):                                     │
 │  ┌────────────┐    ┌─────────┐    ┌─────────┐    ┌────────────┐             │
 │  │  worker3   │ ─► │ VLAN 20 │ ─► │ VLAN 10 │ ─► │    API     │             │
 │  │  VLAN 20   │    │   SVI   │    │   SVI   │    │   server   │             │
 │  │ MTU: 9000  │    │MTU:1500 │    │MTU:9000 │    │  VLAN 10   │             │
 │  └────────────┘    └─────────┘    └─────────┘    └────────────┘             │
-│        │               │                                                     │
+│        │               │                                                    │
 │        │               └──► ❌ Packet dropped! (9000 > 1500)                │
-│        │                                                                     │
+│        │                                                                    │
 │        └──► Sends 9000-byte packets (TLS certificate)                       │
-│                                                                              │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -465,21 +465,21 @@ During a TLS handshake, the server sends its certificate chain, which can be qui
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     TLS HANDSHAKE WITH MTU MISMATCH                          │
+│                       TLS HANDSHAKE WITH MTU MISMATCH                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
+│                                                                             │
 │  1. Client sends ClientHello (small packet) ────────────────► Server        │
 │     ✅ Packet fits in MTU, delivered successfully                           │
-│                                                                              │
+│                                                                             │
 │  2. Server sends ServerHello (small packet) ◄──────────────── Server        │
 │     ✅ Packet fits in MTU, delivered successfully                           │
-│                                                                              │
+│                                                                             │
 │  3. Server sends Certificate (LARGE packet ~4KB) ◄─────────── Server        │
-│     │                                                                        │
+│     │                                                                       │
 │     │  TCP sets DF=1 (Don't Fragment)                                       │
 │     │  Packet size: ~4000 bytes                                             │
-│     │                                                                        │
-│     ▼                                                                        │
+│     │                                                                       │
+│     ▼                                                                       │
 │  ┌─────────────────────────────────────────┐                                │
 │  │  Router/Switch with MTU 1500            │                                │
 │  │                                         │                                │
@@ -491,10 +491,10 @@ During a TLS handshake, the server sends its certificate chain, which can be qui
 │  │  Should send ICMP "Fragmentation        │                                │
 │  │  Needed" but often blocked by firewalls │                                │
 │  └─────────────────────────────────────────┘                                │
-│                                                                              │
+│                                                                             │
 │  4. Client waits for Certificate... times out                               │
 │     Result: "SSL connection timeout"                                        │
-│                                                                              │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
