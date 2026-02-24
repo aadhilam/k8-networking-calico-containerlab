@@ -14,7 +14,7 @@ Calico Ingress Gateway integrates the Kubernetes Gateway API with Calico network
 | **Canary Deployments** | Gradually roll out new versions with controlled traffic percentages |
 | **BGP Integration** | Advertise gateway IPs via BGP for external accessibility |
 
-### What is a Canary Deployment?
+**What is a Canary Deployment?**
 
 A **canary deployment** is a progressive release strategy where a new version of an application is gradually rolled out to a small subset of users before being fully deployed. This approach allows teams to:
 
@@ -39,7 +39,7 @@ This lab uses a topology with:
 *Figure: Calico Ingress Gateway Lab Topology*
 
 
-### Traffic Flow
+**Traffic Flow**
 
 1. **External user** on VLAN 30 sends HTTP request to Gateway LoadBalancer IP `172.16.0.241`
 2. **ToR switch** has BGP-learned route to `172.16.0.240/28` via worker/worker2
@@ -76,7 +76,7 @@ The deploy script will:
 > [!Note]
 > The Gateway, HTTPRoute, and ReferenceGrant resources are **not** pre-configured. You will create them manually in this lab to understand how they work together.
 
-### 2. Set Up Environment
+**2. Set Up Environment**
 
 Set the kubeconfig for this lab:
 
@@ -136,7 +136,7 @@ Router identifier 10.10.10.1, local AS number 65001
 
 ### 4. Verify Gateway API Components
 
-#### 4.1 Check GatewayAPI Status
+**4.1 Check GatewayAPI Status**
 
 The deploy script enabled Calico's Gateway API feature with node placement configuration:
 
@@ -173,7 +173,7 @@ spec:
 > - Traffic enters through these nodes and is processed by the local Envoy proxy
 > - This aligns the data plane (Envoy) with the BGP advertisement path
 
-#### 4.2 Check GatewayClass
+**4.2 Check GatewayClass**
 
 The `tigera-gateway-class` is automatically created when Gateway API is enabled:
 
@@ -223,7 +223,7 @@ app-v2   ClusterIP   10.96.x.x       <none>        80/TCP    5m
 
 Now you'll create the Gateway API resources to enable ingress traffic. This section walks through each resource and explains its purpose.
 
-#### 6.1 Create the Gateway
+**6.1 Create the Gateway**
 
 The **Gateway** is the entry point for external traffic. It creates an Envoy-based load balancer that listens for HTTP traffic.
 
@@ -285,7 +285,7 @@ calico-ingress-gateway    tigera-gateway-class   172.16.0.241    True         30
 2. A LoadBalancer service is created with an IP from the BGP-advertised pool
 3. The Envoy is configured to listen on port 80 for all incoming requests
 
-#### 6.2 Create the ReferenceGrant
+**6.2 Create the ReferenceGrant**
 
 Before creating the HTTPRoute, you need to create a **ReferenceGrant**. This is a security mechanism that allows cross-namespace references.
 
@@ -341,7 +341,7 @@ NAME                    AGE
 allow-gateway-to-demo   10s
 ```
 
-#### 6.3 Create the HTTPRoute
+**6.3 Create the HTTPRoute**
 
 Now create the **HTTPRoute** that defines how traffic should be routed to your backend services. This HTTPRoute implements a canary deployment with 80/20 traffic split.
 
@@ -408,7 +408,7 @@ NAME                   HOSTNAMES        AGE
 canary-traffic-split   ["app.demo.lab"] 10s
 ```
 
-#### 6.4 Verify All Resources Are Connected
+**6.4 Verify All Resources Are Connected**
 
 Now verify that all three resources are properly configured:
 
@@ -540,7 +540,7 @@ Now let's test the ingress gateway from the external user host on VLAN 30.
 > [!Important]
 > Since the Gateway is configured with hostname `app.demo.lab`, you must include the `Host` header in your requests. Without the correct Host header, the Gateway will not route your request.
 
-#### 10.1 Verify User Host Connectivity
+**10.1 Verify User Host Connectivity**
 
 Check the user host's IP address:
 
@@ -566,7 +566,7 @@ default via 172.20.20.1 dev eth0
 172.20.20.0/24 dev eth0 proto kernel scope link src 172.20.20.x
 ```
 
-#### 10.2 Test Single Request
+**10.2 Test Single Request**
 
 Get the Gateway IP and test a single request using the hostname:
 
@@ -595,7 +595,7 @@ docker exec -it clab-calico-ingress-user curl -s http://$GATEWAY_IP
 
 This returns an empty response or 404 because no route matches.
 
-#### 10.3 Test Traffic Distribution
+**10.3 Test Traffic Distribution**
 
 Run multiple requests to observe the traffic split:
 
@@ -614,7 +614,7 @@ done | sort | uniq -c
 
 **Key Observation**: Traffic is distributed approximately 80/20 between v1 and v2, matching our HTTPRoute configuration!
 
-#### 10.4 Detailed Traffic Analysis
+**10.4 Detailed Traffic Analysis**
 
 For a more detailed view with percentages:
 
@@ -642,7 +642,7 @@ Version 2 (Canary): 39 (19.5%)
 
 As you gain confidence in the canary version, you can increase its traffic percentage.
 
-#### 11.1 Increase Canary to 50%
+**11.1 Increase Canary to 50%**
 
 Update the HTTPRoute to split traffic 50/50:
 
@@ -676,7 +676,7 @@ kubectl get httproute canary-traffic-split -o jsonpath='{.spec.rules[0].backendR
 ]
 ```
 
-#### 11.2 Test New Traffic Distribution
+**11.2 Test New Traffic Distribution**
 
 Run the traffic test again to confirm the new 50/50 split:
 
@@ -693,7 +693,7 @@ done | sort | uniq -c
      48 App Version 2
 ```
 
-#### 11.3 Complete Rollout (100% to v2)
+**11.3 Complete Rollout (100% to v2)**
 
 When ready to complete the rollout, send all traffic to v2:
 
@@ -727,7 +727,7 @@ App Version 2
 App Version 2
 ```
 
-### 12. Rollback (If Needed)
+**12. Rollback (If Needed)**
 
 If issues are detected, quickly rollback to the stable version:
 
@@ -740,7 +740,7 @@ kubectl patch httproute canary-traffic-split --type='json' -p='[
 
 All traffic now goes to v1 (stable).
 
-### 13. View Envoy Gateway Pods
+**13. View Envoy Gateway Pods**
 
 The Calico Gateway API deploys Envoy pods to handle ingress traffic:
 
@@ -774,11 +774,11 @@ tigera-gateway-api-gateway-helm-certgen-f8xdv                    0/1     Complet
 
 ## Architecture Deep Dive
 
-### How Calico Ingress Gateway Works
+**How Calico Ingress Gateway Works**
 
 ![CIG Relationships](../../images/cig-relationships.png)
 
-### Key Components
+**Key Components**
 
 | Component | Description |
 |-----------|-------------|
@@ -836,7 +836,7 @@ These three resources work together to create a complete ingress solution. Under
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Gateway Resource (`gateway.yaml`)
+**Gateway Resource (`gateway.yaml`)**
 
 The **Gateway** is the entry point for external traffic into the cluster. It defines:
 
@@ -863,7 +863,7 @@ When this Gateway is created, Calico:
 2. Creates a LoadBalancer service that gets an IP from the BGP-advertised pool
 3. Configures the Envoy to listen on the specified port
 
-#### HTTPRoute Resource (`httproute.yaml`)
+**HTTPRoute Resource (`httproute.yaml`)**
 
 The **HTTPRoute** defines how incoming traffic should be routed to backend services. It:
 
@@ -899,7 +899,7 @@ spec:
 
 **Important**: Notice that the HTTPRoute is in the `default` namespace, but it references Services in the `ingress-gateway-demo` namespace. This cross-namespace reference is not allowed by default for security reasons.
 
-#### ReferenceGrant Resource (`reference-grant.yaml`)
+**ReferenceGrant Resource (`reference-grant.yaml`)**
 
 The **ReferenceGrant** is a security mechanism that explicitly authorizes cross-namespace references. It answers the question: *"Who is allowed to reference resources in my namespace?"*
 
@@ -928,7 +928,7 @@ spec:
 | **Granularity** | Can limit by source namespace, resource kind, and target resource type |
 | **Security Model** | Follows principle of least privilege - no implicit trust between namespaces |
 
-#### Why ReferenceGrant Exists
+**Why ReferenceGrant Exists**
 
 Without ReferenceGrant, any HTTPRoute in any namespace could route traffic to any Service in any other namespace. This would create serious security issues:
 
@@ -938,7 +938,7 @@ Without ReferenceGrant, any HTTPRoute in any namespace could route traffic to an
 
 ReferenceGrant ensures that the **owner of the target namespace** must explicitly opt-in to allow cross-namespace references.
 
-#### How They Work Together
+**How They Work Together**
 
 ```
 External Request → Gateway (default) → HTTPRoute (default) → ReferenceGrant check → Services (ingress-gateway-demo)
@@ -961,7 +961,7 @@ External Request → Gateway (default) → HTTPRoute (default) → ReferenceGran
 5. **ReferenceGrant** authorizes HTTPRoutes from `default` to reference Services
 6. Traffic is forwarded to the backend Services
 
-### LoadBalancer Integration with BGP
+**LoadBalancer Integration with BGP**
 
 The key to external access is the integration between:
 1. **Calico LoadBalancer IPAM**: Assigns IPs from the configured pool
@@ -1018,7 +1018,7 @@ This lab demonstrated Calico's Ingress Gateway with canary deployment capabiliti
 
 ## Troubleshooting
 
-### Gateway Not Getting IP
+**Gateway Not Getting IP**
 
 If the Gateway doesn't get a LoadBalancer IP:
 
@@ -1033,7 +1033,7 @@ kubectl get bgpconfiguration default -o yaml
 kubectl describe gateway calico-ingress-gateway
 ```
 
-### Traffic Not Reaching Backend
+**Traffic Not Reaching Backend**
 
 If traffic doesn't reach the backend services:
 
@@ -1049,7 +1049,7 @@ kubectl get pods -n tigera-gateway
 kubectl logs -n tigera-gateway -l gateway.envoyproxy.io/owning-gateway-name=calico-ingress-gateway
 ```
 
-### BGP Routes Not Advertised
+**BGP Routes Not Advertised**
 
 If LoadBalancer IP is not reachable from external network:
 
