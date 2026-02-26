@@ -76,6 +76,10 @@ Once connected to the EC2 instance:
 15. [Selective BGP Peering with Node Labels](containerlab/15-selective-bgp-peering/)
 16. [IP Reservations and Static IPs for Pods](containerlab/16-static-ip/)
 17. [NodeLocal DNSCache](containerlab/17-nodelocal-dnscache/)
+18. [MTU Configuration in Kubernetes with Calico](containerlab/18-mtu/)
+19. [Calico Ingress Gateway with Canary Deployments](containerlab/19-calico-ingress/)
+20. [Transport Layer Security (TLS) with Calico Ingress](containerlab/20-ingress-tls/)
+21. [Multi-Network using Multus and MACVLAN CNI](containerlab/21-macvlan/)
 
 
 
