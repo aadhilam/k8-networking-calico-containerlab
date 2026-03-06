@@ -42,11 +42,24 @@ The lab folder is - `/containerlab/04-k8s-services`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [k8-services.clab.yaml](k8-services.clab.yaml) | ContainerLab topology defining the Kind cluster |
-| [k8-services-no-cni.yaml](k8-services-no-cni.yaml) | K8s services configuration without CNI |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
+| [k8-services-no-cni.yaml](k8-services-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment with ClusterIP service |
 
 ## Deployment

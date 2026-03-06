@@ -43,11 +43,24 @@ The lab folder is - `/containerlab/12-calico-qos`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [calico-qos.clab.yaml](calico-qos.clab.yaml) | ContainerLab topology defining the Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [calico-qos-no-cni.yaml](calico-qos-no-cni.yaml) | QoS cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/01-iperf-server.yaml](tools/01-iperf-server.yaml) | iperf3 server pod without QoS limits |
 | [tools/02-iperf-client.yaml](tools/02-iperf-client.yaml) | iperf3 client pod without QoS limits |
 | [tools/03-iperf-server-qos.yaml](tools/03-iperf-server-qos.yaml) | iperf3 server pod with QoS bandwidth annotations |

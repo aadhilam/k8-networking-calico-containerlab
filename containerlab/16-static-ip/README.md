@@ -33,11 +33,24 @@ The lab folder is - `/containerlab/16-static-ip`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [k01.clab.yaml](k01.clab.yaml) | ContainerLab topology defining the Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/01-dynamic-pod.yaml](tools/01-dynamic-pod.yaml) | Pod with dynamic IP allocation |
 | [tools/02-static-pod.yaml](tools/02-static-pod.yaml) | Pod with static IP assignment via Calico annotation |
 | [tools/03-duplicate-ip-pod.yaml](tools/03-duplicate-ip-pod.yaml) | Pod attempting duplicate static IP assignment |

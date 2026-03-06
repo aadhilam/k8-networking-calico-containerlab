@@ -305,11 +305,24 @@ The lab folder is - `/containerlab/13-wireguard`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [wireguard.clab.yaml](wireguard.clab.yaml) | ContainerLab topology defining the Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [wireguard-no-cni.yaml](wireguard-no-cni.yaml) | WireGuard cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/01-backend-api.yaml](tools/01-backend-api.yaml) | Backend API pod for WireGuard testing |
 | [tools/02-frontend-client.yaml](tools/02-frontend-client.yaml) | Frontend client pod for WireGuard testing |
 

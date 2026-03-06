@@ -19,11 +19,24 @@ The lab folder is - `/containerlab/05-k8s-dns`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [k8s-dns.clab.yaml](k8s-dns.clab.yaml) | ContainerLab topology defining the Kind cluster |
-| [k8s-dns-no-cni.yaml](k8s-dns-no-cni.yaml) | K8s DNS configuration without CNI |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
+| [k8s-dns-no-cni.yaml](k8s-dns-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/multitool-1.yaml](tools/multitool-1.yaml) | First multitool DaemonSet in default namespace |
 | [tools/multitool-2.yaml](tools/multitool-2.yaml) | Second multitool DaemonSet in default namespace |
 | [tools/multitool-3.yaml](tools/multitool-3.yaml) | Third multitool DaemonSet in foo namespace |

@@ -24,10 +24,19 @@ The lab folder is - `/containerlab/01-calico-ipam`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [calico-ipam.clab.yaml](calico-ipam.clab.yaml) | ContainerLab topology defining the 3-node Kind cluster |
-| [calico-ipam-no-cni.yaml](calico-ipam-no-cni.yaml) | Calico IPAM configuration without CNI |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
+| [calico-ipam-no-cni.yaml](calico-ipam-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM and IP pool configuration |
 
 ## Deployment

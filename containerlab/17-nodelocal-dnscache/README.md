@@ -97,12 +97,29 @@ The lab folder is - `/containerlab/17-nodelocal-dnscache`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [k01.clab.yaml](k01.clab.yaml) | ContainerLab topology defining the Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+
+**NodeLocal DNSCache**
+| File | Description |
+|------|-------------|
 | [nodelocal-dnscache/nodelocaldns.yaml](nodelocal-dnscache/nodelocaldns.yaml) | NodeLocal DNSCache DaemonSet manifest |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/dns-test-pod.yaml](tools/dns-test-pod.yaml) | DNS test pod for cache validation |
 
 ## Deployment

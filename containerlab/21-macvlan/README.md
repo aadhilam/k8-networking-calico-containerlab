@@ -77,14 +77,31 @@ The lab folder is - `/containerlab/21-macvlan`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
 | [calico-cni-config/macvlan-nad.yaml](calico-cni-config/macvlan-nad.yaml) | NetworkAttachmentDefinition for MACVLAN secondary network |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/macvlan-pod.yaml](tools/macvlan-pod.yaml) | Pod with MACVLAN secondary interface |
 | [tools/macvlan-daemonset.yaml](tools/macvlan-daemonset.yaml) | DaemonSet with MACVLAN secondary interfaces |
+
+**Startup Configs**
+| File | Description |
+|------|-------------|
 | [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 3. Export the kubeconfig:

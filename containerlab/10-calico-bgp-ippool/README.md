@@ -11,20 +11,41 @@ The lab folder is - `/containerlab/10-calico-bgp-ippool`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster across two VLANs |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
 | [calico-cni-config/bgpconfiguration-lb.yaml](calico-cni-config/bgpconfiguration-lb.yaml) | BGP Configuration with LoadBalancer advertisement |
 | [calico-cni-config/bgpconfiguration-no-lb.yaml](calico-cni-config/bgpconfiguration-no-lb.yaml) | BGP Configuration without LoadBalancer advertisement |
 | [calico-cni-config/bgppeer-vlan-10.yaml](calico-cni-config/bgppeer-vlan-10.yaml) | BGP Peer resource for VLAN 10 nodes |
 | [calico-cni-config/bgppeer-vlan-20.yaml](calico-cni-config/bgppeer-vlan-20.yaml) | BGP Peer resource for VLAN 20 nodes |
+
+**Kubernetes Manifests**
+| File | Description |
+|------|-------------|
 | [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
 | [k8s-manifests/lb-nginx-service.yaml](k8s-manifests/lb-nginx-service.yaml) | LoadBalancer type service for nginx |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/multitool-1.yaml](tools/multitool-1.yaml) | First multitool DaemonSet |
 | [tools/multitool-2.yaml](tools/multitool-2.yaml) | Second multitool DaemonSet |
 | [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment manifest |
+
+**Startup Configs**
+| File | Description |
+|------|-------------|
 | [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises

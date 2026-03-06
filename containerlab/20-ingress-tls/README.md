@@ -47,14 +47,27 @@ The lab folder is - `/containerlab/20-ingress-tls`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
 | [calico-cni-config/gatewayapi.yaml](calico-cni-config/gatewayapi.yaml) | Gateway API configuration for Calico |
 | [calico-cni-config/bgpconfiguration.yaml](calico-cni-config/bgpconfiguration.yaml) | BGP Configuration resource |
 | [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml) | BGP Peer resource for Arista switch peering |
+
+**Kubernetes Manifests**
+| File | Description |
+|------|-------------|
 | [k8s-manifests/gateway.yaml](k8s-manifests/gateway.yaml) | TLS Gateway resource definition |
 | [k8s-manifests/httproutes.yaml](k8s-manifests/httproutes.yaml) | HTTPRoutes for host-based traffic routing |
 | [k8s-manifests/reference-grant.yaml](k8s-manifests/reference-grant.yaml) | ReferenceGrant for cross-namespace Gateway access |
@@ -62,8 +75,16 @@ The lab folder is - `/containerlab/20-ingress-tls`
 | [k8s-manifests/app-blog.yaml](k8s-manifests/app-blog.yaml) | Blog application deployment and service |
 | [k8s-manifests/app-api.yaml](k8s-manifests/app-api.yaml) | API application deployment and service |
 | [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
+
+**TLS Configuration**
+| File | Description |
+|------|-------------|
 | [tls-config/cluster-issuers.yaml](tls-config/cluster-issuers.yaml) | cert-manager ClusterIssuers for CA and self-signed |
 | [tls-config/certificates.yaml](tls-config/certificates.yaml) | TLS certificate resources for domain certificates |
+
+**Startup Configs**
+| File | Description |
+|------|-------------|
 | [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises

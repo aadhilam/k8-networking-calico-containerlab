@@ -60,11 +60,24 @@ The lab folder is - `/containerlab/02-pod-network`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [pod-network.clab.yaml](pod-network.clab.yaml) | ContainerLab topology defining the 3-node Kind cluster |
-| [pod-network-no-cni.yaml](pod-network-no-cni.yaml) | Pod network configuration without CNI |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
+| [pod-network-no-cni.yaml](pod-network-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/multitool-pod.yaml](tools/multitool-pod.yaml) | Multitool test pod for network inspection |
 
 ## Deployment

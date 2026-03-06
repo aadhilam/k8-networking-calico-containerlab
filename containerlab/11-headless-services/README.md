@@ -40,11 +40,24 @@ The lab folder is - `/containerlab/headless-services`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [headless-services.clab.yaml](headless-services.clab.yaml) | ContainerLab topology defining the Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [headless-services-no-cni.yaml](headless-services-no-cni.yaml) | Headless services cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/01-statefulset-headless.yaml](tools/01-statefulset-headless.yaml) | Redis StatefulSet with headless service |
 | [tools/02-deployment-services.yaml](tools/02-deployment-services.yaml) | Deployment with ClusterIP and headless services |
 | [tools/03-multitool.yaml](tools/03-multitool.yaml) | Multitool pod for DNS testing |

@@ -78,16 +78,33 @@ The lab folder is - `/containerlab/22-ipvlan`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
 | [calico-cni-config/ipvlan-l2-nad.yaml](calico-cni-config/ipvlan-l2-nad.yaml) | NetworkAttachmentDefinition for IPvlan L2 mode |
 | [calico-cni-config/ipvlan-l3-nad.yaml](calico-cni-config/ipvlan-l3-nad.yaml) | NetworkAttachmentDefinition for IPvlan L3 mode |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/ipvlan-l2-pod.yaml](tools/ipvlan-l2-pod.yaml) | Pod with IPvlan L2 secondary interface |
 | [tools/ipvlan-l3-pod.yaml](tools/ipvlan-l3-pod.yaml) | Pod with IPvlan L3 secondary interface |
 | [tools/ipvlan-comparison-pods.yaml](tools/ipvlan-comparison-pods.yaml) | Pods for comparing IPvlan L2 vs L3 modes |
+
+**Startup Configs**
+| File | Description |
+|------|-------------|
 | [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises

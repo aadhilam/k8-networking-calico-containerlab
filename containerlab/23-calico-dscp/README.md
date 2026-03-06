@@ -84,14 +84,31 @@ The lab folder is - `/containerlab/23-calico-dscp`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
 | [calico-cni-config/bgpconfiguration.yaml](calico-cni-config/bgpconfiguration.yaml) | BGP Configuration resource |
 | [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml) | BGP Peer resource for Arista switch peering |
+
+**Kubernetes Manifests**
+| File | Description |
+|------|-------------|
 | [k8s-manifests/sender-pod.yaml](k8s-manifests/sender-pod.yaml) | Sender pod for DSCP traffic testing |
+
+**Startup Configs**
+| File | Description |
+|------|-------------|
 | [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Deployment

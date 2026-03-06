@@ -35,11 +35,24 @@ The lab folder is - `/containerlab/03-pod-routing`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [pod-routing.clab.yaml](pod-routing.clab.yaml) | ContainerLab topology defining the 3-node Kind cluster |
-| [pod-routing-no-cni.yaml](pod-routing-no-cni.yaml) | Pod routing configuration without CNI |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
+| [pod-routing-no-cni.yaml](pod-routing-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/multitool-1.yaml](tools/multitool-1.yaml) | First multitool DaemonSet for connectivity testing |
 | [tools/multitool-2.yaml](tools/multitool-2.yaml) | Second multitool DaemonSet for connectivity testing |
 | [tools/multitool-pod.yaml](tools/multitool-pod.yaml) | Multitool test pod manifest |

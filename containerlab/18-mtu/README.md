@@ -67,13 +67,30 @@ The lab folder is - `/containerlab/18-mtu`
 
 ## Manifest Files
 
+**ContainerLab**
 | File | Description |
 |------|-------------|
 | [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+
+**Kind Cluster**
+| File | Description |
+|------|-------------|
 | [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+
+**Calico CNI**
+| File | Description |
+|------|-------------|
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM and MTU configuration |
+
+**Tools**
+| File | Description |
+|------|-------------|
 | [tools/01-netshoot-server.yaml](tools/01-netshoot-server.yaml) | Netshoot server pod for MTU testing |
 | [tools/02-netshoot-client.yaml](tools/02-netshoot-client.yaml) | Netshoot client pod for MTU testing |
+
+**Startup Configs**
+| File | Description |
+|------|-------------|
 | [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Deployment
