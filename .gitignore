@@ -43,6 +43,9 @@ license-tokens.yml
 #vscode
 .vscode/
 
+# Cursor
+.cursor/
+
 notes.txt
 notes
 container-labs.code-workspace
