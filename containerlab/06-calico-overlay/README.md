@@ -29,6 +29,7 @@ The lab folder is - `/containerlab/06-calico-overlay`
 | [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and 4-node Kind cluster |
 | [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with VXLAN CrossSubnet configuration |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises
 

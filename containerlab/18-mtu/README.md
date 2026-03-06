@@ -74,6 +74,7 @@ The lab folder is - `/containerlab/18-mtu`
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM and MTU configuration |
 | [tools/01-netshoot-server.yaml](tools/01-netshoot-server.yaml) | Netshoot server pod for MTU testing |
 | [tools/02-netshoot-client.yaml](tools/02-netshoot-client.yaml) | Netshoot client pod for MTU testing |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Deployment
 

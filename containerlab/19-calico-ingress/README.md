@@ -70,6 +70,7 @@ The lab folder is - `/containerlab/19-calico-ingress`
 | [k8s-manifests/httproute.yaml](k8s-manifests/httproute.yaml) | HTTPRoute for traffic routing and canary splits |
 | [k8s-manifests/reference-grant.yaml](k8s-manifests/reference-grant.yaml) | ReferenceGrant for cross-namespace Gateway access |
 | [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises
 

@@ -27,6 +27,7 @@ The lab folder is - `/containerlab/09-multi-ippool`
 | [tools/multitool-1.yaml](tools/multitool-1.yaml) | First multitool DaemonSet |
 | [tools/multitool-2.yaml](tools/multitool-2.yaml) | Second multitool DaemonSet with secondary IP pool annotation |
 | [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment manifest |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises
 

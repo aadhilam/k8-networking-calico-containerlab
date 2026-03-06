@@ -88,6 +88,7 @@ The lab folder is - `/containerlab/22-ipvlan`
 | [tools/ipvlan-l2-pod.yaml](tools/ipvlan-l2-pod.yaml) | Pod with IPvlan L2 secondary interface |
 | [tools/ipvlan-l3-pod.yaml](tools/ipvlan-l3-pod.yaml) | Pod with IPvlan L3 secondary interface |
 | [tools/ipvlan-comparison-pods.yaml](tools/ipvlan-comparison-pods.yaml) | Pods for comparing IPvlan L2 vs L3 modes |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises
 

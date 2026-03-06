@@ -64,6 +64,7 @@ The lab folder is - `/containerlab/20-ingress-tls`
 | [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
 | [tls-config/cluster-issuers.yaml](tls-config/cluster-issuers.yaml) | cert-manager ClusterIssuers for CA and self-signed |
 | [tls-config/certificates.yaml](tls-config/certificates.yaml) | TLS certificate resources for domain certificates |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises
 

@@ -92,6 +92,7 @@ The lab folder is - `/containerlab/23-calico-dscp`
 | [calico-cni-config/bgpconfiguration.yaml](calico-cni-config/bgpconfiguration.yaml) | BGP Configuration resource |
 | [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml) | BGP Peer resource for Arista switch peering |
 | [k8s-manifests/sender-pod.yaml](k8s-manifests/sender-pod.yaml) | Sender pod for DSCP traffic testing |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Deployment
 

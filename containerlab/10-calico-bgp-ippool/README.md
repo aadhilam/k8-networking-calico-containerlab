@@ -25,6 +25,7 @@ The lab folder is - `/containerlab/10-calico-bgp-ippool`
 | [tools/multitool-1.yaml](tools/multitool-1.yaml) | First multitool DaemonSet |
 | [tools/multitool-2.yaml](tools/multitool-2.yaml) | Second multitool DaemonSet |
 | [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment manifest |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises
 
@@ -272,7 +273,7 @@ spec:
 
 #### 3.3 Verify BGP configuration in the ToR
 
-The BGP configuration on the Arista cEOS router can be found in the startup configuration file: [ceos01-startup-config.cfg](./startup-config/ceos01-startup-config.cfg)
+The BGP configuration on the Arista cEOS router can be found in the startup configuration file: [`ceos01-startup-config.config`](startup-configs/ceos01-startup-config.config)
 
 ```bash
 docker exec -it clab-calico-bgp-lb-ceos01 Cli

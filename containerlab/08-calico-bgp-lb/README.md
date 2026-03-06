@@ -22,6 +22,7 @@ The lab folder is - `/containerlab/08-calico-bgp-lb`
 | [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
 | [k8s-manifests/lb-nginx-service.yaml](k8s-manifests/lb-nginx-service.yaml) | LoadBalancer type service for nginx |
 | [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment manifest |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Lab Exercises
 

@@ -208,6 +208,7 @@ The lab folder is - `/containerlab/14-calico-ipv6`
 | [dual-stack-no-cni.yaml](dual-stack-no-cni.yaml) | Dual-stack Kind cluster configuration without CNI |
 | [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with dual-stack IP pools |
 | [tools/multitool-pod.yaml](tools/multitool-pod.yaml) | Multitool test pod for network inspection |
+| [startup-configs/ceos01-startup-config.config](startup-configs/ceos01-startup-config.config) | Arista cEOS switch startup configuration |
 
 ## Deployment
 
@@ -637,7 +638,7 @@ kubectl exec -it <pod> -- netstat -tlnp
 
 ### cEOS Switch Configuration
 
-The cEOS switch configuration can be found at `startup-configs/ceos01-startup-config.config`.
+The cEOS switch configuration can be found at [`startup-configs/ceos01-startup-config.config`](startup-configs/ceos01-startup-config.config).
 
 Key configurations:
 - **VLAN 10**: Connects to all Kubernetes nodes
