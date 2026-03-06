@@ -65,6 +65,16 @@ This lab setup helps visualize MTU mismatch issues between container network int
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/18-mtu`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM and MTU configuration |
+| [tools/01-netshoot-server.yaml](tools/01-netshoot-server.yaml) | Netshoot server pod for MTU testing |
+| [tools/02-netshoot-client.yaml](tools/02-netshoot-client.yaml) | Netshoot client pod for MTU testing |
+
 ## Deployment
 
 ```bash
@@ -74,10 +84,10 @@ chmod +x deploy.sh
 ```
 
 The script deploys:
-- An Arista cEOS switch with 9000 byte MTU on VLAN interfaces
-- A 4-node Kind cluster (nodes in two subnets/VLANs)
+- An Arista cEOS switch with 9000 byte MTU on VLAN interfaces ([topology.clab.yaml](topology.clab.yaml))
+- A 4-node Kind cluster (nodes in two subnets/VLANs) ([k01-no-cni.yaml](k01-no-cni.yaml))
 - Calico CNI with **default MTU** (1450 - not explicitly configured)
-- Two netshoot pods for testing (client on worker, server on worker3)
+- Two netshoot pods for testing (client on worker, server on worker3) via [tools/01-netshoot-server.yaml](tools/01-netshoot-server.yaml) and [tools/02-netshoot-client.yaml](tools/02-netshoot-client.yaml)
 
 ## Lab Exercises
 
@@ -222,7 +232,7 @@ ping: local error: message too long, mtu=1450
 
 #### 1.7 Fix: Configure MTU in Calico Installation Resource
 
-To support jumbo frames, we need to configure the MTU in Calico's Installation resource. The MTU should be set to account for VXLAN overhead (50 bytes):
+To support jumbo frames, we need to configure the MTU in Calico's Installation resource ([calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml)). The MTU should be set to account for VXLAN overhead (50 bytes):
 
 ```
 Pod MTU = Physical MTU - VXLAN Overhead
@@ -240,7 +250,7 @@ installation.operator.tigera.io/default patched
 
 #### 1.8 Restart Pods to Apply New MTU
 
-The MTU change only applies to new pods. Delete and recreate the test pods:
+The MTU change only applies to new pods. Delete and recreate the test pods using [tools/01-netshoot-server.yaml](tools/01-netshoot-server.yaml) and [tools/02-netshoot-client.yaml](tools/02-netshoot-client.yaml):
 
 ```bash
 kubectl delete pod netshoot-client netshoot-server

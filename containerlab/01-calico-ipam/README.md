@@ -22,16 +22,24 @@ Calico's IPAM provides efficient IP allocation by pre-allocating IP blocks to no
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/01-calico-ipam`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [calico-ipam.clab.yaml](calico-ipam.clab.yaml) | ContainerLab topology defining the 3-node Kind cluster |
+| [calico-ipam-no-cni.yaml](calico-ipam-no-cni.yaml) | Calico IPAM configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM and IP pool configuration |
+
 ## Deployment
 
 The `deploy.sh` script automates the complete lab setup process:
 
-1. **ContainerLab Topology Deployment**: Creates a 3-node Kind cluster using the `calico-ipam.clab.yaml` configuration
+1. **ContainerLab Topology Deployment**: Creates a 3-node Kind cluster using the [`calico-ipam.clab.yaml`](calico-ipam.clab.yaml) configuration
 2. **Kubeconfig Setup**: Exports the Kind cluster's kubeconfig for kubectl access
 3. **Calico Installation**: Downloads and installs calicoctl, then deploys Calico CNI components:
    - Calico Operator CRDs
    - Tigera Operator
-   - Custom Calico resources with IPAM configuration
+   - [Custom Calico resources](calico-cni-config/custom-resources.yaml) with IPAM configuration
 4. **Verification**: Waits for all Calico components to become available before completion
 
 Deploy the lab using:
@@ -42,7 +50,7 @@ chmod +x deploy.sh
 
 ### Calico CNI Configuration
 
-The Calico installation uses a custom Installation resource that defines the pod network configuration. Key considerations for the CIDR selection:
+The Calico installation uses a custom Installation resource ([`custom-resources.yaml`](calico-cni-config/custom-resources.yaml)) that defines the pod network configuration. Key considerations for the CIDR selection:
 
 **Default IP Pool CIDR: 192.168.0.0/16**
 - **Size**: Provides 65,536 IP addresses (sufficient for large clusters)
@@ -148,7 +156,7 @@ Output:
 +----------+-------------------+------------+------------+-------------------+
 ```
 
-This shows the IP pool configuration from your custom-resources.yaml.
+This shows the IP pool configuration from your [`custom-resources.yaml`](calico-cni-config/custom-resources.yaml).
 
 - **CIDR**: The overall pod network range (192.168.0.0/16)
 - **IPs TOTAL**: Total available IP addresses in the pool (65,536)

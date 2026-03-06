@@ -12,6 +12,21 @@ In this lab, we will look at how multiple IP pools can be used to allocate IP ad
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/09-multi-ippool`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with dual IP pool configuration |
+| [calico-cni-config/bgpconfiguration-lb.yaml](calico-cni-config/bgpconfiguration-lb.yaml) | BGP Configuration with LoadBalancer advertisement |
+| [calico-cni-config/bgpconfiguration-no-lb.yaml](calico-cni-config/bgpconfiguration-no-lb.yaml) | BGP Configuration without LoadBalancer advertisement |
+| [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml) | BGP Peer resource for Arista switch peering |
+| [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
+| [k8s-manifests/lb-nginx-service.yaml](k8s-manifests/lb-nginx-service.yaml) | LoadBalancer type service for nginx |
+| [tools/multitool-1.yaml](tools/multitool-1.yaml) | First multitool DaemonSet |
+| [tools/multitool-2.yaml](tools/multitool-2.yaml) | Second multitool DaemonSet with secondary IP pool annotation |
+| [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment manifest |
 
 ## Lab Exercises
 

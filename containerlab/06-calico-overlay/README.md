@@ -22,6 +22,14 @@ Demonstrates how Calico handles pod-to-pod communication when Kubernetes nodes a
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/06-calico-overlay`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and 4-node Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with VXLAN CrossSubnet configuration |
+
 ## Lab Exercises
 
 > [!Note]

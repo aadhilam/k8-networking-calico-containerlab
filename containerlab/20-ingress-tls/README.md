@@ -45,6 +45,26 @@ To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/20-ingress-tls`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [calico-cni-config/gatewayapi.yaml](calico-cni-config/gatewayapi.yaml) | Gateway API configuration for Calico |
+| [calico-cni-config/bgpconfiguration.yaml](calico-cni-config/bgpconfiguration.yaml) | BGP Configuration resource |
+| [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml) | BGP Peer resource for Arista switch peering |
+| [k8s-manifests/gateway.yaml](k8s-manifests/gateway.yaml) | TLS Gateway resource definition |
+| [k8s-manifests/httproutes.yaml](k8s-manifests/httproutes.yaml) | HTTPRoutes for host-based traffic routing |
+| [k8s-manifests/reference-grant.yaml](k8s-manifests/reference-grant.yaml) | ReferenceGrant for cross-namespace Gateway access |
+| [k8s-manifests/app-store.yaml](k8s-manifests/app-store.yaml) | Store application deployment and service |
+| [k8s-manifests/app-blog.yaml](k8s-manifests/app-blog.yaml) | Blog application deployment and service |
+| [k8s-manifests/app-api.yaml](k8s-manifests/app-api.yaml) | API application deployment and service |
+| [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
+| [tls-config/cluster-issuers.yaml](tls-config/cluster-issuers.yaml) | cert-manager ClusterIssuers for CA and self-signed |
+| [tls-config/certificates.yaml](tls-config/certificates.yaml) | TLS certificate resources for domain certificates |
+
 ## Lab Exercises
 
 > [!Note]
@@ -296,7 +316,7 @@ namespace/cert-manager-demo created
 
 #### 3.2 Examine the Store Application
 
-First, examine the Store application manifest:
+First, examine the [Store application manifest](k8s-manifests/app-store.yaml):
 
 ```bash
 cat k8s-manifests/app-store.yaml
@@ -322,7 +342,7 @@ service/store created
 
 #### 3.4 Deploy the Blog Application
 
-Examine and deploy the Blog application:
+Examine and deploy the [Blog application](k8s-manifests/app-blog.yaml):
 
 ```bash
 cat k8s-manifests/app-blog.yaml
@@ -340,7 +360,7 @@ service/blog created
 
 #### 3.5 Deploy the API Application
 
-Examine and deploy the API application:
+Examine and deploy the [API application](k8s-manifests/app-api.yaml):
 
 ```bash
 cat k8s-manifests/app-api.yaml
@@ -395,13 +415,13 @@ In this phase, you'll create ClusterIssuers that define how certificates are obt
 
 #### 4.1 Understand ClusterIssuers
 
-Examine the ClusterIssuer manifest:
+Examine the [ClusterIssuer manifest](tls-config/cluster-issuers.yaml):
 
 ```bash
 cat tls-config/cluster-issuers.yaml
 ```
 
-This file contains two issuers for the lab:
+The [cluster-issuers.yaml](tls-config/cluster-issuers.yaml) file contains two issuers for the lab:
 
 | Issuer | Purpose |
 |--------|---------|
@@ -474,13 +494,13 @@ Now you'll create Certificate resources that request certificates from our Lab C
 
 #### 5.1 Understand the Certificate Resources
 
-Examine the certificates manifest:
+Examine the [certificates manifest](tls-config/certificates.yaml):
 
 ```bash
 cat tls-config/certificates.yaml
 ```
 
-This file defines three certificates in a specific order:
+The [certificates.yaml](tls-config/certificates.yaml) file defines three certificates in a specific order:
 
 **1. Lab CA Certificate** (creates the root CA - must be created first):
 
@@ -769,7 +789,7 @@ In this final configuration phase, you'll create the Gateway with TLS listeners 
 
 #### 6.1 Understand the TLS Gateway
 
-Examine the Gateway manifest:
+Examine the [Gateway manifest](k8s-manifests/gateway.yaml):
 
 ```bash
 cat k8s-manifests/gateway.yaml
@@ -860,7 +880,7 @@ Look for the listener statuses - all should show `Attached: True` and `ResolvedR
 
 #### 6.5 Create the ReferenceGrant
 
-The Gateway needs permission to reference secrets in the `cert-manager-demo` namespace. Examine and create the ReferenceGrant:
+The Gateway needs permission to reference secrets in the `cert-manager-demo` namespace. Examine and create the [ReferenceGrant](k8s-manifests/reference-grant.yaml):
 
 ```bash
 cat k8s-manifests/reference-grant.yaml
@@ -876,7 +896,7 @@ referencegrant.gateway.networking.k8s.io/allow-gateway-secrets created
 
 #### 6.6 Understand HTTPRoutes
 
-Examine the HTTPRoutes manifest:
+Examine the [HTTPRoutes manifest](k8s-manifests/httproutes.yaml):
 
 ```bash
 cat k8s-manifests/httproutes.yaml

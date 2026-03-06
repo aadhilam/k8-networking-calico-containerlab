@@ -9,6 +9,23 @@ This lab demonstrates how to advertise Calico IP pools to external networks usin
 To setup the lab for this module [Lab setup](../readme.md#lab-setup)
 The lab folder is - `/containerlab/10-calico-bgp-ippool`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster across two VLANs |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [calico-cni-config/bgpconfiguration-lb.yaml](calico-cni-config/bgpconfiguration-lb.yaml) | BGP Configuration with LoadBalancer advertisement |
+| [calico-cni-config/bgpconfiguration-no-lb.yaml](calico-cni-config/bgpconfiguration-no-lb.yaml) | BGP Configuration without LoadBalancer advertisement |
+| [calico-cni-config/bgppeer-vlan-10.yaml](calico-cni-config/bgppeer-vlan-10.yaml) | BGP Peer resource for VLAN 10 nodes |
+| [calico-cni-config/bgppeer-vlan-20.yaml](calico-cni-config/bgppeer-vlan-20.yaml) | BGP Peer resource for VLAN 20 nodes |
+| [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
+| [k8s-manifests/lb-nginx-service.yaml](k8s-manifests/lb-nginx-service.yaml) | LoadBalancer type service for nginx |
+| [tools/multitool-1.yaml](tools/multitool-1.yaml) | First multitool DaemonSet |
+| [tools/multitool-2.yaml](tools/multitool-2.yaml) | Second multitool DaemonSet |
+| [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment manifest |
+
 ## Lab Exercises
 
 > [!Note]
@@ -84,7 +101,7 @@ k01-worker3         Ready    <none>          12m   v1.32.2
 
 #### 2.1 Verify the multiple IP pools configured in the `installation` resource
 
-The following IP pools were configured in the installation resource. The installation resource can be found in the following file. [custom-resources.yaml][customResourcesDefinition]
+The following IP pools were configured in the installation resource. The installation resource can be found in [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml).
 
 ```yaml
   calicoNetwork:
@@ -153,7 +170,7 @@ The topology diagram for this cluster setup is as follows:
 
 #### 3.1 Verify the `bgpconfiguration` Resource
 
-The BGP configuration resource can be found in [calico-cni-config/bgp-configuration.yaml](./calico-cni-config/bgp-configuration.yaml).
+The BGP configuration resource can be found in [calico-cni-config/bgpconfiguration-lb.yaml](calico-cni-config/bgpconfiguration-lb.yaml).
 
 ```bash
 kubectl get bgpconfiguration default -o yaml
@@ -198,8 +215,8 @@ The BGP peer resources are used to create BGP peerings from the Kubernetes clust
 
 The BGP peer resources are used to create BGP peerings from the Kubernetes cluster to the upstream network. Let's verify the BGP peers for this lab.
 
-- [BGP peers for control, worker1 and worker2 which are in subnet or VLAN 10](containerlab/10-calico-bgp-ippool/calico-cni-config/bgppeer-vlan-10.yaml)
-- [BGP peer for worker3 which is in VLAN 20](containerlab/10-calico-bgp-ippool/calico-cni-config/bgppeer-vlan-20.yaml)
+- [BGP peers for control, worker1 and worker2 which are in subnet or VLAN 10](calico-cni-config/bgppeer-vlan-10.yaml)
+- [BGP peer for worker3 which is in VLAN 20](calico-cni-config/bgppeer-vlan-20.yaml)
 
 The reason that there are two BGP peers is because the top of rack switch or the BGP peer IP is different for the two VLANs that we have in this topology.
 

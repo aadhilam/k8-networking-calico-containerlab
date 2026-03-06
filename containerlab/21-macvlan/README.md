@@ -75,6 +75,17 @@ The lab folder is - `/containerlab/21-macvlan`
    
    **Note**: You will need to manually apply the macvlan NetworkAttachmentDefinition (see step 6 below)
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [calico-cni-config/macvlan-nad.yaml](calico-cni-config/macvlan-nad.yaml) | NetworkAttachmentDefinition for MACVLAN secondary network |
+| [tools/macvlan-pod.yaml](tools/macvlan-pod.yaml) | Pod with MACVLAN secondary interface |
+| [tools/macvlan-daemonset.yaml](tools/macvlan-daemonset.yaml) | DaemonSet with MACVLAN secondary interfaces |
+
 3. Export the kubeconfig:
    ```bash
    export KUBECONFIG=$(pwd)/k01.kubeconfig
@@ -83,6 +94,8 @@ The lab folder is - `/containerlab/21-macvlan`
 ## Lab Exercises
 
 ### 1. Inspect ContainerLab Topology
+
+Inspect [topology.clab.yaml](topology.clab.yaml) to verify the lab topology:
 
 ```bash
 containerlab inspect topology.clab.yaml
@@ -346,7 +359,7 @@ portmap
 
 ### 6. Create Macvlan NetworkAttachmentDefinition
 
-Before deploying pods with macvlan interfaces, create a NetworkAttachmentDefinition:
+Before deploying pods with macvlan interfaces, create a NetworkAttachmentDefinition. Review [calico-cni-config/macvlan-nad.yaml](calico-cni-config/macvlan-nad.yaml):
 
 ```bash
 cat calico-cni-config/macvlan-nad.yaml
@@ -391,7 +404,7 @@ spec:
 - `passthru`: Single container gets full interface access
 - `private`: No communication between same-host macvlan interfaces
 
-Apply the NetworkAttachmentDefinition:
+Apply [calico-cni-config/macvlan-nad.yaml](calico-cni-config/macvlan-nad.yaml):
 
 ```bash
 kubectl apply -f calico-cni-config/macvlan-nad.yaml
@@ -408,6 +421,8 @@ vlan20-macvlan   5s
 
 > [!Important]
 > Complete step 6 first. Pods will fail if the NetworkAttachmentDefinition doesn't exist.
+
+Review [tools/macvlan-pod.yaml](tools/macvlan-pod.yaml):
 
 ```bash
 cat tools/macvlan-pod.yaml
@@ -429,7 +444,7 @@ spec:
     command: ["sleep", "infinity"]
 ```
 
-The annotation `k8s.v1.cni.cncf.io/networks: vlan20-macvlan` tells Multus to attach a secondary macvlan interface.
+The annotation `k8s.v1.cni.cncf.io/networks: vlan20-macvlan` tells Multus to attach a secondary macvlan interface. Apply [tools/macvlan-pod.yaml](tools/macvlan-pod.yaml):
 
 ```bash
 kubectl apply -f tools/macvlan-pod.yaml
@@ -533,7 +548,7 @@ Output:
 > [!Important]
 > Ensure the NetworkAttachmentDefinition from step 6 exists.
 
-Deploy a DaemonSet to test macvlan on all nodes:
+Apply [tools/macvlan-daemonset.yaml](tools/macvlan-daemonset.yaml) to deploy a DaemonSet and test macvlan on all nodes:
 
 ```bash
 kubectl apply -f tools/macvlan-daemonset.yaml

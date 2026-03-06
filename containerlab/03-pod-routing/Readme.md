@@ -33,17 +33,28 @@ Cross-node pod communication introduces additional complexity requiring cluster-
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/03-pod-routing`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [pod-routing.clab.yaml](pod-routing.clab.yaml) | ContainerLab topology defining the 3-node Kind cluster |
+| [pod-routing-no-cni.yaml](pod-routing-no-cni.yaml) | Pod routing configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [tools/multitool-1.yaml](tools/multitool-1.yaml) | First multitool DaemonSet for connectivity testing |
+| [tools/multitool-2.yaml](tools/multitool-2.yaml) | Second multitool DaemonSet for connectivity testing |
+| [tools/multitool-pod.yaml](tools/multitool-pod.yaml) | Multitool test pod manifest |
+
 ## Deployment
 
 The `deploy.sh` script automates the complete lab setup process:
 
-1. **ContainerLab Topology Deployment**: Creates a 3-node Kind cluster using the `pod-routing.clab.yaml` configuration
+1. **ContainerLab Topology Deployment**: Creates a 3-node Kind cluster using the [`pod-routing.clab.yaml`](pod-routing.clab.yaml) configuration
 2. **Kubeconfig Setup**: Exports the Kind cluster's kubeconfig for kubectl access
 3. **Calico Installation**: Downloads and installs calicoctl, then deploys Calico CNI components:
    - Calico Operator CRDs
    - Tigera Operator
-   - Custom Calico resources with IPAM configuration
-4. **Test Pod Deployment**: Deploys two multitool DaemonSets for connectivity testing
+   - [Custom Calico resources](calico-cni-config/custom-resources.yaml) with IPAM configuration
+4. **Test Pod Deployment**: Deploys [two multitool DaemonSets](tools/) for connectivity testing
 5. **Verification**: Waits for all Calico components to become available before completion
 
 

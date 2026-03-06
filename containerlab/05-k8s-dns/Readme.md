@@ -17,6 +17,18 @@ In Kubernetes, DNS is a foundational service that enables reliable service-to-se
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/05-k8s-dns`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [k8s-dns.clab.yaml](k8s-dns.clab.yaml) | ContainerLab topology defining the Kind cluster |
+| [k8s-dns-no-cni.yaml](k8s-dns-no-cni.yaml) | K8s DNS configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [tools/multitool-1.yaml](tools/multitool-1.yaml) | First multitool DaemonSet in default namespace |
+| [tools/multitool-2.yaml](tools/multitool-2.yaml) | Second multitool DaemonSet in default namespace |
+| [tools/multitool-3.yaml](tools/multitool-3.yaml) | Third multitool DaemonSet in foo namespace |
+| [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment with ClusterIP service |
+
 ## Lab Exercises
 
 After deployment, verify the cluster is ready by checking the ContainerLab topology status:

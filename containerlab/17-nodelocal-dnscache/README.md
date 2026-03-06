@@ -95,6 +95,16 @@ To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/17-nodelocal-dnscache`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [k01.clab.yaml](k01.clab.yaml) | ContainerLab topology defining the Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [nodelocal-dnscache/nodelocaldns.yaml](nodelocal-dnscache/nodelocaldns.yaml) | NodeLocal DNSCache DaemonSet manifest |
+| [tools/dns-test-pod.yaml](tools/dns-test-pod.yaml) | DNS test pod for cache validation |
+
 ## Deployment
 
 The `deploy.sh` script deploys a 3-node Kind cluster with Calico CNI. **NodeLocal DNSCache is NOT installed** - you will deploy it manually as part of this lab.
@@ -167,7 +177,7 @@ Currently, all DNS queries go to `10.96.0.10`, which is handled by CoreDNS pods 
 
 Now you'll deploy NodeLocal DNSCache following the [official Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/).
 
-The manifest is provided in the `nodelocal-dnscache/` folder. Copy it to your working directory:
+The manifest ([nodelocal-dnscache/nodelocaldns.yaml](nodelocal-dnscache/nodelocaldns.yaml)) is provided in the `nodelocal-dnscache/` folder. Copy it to your working directory:
 
 ```bash
 cp nodelocal-dnscache/nodelocaldns.yaml .

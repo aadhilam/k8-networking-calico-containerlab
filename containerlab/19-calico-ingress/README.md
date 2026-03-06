@@ -54,6 +54,23 @@ To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/19-calico-ingress`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [calico-cni-config/gatewayapi.yaml](calico-cni-config/gatewayapi.yaml) | Gateway API configuration for Calico |
+| [calico-cni-config/bgpconfiguration.yaml](calico-cni-config/bgpconfiguration.yaml) | BGP Configuration resource |
+| [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml) | BGP Peer resource for Arista switch peering |
+| [k8s-manifests/app-v1.yaml](k8s-manifests/app-v1.yaml) | Application v1 deployment and service |
+| [k8s-manifests/app-v2.yaml](k8s-manifests/app-v2.yaml) | Application v2 deployment and service |
+| [k8s-manifests/gateway.yaml](k8s-manifests/gateway.yaml) | Gateway resource definition |
+| [k8s-manifests/httproute.yaml](k8s-manifests/httproute.yaml) | HTTPRoute for traffic routing and canary splits |
+| [k8s-manifests/reference-grant.yaml](k8s-manifests/reference-grant.yaml) | ReferenceGrant for cross-namespace Gateway access |
+| [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
+
 ## Lab Exercises
 
 > [!Note]
@@ -836,7 +853,7 @@ These three resources work together to create a complete ingress solution. Under
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Gateway Resource (`gateway.yaml`)**
+**Gateway Resource ([gateway.yaml](k8s-manifests/gateway.yaml))**
 
 The **Gateway** is the entry point for external traffic into the cluster. It defines:
 
@@ -863,7 +880,7 @@ When this Gateway is created, Calico:
 2. Creates a LoadBalancer service that gets an IP from the BGP-advertised pool
 3. Configures the Envoy to listen on the specified port
 
-**HTTPRoute Resource (`httproute.yaml`)**
+**HTTPRoute Resource ([httproute.yaml](k8s-manifests/httproute.yaml))**
 
 The **HTTPRoute** defines how incoming traffic should be routed to backend services. It:
 
@@ -899,7 +916,7 @@ spec:
 
 **Important**: Notice that the HTTPRoute is in the `default` namespace, but it references Services in the `ingress-gateway-demo` namespace. This cross-namespace reference is not allowed by default for security reasons.
 
-**ReferenceGrant Resource (`reference-grant.yaml`)**
+**ReferenceGrant Resource ([reference-grant.yaml](k8s-manifests/reference-grant.yaml))**
 
 The **ReferenceGrant** is a security mechanism that explicitly authorizes cross-namespace references. It answers the question: *"Who is allowed to reference resources in my namespace?"*
 

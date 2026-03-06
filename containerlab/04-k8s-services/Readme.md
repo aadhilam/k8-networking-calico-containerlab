@@ -40,14 +40,23 @@ Key steps when you create/update a ClusterIP Service:
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/04-k8s-services`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [k8-services.clab.yaml](k8-services.clab.yaml) | ContainerLab topology defining the Kind cluster |
+| [k8-services-no-cni.yaml](k8-services-no-cni.yaml) | K8s services configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment with ClusterIP service |
+
 ## Deployment
 
-1. **ContainerLab Topology Deployment**: Creates a 3-node Kind cluster using the `k8s-services.clab.yaml` configuration
+1. **ContainerLab Topology Deployment**: Creates a 3-node Kind cluster using the [`k8-services.clab.yaml`](k8-services.clab.yaml) configuration
 2. **Kubeconfig Setup**: Exports the Kind cluster's kubeconfig for kubectl access
 3. **Calico Installation**: Downloads and installs calicoctl, then deploys Calico CNI components:
     - Calico Operator CRDs
     - Tigera Operator
-    - Custom Calico resources with IPAM configuration
+    - [Custom Calico resources](calico-cni-config/custom-resources.yaml) with IPAM configuration
 4. **Test Pod Deployment**: Deploys two multitool DaemonSets for connectivity testing and an nginx deployment with a cluster-ip service for testing pod to service connectivity
 5. **Verification**: Waits for all Calico components to become available before completion
 

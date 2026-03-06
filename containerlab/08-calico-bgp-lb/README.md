@@ -9,6 +9,20 @@ This lab demonstrates Calico's BGP (Border Gateway Protocol) functionality. BGP 
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/08-calico-bgp-lb`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [calico-cni-config/bgpconfiguration-lb.yaml](calico-cni-config/bgpconfiguration-lb.yaml) | BGP Configuration with LoadBalancer service advertisement |
+| [calico-cni-config/bgpconfiguration-no-lb.yaml](calico-cni-config/bgpconfiguration-no-lb.yaml) | BGP Configuration without LoadBalancer advertisement |
+| [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml) | BGP Peer resource for Arista switch peering |
+| [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
+| [k8s-manifests/lb-nginx-service.yaml](k8s-manifests/lb-nginx-service.yaml) | LoadBalancer type service for nginx |
+| [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment manifest |
+
 ## Lab Exercises
 
 > [!Note]
@@ -76,7 +90,7 @@ Note that the cluster IP service for `nginx-service` is only accessible by workl
 
 Before we can create a ` type: LoadBalancer` service, we need to first create an IP pool that can be used to allocate IPs for such services. Note that this IP pool should be routable in your network and should not conflict with other subnets in your network.
 
-The load balancer IP pool definition for this lab is shown below.
+The load balancer IP pool definition for this lab is defined in [`lb-ippool.yaml`](k8s-manifests/lb-ippool.yaml) and shown below.
 ```yaml
 apiVersion: projectcalico.org/v3
 kind: IPPool
@@ -115,7 +129,7 @@ Once configured, Calico's IPAM controller will use the CIDR to allocate IPs to l
 
 #### 2.2 Create `type: LoadBalancer` Service
 
-The definition of the load balancer type service for `nginx-service` is provided below.
+The definition of the load balancer type service is defined in [`lb-nginx-service.yaml`](k8s-manifests/lb-nginx-service.yaml) and shown below.
 
 ```yaml
 apiVersion: v1
@@ -172,7 +186,7 @@ spec:
   - cidr: 172.16.0.240/28
 
 ```
-You can apply this manifest by using:
+You can apply this manifest ([`bgpconfiguration-lb.yaml`](calico-cni-config/bgpconfiguration-lb.yaml)) by using:
 
 ```
 kubectl apply -f ./calico-cni-config/bgpconfiguration-lb.yaml

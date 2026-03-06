@@ -31,6 +31,18 @@ metadata:
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/16-static-ip`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [k01.clab.yaml](k01.clab.yaml) | ContainerLab topology defining the Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [tools/01-dynamic-pod.yaml](tools/01-dynamic-pod.yaml) | Pod with dynamic IP allocation |
+| [tools/02-static-pod.yaml](tools/02-static-pod.yaml) | Pod with static IP assignment via Calico annotation |
+| [tools/03-duplicate-ip-pod.yaml](tools/03-duplicate-ip-pod.yaml) | Pod attempting duplicate static IP assignment |
+| [tools/04-ip-reservation.yaml](tools/04-ip-reservation.yaml) | Calico IP reservation resource |
+
 ## Deployment
 
 The `deploy.sh` script automates the complete lab setup:
@@ -73,7 +85,7 @@ default-ipv4-ippool   192.168.0.0/16
 
 ### 2. View the IP Reservation
 
-The deploy script already created an IP reservation for the `192.168.100.8/29` range (8 IPs: 192.168.100.8-15). This prevents Calico from automatically assigning IPs in this range, reserving them for static assignments.
+The deploy script already created an IP reservation for the `192.168.100.8/29` range (8 IPs: 192.168.100.8-15) using [tools/04-ip-reservation.yaml](tools/04-ip-reservation.yaml). This prevents Calico from automatically assigning IPs in this range, reserving them for static assignments.
 
 ```bash
 kubectl get ipreservations
@@ -95,7 +107,7 @@ spec:
 
 ### 3. Verify Dynamic Pod Has IP Outside Reserved Range
 
-The dynamic pod was deployed during setup. Notice its IP is NOT in the reserved `192.168.100.8/29` range:
+The dynamic pod ([tools/01-dynamic-pod.yaml](tools/01-dynamic-pod.yaml)) was deployed during setup. Notice its IP is NOT in the reserved `192.168.100.8/29` range:
 
 ```bash
 kubectl get pod dynamic-pod -o wide
@@ -111,7 +123,7 @@ dynamic-pod   1/1     Running   0          10s   192.168.x.x     k01-worker
 
 ### 4. Deploy a Pod with Static IP
 
-Now deploy a pod with a specific static IP address using the Calico annotation.
+Now deploy a pod with a specific static IP address using the Calico annotation in [tools/02-static-pod.yaml](tools/02-static-pod.yaml).
 
 ```bash
 kubectl apply -f tools/02-static-pod.yaml
@@ -168,7 +180,7 @@ PING 192.168.100.10 (192.168.100.10): 56 data bytes
 
 ### 7. Attempt to Use an Already Assigned IP
 
-Let's see what happens when we try to create another pod with the same static IP:
+Let's see what happens when we try to create another pod with the same static IP using [tools/03-duplicate-ip-pod.yaml](tools/03-duplicate-ip-pod.yaml):
 
 ```bash
 kubectl apply -f tools/03-duplicate-ip-pod.yaml
@@ -202,7 +214,7 @@ kubectl delete pod duplicate-pod
 
 ### 8. Delete and Recreate Pod with Same Static IP
 
-Static IPs persist through pod deletion and recreation. Let's verify:
+Static IPs persist through pod deletion and recreation. Let's verify using [tools/02-static-pod.yaml](tools/02-static-pod.yaml):
 
 ```bash
 # Delete the static pod

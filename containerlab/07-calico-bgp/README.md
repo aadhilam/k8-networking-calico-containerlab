@@ -9,6 +9,16 @@ This lab demonstrates Calico's BGP (Border Gateway Protocol) functionality. BGP 
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/07-calico-bgp`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [calico-cni-config/bgpconfiguration.yaml](calico-cni-config/bgpconfiguration.yaml) | Calico BGP Configuration with AS number and mesh settings |
+| [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml) | BGP Peer resource for Arista switch peering |
+
 ## Lab Exercises
 
 > [!Note]
@@ -49,7 +59,7 @@ k01-worker          Ready    <none>          46m   v1.32.2
 k01-worker2         Ready    <none>          46m   v1.32.2
 ```
 
-The following topology configuration can be seen in the `topology.clab.yaml` file.
+The following topology configuration can be seen in the [`topology.clab.yaml`](topology.clab.yaml) file.
 
 ```
     k01-control-plane:
@@ -83,6 +93,8 @@ The following topology configuration can be seen in the `topology.clab.yaml` fil
 
 BGP Configuration is a cluster-wide resource that controls global BGP settings for Calico, including the AS number, logging levels, and whether to enable the default node-to-node mesh. This resource determines how Calico nodes will participate in BGP routing throughout the cluster.
 
+This configuration is defined in [`bgpconfiguration.yaml`](calico-cni-config/bgpconfiguration.yaml).
+
 ```
 apiVersion: projectcalico.org/v3
 kind: BGPConfiguration
@@ -103,6 +115,8 @@ This BGP Configuration sets up Calico's global BGP behavior for the cluster:
 #### 2.2 BGP Peer
 
 BGP Peer resources define external BGP neighbors that Calico nodes should establish sessions with to exchange routing information. This allows Calico to advertise pod routes to external network infrastructure and receive routes from upstream routers.
+
+This configuration is defined in [`bgppeer.yaml`](calico-cni-config/bgppeer.yaml).
 
 ```
 apiVersion: projectcalico.org/v3

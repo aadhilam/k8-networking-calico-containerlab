@@ -34,6 +34,20 @@ To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 
 The lab folder is - `/containerlab/15-selective-bgp-peering`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [calico-cni-config/bgpconfiguration-lb.yaml](calico-cni-config/bgpconfiguration-lb.yaml) | BGP Configuration with LoadBalancer advertisement |
+| [calico-cni-config/bgpconfiguration-no-lb.yaml](calico-cni-config/bgpconfiguration-no-lb.yaml) | BGP Configuration without LoadBalancer advertisement |
+| [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml) | BGP Peer with node selector for selective peering |
+| [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml) | LoadBalancer IP pool definition |
+| [k8s-manifests/lb-nginx-service.yaml](k8s-manifests/lb-nginx-service.yaml) | LoadBalancer type service for nginx |
+| [tools/nginx-deployment.yaml](tools/nginx-deployment.yaml) | Nginx deployment manifest |
+
 ## Lab Exercises
 
 > [!Note]
@@ -41,7 +55,7 @@ The lab folder is - `/containerlab/15-selective-bgp-peering`
 
 ### 1. Inspect ContainerLab Topology
 
-First, let's inspect the lab topology.
+First, let's inspect the lab topology using [topology.clab.yaml](topology.clab.yaml).
 
 ```bash
 containerlab inspect topology.clab.yaml 
@@ -96,7 +110,7 @@ k01-worker2   Ready    <none>   10m   v1.32.2
 
 ### 3. Review BGPPeer Configuration
 
-The key to selective peering is the `nodeSelector` field in the BGPPeer resource. Let's examine the configuration:
+The key to selective peering is the `nodeSelector` field in the BGPPeer resource, defined in [calico-cni-config/bgppeer.yaml](calico-cni-config/bgppeer.yaml). Let's examine the configuration:
 
 ```
 kubectl get bgppeer bgppeer-arista -o yaml
@@ -124,6 +138,8 @@ Without this selector, all nodes would attempt to peer with the ToR, which is wh
 
 #### 4.1 Apply the Load Balancer IP Pool
 
+Apply [k8s-manifests/lb-ippool.yaml](k8s-manifests/lb-ippool.yaml):
+
 ```
 kubectl apply -f ./k8s-manifests/lb-ippool.yaml
 ```
@@ -142,6 +158,8 @@ loadbalancer-ip-pool   2025-01-01T10:05:00Z
 ```
 
 #### 4.2 Create LoadBalancer Service
+
+Apply [k8s-manifests/lb-nginx-service.yaml](k8s-manifests/lb-nginx-service.yaml):
 
 ```
 kubectl apply -f ./k8s-manifests/lb-nginx-service.yaml 
@@ -162,6 +180,8 @@ nginx-service      ClusterIP      10.96.98.120   <none>         80/TCP         1
 ```
 
 #### 4.3 Update BGP Configuration to Advertise LB IPs
+
+Apply [calico-cni-config/bgpconfiguration-lb.yaml](calico-cni-config/bgpconfiguration-lb.yaml):
 
 ```
 kubectl apply -f ./calico-cni-config/bgpconfiguration-lb.yaml 

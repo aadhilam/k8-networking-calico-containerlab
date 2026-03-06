@@ -64,23 +64,36 @@ The lab folder is - `/containerlab/22-ipvlan`
 
    This script will:
    - Import the Arista cEOS image if needed
-   - Deploy the ContainerLab topology
-   - Install Calico CNI
+   - Deploy the ContainerLab topology ([topology.clab.yaml](topology.clab.yaml))
+   - Install Calico CNI ([calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml))
    - Install Multus CNI
    - Install CNI plugins (including IPvlan)
    
-   **Note**: You will need to manually apply the IPvlan NetworkAttachmentDefinitions (see step 5 below)
+   **Note**: You will need to manually apply the IPvlan NetworkAttachmentDefinitions ([ipvlan-l2-nad.yaml](calico-cni-config/ipvlan-l2-nad.yaml) and [ipvlan-l3-nad.yaml](calico-cni-config/ipvlan-l3-nad.yaml)) (see step 5 below)
 
 3. Export the kubeconfig:
    ```bash
    export KUBECONFIG=$(pwd)/k01.kubeconfig
    ```
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [k01-no-cni.yaml](k01-no-cni.yaml) | Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [calico-cni-config/ipvlan-l2-nad.yaml](calico-cni-config/ipvlan-l2-nad.yaml) | NetworkAttachmentDefinition for IPvlan L2 mode |
+| [calico-cni-config/ipvlan-l3-nad.yaml](calico-cni-config/ipvlan-l3-nad.yaml) | NetworkAttachmentDefinition for IPvlan L3 mode |
+| [tools/ipvlan-l2-pod.yaml](tools/ipvlan-l2-pod.yaml) | Pod with IPvlan L2 secondary interface |
+| [tools/ipvlan-l3-pod.yaml](tools/ipvlan-l3-pod.yaml) | Pod with IPvlan L3 secondary interface |
+| [tools/ipvlan-comparison-pods.yaml](tools/ipvlan-comparison-pods.yaml) | Pods for comparing IPvlan L2 vs L3 modes |
+
 ## Lab Exercises
 
 ### 1. Inspect ContainerLab Topology
 
-First, let's inspect the lab topology.
+First, let's inspect the lab topology defined in [topology.clab.yaml](topology.clab.yaml).
 
 ```bash
 containerlab inspect topology.clab.yaml
@@ -387,7 +400,7 @@ Before deploying pods with IPvlan interfaces, we need to create NetworkAttachmen
 
 #### 5.1 IPvlan L2 Mode
 
-First, let's examine the IPvlan L2 NetworkAttachmentDefinition:
+First, let's examine the IPvlan L2 NetworkAttachmentDefinition in [calico-cni-config/ipvlan-l2-nad.yaml](calico-cni-config/ipvlan-l2-nad.yaml):
 
 ```bash
 cat calico-cni-config/ipvlan-l2-nad.yaml
@@ -437,7 +450,7 @@ IPvlan L2 mode:
 
 #### 5.2 IPvlan L3 Mode
 
-Now examine the IPvlan L3 NetworkAttachmentDefinition:
+Now examine the IPvlan L3 NetworkAttachmentDefinition in [calico-cni-config/ipvlan-l3-nad.yaml](calico-cni-config/ipvlan-l3-nad.yaml):
 
 ```bash
 cat calico-cni-config/ipvlan-l3-nad.yaml
@@ -484,7 +497,7 @@ IPvlan L3 mode:
 - **No IP conflicts**: Pods on different nodes will never get the same IP address
 - **Essential for IPvlan L3**: Even in L3 mode, IP conflicts would cause routing issues
 
-Now apply both NetworkAttachmentDefinitions:
+Now apply both NetworkAttachmentDefinitions from [ipvlan-l2-nad.yaml](calico-cni-config/ipvlan-l2-nad.yaml) and [ipvlan-l3-nad.yaml](calico-cni-config/ipvlan-l3-nad.yaml):
 
 ```bash
 kubectl apply -f calico-cni-config/ipvlan-l2-nad.yaml
@@ -519,7 +532,7 @@ vlan30-ipvlan-l3    5s
 > [!Important]
 > Make sure you have completed step 5 and created the NetworkAttachmentDefinitions before deploying pods.
 
-Deploy a pod with IPvlan L2:
+Deploy a pod with IPvlan L2 using [tools/ipvlan-l2-pod.yaml](tools/ipvlan-l2-pod.yaml):
 
 ```bash
 kubectl apply -f tools/ipvlan-l2-pod.yaml
@@ -777,7 +790,7 @@ The IPvlan interface (`net1`) has the **exact same MAC address** (`02:42:ac:12:0
 
 ### 10. Deploy Pods with IPvlan L3 Interface
 
-Deploy a pod with IPvlan L3:
+Deploy a pod with IPvlan L3 using [tools/ipvlan-l3-pod.yaml](tools/ipvlan-l3-pod.yaml):
 
 ```bash
 kubectl apply -f tools/ipvlan-l3-pod.yaml
@@ -796,7 +809,7 @@ ipvlan-l3-test-pod  1/1     Running   0          30s   192.168.0.2      k01-work
 
 ### 11. Test IPvlan L2 vs L3 Communication
 
-Deploy comparison pods to test both modes:
+Deploy comparison pods to test both modes using [tools/ipvlan-comparison-pods.yaml](tools/ipvlan-comparison-pods.yaml):
 
 ```bash
 kubectl apply -f tools/ipvlan-comparison-pods.yaml

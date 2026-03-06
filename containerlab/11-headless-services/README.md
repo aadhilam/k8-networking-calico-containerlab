@@ -38,15 +38,26 @@ Headless services create different DNS records depending on the workload type:
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/headless-services`
 
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [headless-services.clab.yaml](headless-services.clab.yaml) | ContainerLab topology defining the Kind cluster |
+| [headless-services-no-cni.yaml](headless-services-no-cni.yaml) | Headless services cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with IPAM configuration |
+| [tools/01-statefulset-headless.yaml](tools/01-statefulset-headless.yaml) | Redis StatefulSet with headless service |
+| [tools/02-deployment-services.yaml](tools/02-deployment-services.yaml) | Deployment with ClusterIP and headless services |
+| [tools/03-multitool.yaml](tools/03-multitool.yaml) | Multitool pod for DNS testing |
+
 ## Deployment
 
-1. **ContainerLab Topology Deployment**: Creates a 3-node Kind cluster using the `headless-services.clab.yaml` configuration
+1. **ContainerLab Topology Deployment**: Creates a 3-node Kind cluster using the [headless-services.clab.yaml](headless-services.clab.yaml) configuration
 2. **Kubeconfig Setup**: Exports the Kind cluster's kubeconfig for kubectl access
 3. **Calico Installation**: Downloads and installs calicoctl, then deploys Calico CNI components:
     - Calico Operator CRDs
     - Tigera Operator
-    - Custom Calico resources with IPAM configuration
-4. **Test Workload Deployment**: Deploys Redis StatefulSet with replication, Nginx Deployment with headless services, plus multitool pods for testing
+    - [Custom Calico resources](calico-cni-config/custom-resources.yaml) with IPAM configuration
+4. **Test Workload Deployment**: Deploys [Redis StatefulSet](tools/01-statefulset-headless.yaml) with replication, [Nginx Deployment](tools/02-deployment-services.yaml) with headless services, plus [multitool pods](tools/03-multitool.yaml) for testing
 5. **Verification**: Waits for all Calico components to become available before completion
 
 Deploy the lab using:

@@ -22,7 +22,7 @@ In this lab, pods can reach both an IPv4 destination (1.1.1.1) and an IPv6 desti
 
 ### Kind Cluster Configuration for Dual-Stack
 
-To enable dual-stack networking in Kubernetes, the cluster must be configured at creation time. The Kind cluster configuration file (`dual-stack-no-cni.yaml`) contains the key settings:
+To enable dual-stack networking in Kubernetes, the cluster must be configured at creation time. The Kind cluster configuration file ([dual-stack-no-cni.yaml](dual-stack-no-cni.yaml)) contains the key settings:
 
 ```yaml
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -74,7 +74,7 @@ The `node-ip` parameter is a comma-separated list of the node's IPv4 and IPv6 ad
 
 ### Calico IP Pools Configuration
 
-After the cluster is created, Calico CNI is installed with dual-stack IP pools. The configuration is in `calico-cni-config/custom-resources.yaml`:
+After the cluster is created, Calico CNI is installed with dual-stack IP pools. The configuration is in [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml):
 
 ```yaml
 apiVersion: operator.tigera.io/v1
@@ -199,6 +199,15 @@ graph TD
 
 To setup the lab for this module **[Lab setup](../readme.md#lab-setup)**
 The lab folder is - `/containerlab/14-calico-ipv6`
+
+## Manifest Files
+
+| File | Description |
+|------|-------------|
+| [topology.clab.yaml](topology.clab.yaml) | ContainerLab topology with Arista switch and Kind cluster |
+| [dual-stack-no-cni.yaml](dual-stack-no-cni.yaml) | Dual-stack Kind cluster configuration without CNI |
+| [calico-cni-config/custom-resources.yaml](calico-cni-config/custom-resources.yaml) | Custom Calico Installation resource with dual-stack IP pools |
+| [tools/multitool-pod.yaml](tools/multitool-pod.yaml) | Multitool test pod for network inspection |
 
 ## Deployment
 
